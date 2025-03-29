@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import InstantCareModal from "./InstantCareModal";
 import ScheduledCareModal from "./ScheduledCareModal";
 import heroBackgroundImage from "../assets/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg";
+import brandImage from "../assets/enchanted-brand.jpg";
 
 export default function Hero() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +51,17 @@ export default function Hero() {
             </button>
             <ScheduledCareModal />
           </div>
+        </div>
+      </div>
+
+      {/* Brand image section below hero */}
+      <div className="bg-white py-12">
+        <div className="max-w-4xl mx-auto flex flex-col items-center px-4 sm:px-6 lg:px-8">
+          <img 
+            src={brandImage} 
+            alt="The Enchanted Co. Brand" 
+            className="w-full max-w-md mx-auto rounded-lg shadow-md"
+          />
         </div>
       </div>
 
