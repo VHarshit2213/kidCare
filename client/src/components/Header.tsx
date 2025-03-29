@@ -28,8 +28,7 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-              <img src="/images/enchanted-logo.jpg" alt="The Enchanted Co." className="h-10 w-10 rounded-full" />
+            <Link href="/" className="flex-shrink-0 flex items-center">
               <span className="text-primary font-bold text-xl">The Enchanted Co.</span>
             </Link>
             <nav className="hidden sm:ml-10 sm:flex sm:space-x-8">
@@ -43,6 +42,12 @@ export default function Header() {
               >
                 Home
               </Link>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-sitter-request'))}
+                className="border-transparent text-neutral-600 hover:text-neutral-900 hover:border-neutral-300 border-b-2 px-1 pt-1 font-medium text-sm"
+              >
+                Request a Sitter
+              </button>
               <Link
                 href="/bookings"
                 className={`${

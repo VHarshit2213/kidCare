@@ -4,6 +4,10 @@ export default function MobileNav() {
   const [location] = useLocation();
 
   const isActive = (path: string) => location === path;
+  
+  const handleRequestSitter = () => {
+    window.dispatchEvent(new CustomEvent('open-sitter-request'));
+  };
 
   return (
     <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white shadow-t border-t border-neutral-200 z-10">
@@ -27,6 +31,27 @@ export default function MobileNav() {
             <span className="text-xs mt-1">Home</span>
           </a>
         </Link>
+        
+        <button 
+          onClick={handleRequestSitter}
+          className="flex flex-col items-center py-3 px-4 text-neutral-600"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span className="text-xs mt-1">Request a Sitter</span>
+        </button>
 
         <Link href="/bookings">
           <a className={`flex flex-col items-center py-3 px-4 ${isActive("/bookings") ? "text-primary" : "text-neutral-600"}`}>
