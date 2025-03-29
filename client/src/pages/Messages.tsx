@@ -57,10 +57,7 @@ export default function Messages() {
 
         {!isAuthenticated ? (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
-            <p className="text-neutral-600">Please log in to view your messages.</p>
-            <button className="mt-4 px-4 py-2 text-white rounded-md hover:opacity-90" style={{ backgroundColor: "#3c5679" }}>
-              Log In
-            </button>
+            <p className="text-neutral-600">Messages will appear here after booking a sitter.</p>
           </div>
         ) : isLoadingMessages || isLoadingUsers ? (
           <div className="space-y-4">

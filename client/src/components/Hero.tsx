@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import InstantCareModal from "./InstantCareModal";
+import ScheduledCareModal from "./ScheduledCareModal";
 import heroBackgroundImage from "../assets/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg";
 
 export default function Hero() {
@@ -40,13 +41,14 @@ export default function Hero() {
           <p className="mt-4 text-lg text-white opacity-90 max-w-xl">
             The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone or computer.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap gap-3">
             <button 
               onClick={toggleModal}
               className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
             >
               Request a Sitter Now
             </button>
+            <ScheduledCareModal />
           </div>
         </div>
       </div>
