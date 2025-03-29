@@ -44,9 +44,6 @@ export interface InstantCareFormData {
   endTime: string;
   childName: string;
   careInstructions?: string;
-  requiresFirstAid: boolean;
-  requiresTransportation: boolean;
-  requiresExperience: boolean;
 }
 
 export interface AppContextType {

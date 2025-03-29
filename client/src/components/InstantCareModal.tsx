@@ -38,9 +38,6 @@ const instantCareSchema = z.object({
   endTime: z.string().min(1, "End time is required"),
   childName: z.string().min(1, "Child's name is required"),
   careInstructions: z.string().optional(),
-  requiresFirstAid: z.boolean().default(false),
-  requiresTransportation: z.boolean().default(false),
-  requiresExperience: z.boolean().default(false),
 }).refine(data => new Date(data.startTime) < new Date(data.endTime), {
   message: "End time must be after start time",
   path: ['endTime']
@@ -56,9 +53,6 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
       endTime: format(new Date(new Date().getTime() + 4 * 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
       childName: "",
       careInstructions: "",
-      requiresFirstAid: false,
-      requiresTransportation: false,
-      requiresExperience: false,
     },
   });
 
@@ -67,6 +61,10 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
       const response = await apiRequest("POST", "/api/bookings", {
         parentId: 1, // Using a default parent ID since we're not requiring login
         ...data,
+        // Adding these fields with default values since they're required by the backend
+        requiresFirstAid: false,
+        requiresTransportation: false,
+        requiresExperience: false,
       });
       return await response.json();
     },
@@ -209,64 +207,6 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                 </FormItem>
               )}
             />
-
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Additional Requirements</h4>
-              
-              <FormField
-                control={form.control}
-                name="requiresFirstAid"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-1">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>First Aid Certified</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="requiresTransportation"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-1">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Has Transportation</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="requiresExperience"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-1">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>2+ Years Experience</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <Button
               type="submit"
