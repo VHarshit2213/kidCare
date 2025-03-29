@@ -5,6 +5,7 @@ import BookingCard from "@/components/BookingCard";
 import { useContext } from "react";
 import { AppContext } from "@/App";
 import { Booking } from "@/lib/types";
+import enchantedLogo from "../assets/enchanted-logo-full.jpg";
 
 export default function Home() {
   const { currentUser, isAuthenticated } = useContext(AppContext);
@@ -54,6 +55,23 @@ export default function Home() {
             )}
           </div>
         )}
+        
+        {/* Logo Section */}
+        <div className="py-16 flex flex-col items-center justify-center border-t border-neutral-200">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-neutral-800 mb-2">Trusted Childcare Solutions</h2>
+            <p className="text-neutral-600 max-w-2xl mx-auto">
+              The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind.
+            </p>
+          </div>
+          <div className="w-full max-w-xs">
+            <img 
+              src={enchantedLogo} 
+              alt="The Enchanted Co. Logo" 
+              className="w-full rounded-lg shadow-md"
+            />
+          </div>
+        </div>
       </div>
     </Layout>
   );
