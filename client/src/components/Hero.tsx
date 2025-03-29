@@ -27,10 +27,10 @@ export default function Hero() {
         <div className="absolute inset-0">
           <img
             className="w-full h-full object-cover"
-            src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2689&q=80"
-            alt="Happy children playing"
+            src="/images/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg"
+            alt="Wooden baby crib in a nursery"
           />
-          <div className="absolute inset-0 bg-primary mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-primary/75 mix-blend-multiply"></div>
         </div>
         <div className="relative max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
