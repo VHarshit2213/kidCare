@@ -11,10 +11,12 @@ interface AvailableScheduledSittersProps {
   isOpen: boolean;
   onClose: () => void;
   onPlayAndGreet: (sitterId: number) => void;
+  onBookNow: (sitterId: number) => void;
   date: Date;
   startTime: string;
   endTime: string;
   playAndGreetStatus: {[key: string]: boolean};
+  bookingStatus: {[key: string]: boolean};
 }
 
 // Mock data for available sitters
@@ -57,10 +59,12 @@ export default function AvailableScheduledSitters({
   isOpen,
   onClose,
   onPlayAndGreet,
+  onBookNow,
   date,
   startTime,
   endTime,
-  playAndGreetStatus
+  playAndGreetStatus,
+  bookingStatus = {}
 }: AvailableScheduledSittersProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,19 +117,40 @@ export default function AvailableScheduledSitters({
                     ))}
                   </div>
                   
-                  {playAndGreetStatus[sitter.id.toString()] ? (
+                  {bookingStatus[sitter.id.toString()] ? (
                     <div className="mt-3 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-                      Great! {sitter.fullName} has been notified of your play and greet request.
+                      Booking confirmed! {sitter.fullName} will be at your location on {format(date, "MMMM d")} at {startTime}.
+                    </div>
+                  ) : playAndGreetStatus[sitter.id.toString()] ? (
+                    <div>
+                      <div className="mt-3 p-3 bg-green-50 text-green-700 rounded-md text-sm mb-4">
+                        Great! {sitter.fullName} has been notified of your play and greet request.
+                      </div>
+                      <Button 
+                        onClick={() => onBookNow(sitter.id)}
+                        style={{ backgroundColor: "#3c5679" }}
+                        className="text-white font-medium"
+                      >
+                        Book Now
+                      </Button>
                     </div>
                   ) : (
-                    <Button 
-                      onClick={() => onPlayAndGreet(sitter.id)}
-                      className="w-full sm:w-auto" 
-                      variant="outline"
-                      style={{ borderColor: "#3c5679", color: "#3c5679" }}
-                    >
-                      Schedule a Play and Greet
-                    </Button>
+                    <div className="flex flex-wrap gap-3">
+                      <Button 
+                        onClick={() => onPlayAndGreet(sitter.id)}
+                        variant="outline"
+                        style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                      >
+                        Schedule a Play and Greet
+                      </Button>
+                      <Button 
+                        onClick={() => onBookNow(sitter.id)}
+                        style={{ backgroundColor: "#3c5679" }}
+                        className="text-white font-medium"
+                      >
+                        Book Now
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

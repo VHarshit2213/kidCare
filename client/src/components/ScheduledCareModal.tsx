@@ -46,6 +46,7 @@ export default function ScheduledCareModal() {
   const [hoursNeeded, setHoursNeeded] = useState(2);
   const [showAvailableSitters, setShowAvailableSitters] = useState(false);
   const [showPlayAndGreetSuccess, setShowPlayAndGreetSuccess] = useState<{[key: string]: boolean}>({});
+  const [bookingStatus, setBookingStatus] = useState<{[key: string]: boolean}>({});
   
   // Mock child data - in a real app, this would be fetched from your database
   const childOptions: Child[] = [
@@ -94,6 +95,13 @@ export default function ScheduledCareModal() {
       [sitterId.toString()]: true
     }));
   };
+  
+  const handleBookNow = (sitterId: number) => {
+    setBookingStatus(prev => ({
+      ...prev,
+      [sitterId.toString()]: true
+    }));
+  };
 
   return (
     <>
@@ -104,10 +112,12 @@ export default function ScheduledCareModal() {
           form.reset();
         }}
         onPlayAndGreet={handlePlayAndGreet}
+        onBookNow={handleBookNow}
         date={date || new Date()}
         startTime={form.getValues().startTime || ""}
         endTime={form.getValues().endTime || ""}
         playAndGreetStatus={showPlayAndGreetSuccess}
+        bookingStatus={bookingStatus}
       />
     
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -179,21 +189,67 @@ export default function ScheduledCareModal() {
 
               <div className="mb-4">
                 <FormLabel>Hours Needed</FormLabel>
-                <Select
-                  value={hoursNeeded.toString()}
-                  onValueChange={(value) => setHoursNeeded(parseInt(value))}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select hours" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
-                      <SelectItem key={hours} value={hours.toString()}>
-                        {hours} {hours === 1 ? 'hour' : 'hours'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                    >
+                      {hoursNeeded ? `${hoursNeeded} ${hoursNeeded === 1 ? 'hour' : 'hours'}` : "Select hours..."}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[200px]">
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
+                        <div
+                          key={hours}
+                          className={`flex items-center space-x-2 rounded px-2 py-1 hover:bg-accent cursor-pointer ${
+                            hoursNeeded === hours ? "bg-accent" : ""
+                          }`}
+                          onClick={() => {
+                            setHoursNeeded(hours);
+                            
+                            // Update end time based on start time and hours
+                            const startTimeValue = form.getValues().startTime;
+                            if (startTimeValue) {
+                              const [startHour, startMinute] = startTimeValue.split(':').map(Number);
+                              const endDate = new Date();
+                              endDate.setHours(startHour, startMinute, 0);
+                              endDate.setHours(endDate.getHours() + hours);
+                              
+                              const endHour = endDate.getHours().toString().padStart(2, '0');
+                              const endMinute = endDate.getMinutes().toString().padStart(2, '0');
+                              const newEndTime = `${endHour}:${endMinute}`;
+                              
+                              form.setValue('endTime', newEndTime);
+                            }
+                          }}
+                        >
+                          <div>{hours} {hours === 1 ? 'hour' : 'hours'}</div>
+                          {hoursNeeded === hours && (
+                            <Check className="ml-auto h-4 w-4" />
+                          )}
+                        </div>
+                      ))}
+                      <div className="mt-4 pt-3 border-t flex justify-end">
+                        <Button 
+                          type="button" 
+                          style={{ backgroundColor: "#3c5679" }}
+                          className="text-white font-medium"
+                          onClick={() => {
+                            const popover = document.querySelector('[role="combobox"]');
+                            if (popover) {
+                              (popover as HTMLElement).click();
+                            }
+                          }}
+                        >
+                          Done
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
