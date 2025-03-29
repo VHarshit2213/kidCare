@@ -1,18 +1,11 @@
-import { useState, useContext } from "react";
-import { AppContext } from "@/App";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import InstantCareModal from "./InstantCareModal";
 
 export default function Hero() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isAuthenticated } = useContext(AppContext);
 
   const toggleModal = () => {
-    if (!isAuthenticated) {
-      // Show login prompt or login modal
-      alert("Please log in to request childcare services.");
-      return;
-    }
     setIsModalOpen(!isModalOpen);
   };
 

@@ -1,10 +1,8 @@
-import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
-import { AppContext } from "@/App";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { InstantCareFormData } from "@/lib/types";
@@ -49,7 +47,6 @@ const instantCareSchema = z.object({
 });
 
 export default function InstantCareModal({ isOpen, onClose }: InstantCareModalProps) {
-  const { currentUser } = useContext(AppContext);
   const { toast } = useToast();
 
   const form = useForm<InstantCareFormData>({
@@ -68,7 +65,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const createBookingMutation = useMutation({
     mutationFn: async (data: InstantCareFormData) => {
       const response = await apiRequest("POST", "/api/bookings", {
-        parentId: currentUser?.id,
+        parentId: 1, // Using a default parent ID since we're not requiring login
         ...data,
       });
       return await response.json();
