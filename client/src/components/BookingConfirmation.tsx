@@ -196,7 +196,13 @@ export default function BookingConfirmation({
         </div>
 
         <div className="mt-6 pt-4 border-t flex justify-end">
-          <Button onClick={onClose} className="btn-brand-primary">Close</Button>
+          <Button 
+            onClick={onClose} 
+            style={{ backgroundColor: "#3c5679" }}
+            className="text-white font-medium"
+          >
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -43,7 +43,8 @@ export default function Hero() {
           <div className="mt-8">
             <button 
               onClick={toggleModal}
-              className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
+              className="px-6 py-3 shadow-lg text-lg text-white font-medium rounded-md" 
+              style={{ backgroundColor: "#3c5679" }}
             >
               Request a Sitter Now
             </button>

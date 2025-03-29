@@ -106,7 +106,7 @@ export default function Header() {
             ) : (
               <div className="ml-4 flex items-center space-x-2">
                 <Button variant="ghost" size="sm" className="text-brand-blue hover:text-brand-blue/90">Login</Button>
-                <Button className="btn-brand-secondary">Sign Up</Button>
+                <Button style={{ backgroundColor: "#3c5679" }} className="text-white font-medium">Sign Up</Button>
               </div>
             )}
           </div>

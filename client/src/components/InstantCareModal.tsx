@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,6 +68,20 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const [bookingDetails, setBookingDetails] = useState<InstantCareFormData | null>(null);
   const [showSittersPopup, setShowSittersPopup] = useState(false);
   const [childInput, setChildInput] = useState("");
+  const [minDate, setMinDate] = useState<string>("");
+  const [maxDate, setMaxDate] = useState<string>("");
+  
+  // Set time constraints for the current day only
+  useEffect(() => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    setMinDate(format(today, "yyyy-MM-dd'T'HH:mm"));
+    setMaxDate(format(tomorrow, "yyyy-MM-dd'T'00:00"));
+  }, []);
+  
   // Mock children for demonstration purposes
   const [childOptions] = useState<Child[]>([
     { id: "1", name: "Emma" },
@@ -186,6 +200,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                           <Input
                             type="datetime-local"
                             className="pl-10"
+                            min={minDate}
+                            max={maxDate}
                             {...field}
                           />
                         </div>
@@ -222,6 +238,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                           <Input
                             type="datetime-local"
                             className="pl-10"
+                            min={minDate}
+                            max={maxDate}
                             {...field}
                           />
                         </div>
@@ -302,6 +320,21 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                         </Badge>
                       ))}
                     </div>
+                    <div className="mt-3">
+                      <Button 
+                        type="button"
+                        style={{ backgroundColor: "#3c5679" }}
+                        className="text-white font-medium"
+                        onClick={() => {
+                          const popover = document.querySelector('[role="combobox"]');
+                          if (popover) {
+                            (popover as HTMLElement).click();
+                          }
+                        }}
+                      >
+                        Done
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -327,7 +360,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
 
               <Button
                 type="submit"
-                className="w-full btn-brand-primary"
+                style={{ backgroundColor: "#3c5679" }}
+                className="w-full text-white font-medium"
               >
                 Find Available Sitters
               </Button>

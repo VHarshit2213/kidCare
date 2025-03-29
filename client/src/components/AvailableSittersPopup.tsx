@@ -127,7 +127,13 @@ export default function AvailableSittersPopup({
             <p className="text-muted-foreground mb-6">
               We couldn't find any available sitters within 8 miles for your requested time.
             </p>
-            <Button onClick={onClose}>Try Different Time</Button>
+            <Button 
+              onClick={onClose}
+              style={{ backgroundColor: "#3c5679" }}
+              className="text-white font-medium"
+            >
+              Try Different Time
+            </Button>
           </div>
         ) : (
           <div className="space-y-4 py-2">
@@ -176,7 +182,8 @@ export default function AvailableSittersPopup({
                         size="sm" 
                         onClick={() => handleBookNow(sitter.id)}
                         disabled={selectedSitter === sitter.id}
-                        className="btn-brand-secondary"
+                        style={{ backgroundColor: "#3c5679" }}
+                        className="text-white font-medium"
                       >
                         {selectedSitter === sitter.id ? "Booking..." : "Book Now"}
                       </Button>
