@@ -70,6 +70,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const [childInput, setChildInput] = useState("");
   const [minDate, setMinDate] = useState<string>("");
   const [maxDate, setMaxDate] = useState<string>("");
+  const [hoursNeeded, setHoursNeeded] = useState<number>(2);
   
   // Set time constraints for the current day only
   useEffect(() => {
@@ -81,6 +82,17 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     setMinDate(format(today, "yyyy-MM-dd'T'HH:mm"));
     setMaxDate(format(tomorrow, "yyyy-MM-dd'T'00:00"));
   }, []);
+  
+  // Update end time when start time or hours needed changes
+  const updateEndTime = (startTimeStr: string, hours: number) => {
+    if (startTimeStr) {
+      const startTime = new Date(startTimeStr);
+      const endTime = new Date(startTime);
+      endTime.setHours(endTime.getHours() + hours);
+      
+      form.setValue("endTime", format(endTime, "yyyy-MM-dd'T'HH:mm"));
+    }
+  };
   
   // Mock children for demonstration purposes
   const [childOptions] = useState<Child[]>([
@@ -172,7 +184,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="startTime"
@@ -203,6 +215,10 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                             min={minDate}
                             max={maxDate}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              updateEndTime(e.target.value, hoursNeeded);
+                            }}
                           />
                         </div>
                       </FormControl>
@@ -210,6 +226,31 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                     </FormItem>
                   )}
                 />
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Hours Needed</label>
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      value={hoursNeeded.toString()}
+                      onValueChange={(value) => {
+                        const hours = parseInt(value);
+                        setHoursNeeded(hours);
+                        updateEndTime(form.getValues("startTime"), hours);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select hours" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
+                          <SelectItem key={hours} value={hours.toString()}>
+                            {hours} {hours === 1 ? 'hour' : 'hours'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
                 <FormField
                   control={form.control}
@@ -299,6 +340,21 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 </div>
                               );
                             })}
+                            <div className="mt-4 pt-3 border-t flex justify-end">
+                              <Button 
+                                type="button" 
+                                style={{ backgroundColor: "#3c5679" }}
+                                className="text-white font-medium"
+                                onClick={() => {
+                                  const popover = document.querySelector('[role="combobox"]');
+                                  if (popover) {
+                                    (popover as HTMLElement).click();
+                                  }
+                                }}
+                              >
+                                Done
+                              </Button>
+                            </div>
                           </div>
                         </PopoverContent>
                       </Popover>
@@ -320,21 +376,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                         </Badge>
                       ))}
                     </div>
-                    <div className="mt-3">
-                      <Button 
-                        type="button"
-                        style={{ backgroundColor: "#3c5679" }}
-                        className="text-white font-medium"
-                        onClick={() => {
-                          const popover = document.querySelector('[role="combobox"]');
-                          if (popover) {
-                            (popover as HTMLElement).click();
-                          }
-                        }}
-                      >
-                        Done
-                      </Button>
-                    </div>
+
                     <FormMessage />
                   </FormItem>
                 )}

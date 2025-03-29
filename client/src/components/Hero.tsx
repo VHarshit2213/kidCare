@@ -33,7 +33,7 @@ export default function Hero() {
           />
           <div className="absolute inset-0 bg-brand-blue/60 mix-blend-multiply"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-36 md:py-48 lg:py-56 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
             Find trusted childcare in minutes
           </h1>
@@ -43,8 +43,7 @@ export default function Hero() {
           <div className="mt-8">
             <button 
               onClick={toggleModal}
-              className="px-6 py-3 shadow-lg text-lg text-white font-medium rounded-md" 
-              style={{ backgroundColor: "#3c5679" }}
+              className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
             >
               Request a Sitter Now
             </button>
