@@ -8,6 +8,7 @@ import { User } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { Booking } from "@/lib/types";
 import { Spinner } from "./ui/spinner";
+import BookingConfirmation from "./BookingConfirmation";
 
 interface AvailableSittersPopupProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ export default function AvailableSittersPopup({
   bookingDetails 
 }: AvailableSittersPopupProps) {
   const [selectedSitter, setSelectedSitter] = useState<number | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [bookedSitter, setBookedSitter] = useState<(User & { distance: number }) | null>(null);
   
   // Fetch all babysitters
   const { data, isLoading } = useQuery<User[]>({
@@ -67,11 +70,41 @@ export default function AvailableSittersPopup({
   
   const handleBookNow = (sitterId: number) => {
     setSelectedSitter(sitterId);
-    // In a real implementation, you would handle the booking here
-    setTimeout(() => {
-      onClose();
-    }, 1000);
+    
+    // Find the selected sitter from the filtered list
+    const sitter = availableSitters.find(s => s.id === sitterId);
+    
+    // Store the booked sitter
+    if (sitter) {
+      setBookedSitter(sitter);
+      
+      // In a real implementation, you would send the booking to the server here
+      
+      // Simulate a brief loading state
+      setTimeout(() => {
+        setShowConfirmation(true);
+      }, 800);
+    }
   };
+  
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    setSelectedSitter(null);
+    setBookedSitter(null);
+    onClose();
+  };
+  
+  // Don't show the sitters dialog if we're showing confirmation
+  if (showConfirmation && bookedSitter) {
+    return (
+      <BookingConfirmation
+        isOpen={showConfirmation}
+        onClose={handleConfirmationClose}
+        sitter={bookedSitter}
+        bookingDetails={bookingDetails}
+      />
+    );
+  }
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
