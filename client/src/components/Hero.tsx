@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import InstantCareModal from "./InstantCareModal";
+import heroBackgroundImage from "../assets/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg";
 
 export default function Hero() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,7 +28,7 @@ export default function Hero() {
         <div className="absolute inset-0">
           <img
             className="w-full h-full object-cover"
-            src="/images/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg"
+            src={heroBackgroundImage}
             alt="Wooden baby crib in a nursery"
           />
           <div className="absolute inset-0 bg-primary/75 mix-blend-multiply"></div>
