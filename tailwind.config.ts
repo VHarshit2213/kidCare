@@ -24,6 +24,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          dark: "#3c5679", // Blue color for buttons hover etc
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -40,6 +41,10 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        brand: {
+          pink: "#d4aea8",
+          blue: "#3c5679",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -100,15 +100,15 @@ export default function BookingConfirmation({
           </DialogDescription>
         </DialogHeader>
 
-        <Card className="p-4 mt-4 bg-green-50">
+        <Card className="p-4 mt-4 bg-brand-pink/10">
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+            <div className="h-8 w-8 rounded-full bg-brand-pink/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-blue">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <div className="font-medium text-green-800">Booking completed successfully</div>
+            <div className="font-medium text-brand-blue">Booking completed successfully</div>
           </div>
         </Card>
 
@@ -119,7 +119,7 @@ export default function BookingConfirmation({
               {sitter.profileImageUrl ? (
                 <img src={sitter.profileImageUrl} alt={sitter.fullName} />
               ) : (
-                <div className="bg-primary/10 flex items-center justify-center h-full w-full text-primary font-semibold">
+                <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
                   {sitter.fullName.charAt(0)}
                 </div>
               )}
@@ -133,9 +133,9 @@ export default function BookingConfirmation({
           </div>
         </div>
 
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+        <div className="mt-6 bg-brand-blue/5 p-4 rounded-lg">
           <h3 className="text-md font-medium mb-2 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-brand-blue">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
@@ -150,7 +150,7 @@ export default function BookingConfirmation({
           ) : (
             <div className="flex justify-between items-center">
               <p className="text-lg font-semibold">{estimatedArrival || 'Calculating...'}</p>
-              <Badge variant="outline" className="px-2">Live Tracking</Badge>
+              <Badge variant="outline" className="px-2 border-brand-pink text-brand-blue">Live Tracking</Badge>
             </div>
           )}
           
@@ -168,7 +168,7 @@ export default function BookingConfirmation({
                 </div>
               )}
               <div className="absolute bottom-2 right-2">
-                <Badge className="bg-blue-500" variant="default">Your Location</Badge>
+                <Badge className="bg-brand-blue" variant="default">Your Location</Badge>
               </div>
             </div>
           )}
@@ -196,7 +196,7 @@ export default function BookingConfirmation({
         </div>
 
         <div className="mt-6 pt-4 border-t flex justify-end">
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose} className="btn-brand-primary">Close</Button>
         </div>
       </DialogContent>
     </Dialog>

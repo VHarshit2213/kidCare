@@ -138,7 +138,7 @@ export default function AvailableSittersPopup({
                     {sitter.profileImageUrl ? (
                       <img src={sitter.profileImageUrl} alt={sitter.fullName} />
                     ) : (
-                      <div className="bg-primary/10 flex items-center justify-center h-full w-full text-primary font-semibold">
+                      <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
                         {sitter.fullName.charAt(0)}
                       </div>
                     )}
@@ -153,7 +153,7 @@ export default function AvailableSittersPopup({
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="px-2 py-0.5">
+                        <Badge variant="outline" className="px-2 py-0.5 border-brand-blue text-brand-blue">
                           {sitter.yearsExperience}+ yrs exp
                         </Badge>
                       </div>
@@ -161,13 +161,13 @@ export default function AvailableSittersPopup({
                     
                     <div className="mt-2 flex flex-wrap gap-1">
                       {sitter.firstAidCertified && (
-                        <Badge variant="secondary" className="text-xs px-2">First Aid</Badge>
+                        <Badge variant="outline" className="text-xs px-2 border-brand-pink text-brand-blue">First Aid</Badge>
                       )}
                       {sitter.hasTransportation && (
-                        <Badge variant="secondary" className="text-xs px-2">Transportation</Badge>
+                        <Badge variant="outline" className="text-xs px-2 border-brand-pink text-brand-blue">Transportation</Badge>
                       )}
                       {sitter.skills?.slice(0, 2).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs px-2">{skill}</Badge>
+                        <Badge key={index} variant="outline" className="text-xs px-2 border-brand-pink text-brand-blue">{skill}</Badge>
                       ))}
                     </div>
                     
@@ -176,6 +176,7 @@ export default function AvailableSittersPopup({
                         size="sm" 
                         onClick={() => handleBookNow(sitter.id)}
                         disabled={selectedSitter === sitter.id}
+                        className="btn-brand-secondary"
                       >
                         {selectedSitter === sitter.id ? "Booking..." : "Book Now"}
                       </Button>

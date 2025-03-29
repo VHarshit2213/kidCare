@@ -1,13 +1,13 @@
 export default function HowItWorks() {
   return (
-    <div className="py-8 border-t border-neutral-200">
-      <h2 className="text-2xl font-bold text-neutral-800 text-center">How KidCare Works</h2>
-      <div className="mt-8 grid gap-8 grid-cols-1 md:grid-cols-3">
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-primary">
+    <div className="py-12 border-t border-neutral-200">
+      <h2 className="text-3xl font-bold text-center text-gradient">How The Enchanted Co. Works</h2>
+      <div className="mt-10 grid gap-8 grid-cols-1 md:grid-cols-3">
+        <div className="text-center px-4 py-6 rounded-lg hover:shadow-md transition-shadow">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-pink/20 text-brand-blue">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-8 w-8"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -20,16 +20,16 @@ export default function HowItWorks() {
               />
             </svg>
           </div>
-          <h3 className="mt-4 text-lg font-medium text-neutral-800">1. Find Babysitters</h3>
-          <p className="mt-2 text-base text-neutral-600">
+          <h3 className="mt-6 text-xl font-medium text-brand-blue">1. Find Babysitters</h3>
+          <p className="mt-3 text-base text-neutral-600">
             Browse profiles of verified babysitters in your area, complete with reviews, skills, and availability.
           </p>
         </div>
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-primary">
+        <div className="text-center px-4 py-6 rounded-lg hover:shadow-md transition-shadow">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-pink/20 text-brand-blue">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-8 w-8"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -42,16 +42,16 @@ export default function HowItWorks() {
               />
             </svg>
           </div>
-          <h3 className="mt-4 text-lg font-medium text-neutral-800">2. Book Care</h3>
-          <p className="mt-2 text-base text-neutral-600">
+          <h3 className="mt-6 text-xl font-medium text-brand-blue">2. Book Care</h3>
+          <p className="mt-3 text-base text-neutral-600">
             Request instant care or schedule in advance. Add details about your children and any special requirements.
           </p>
         </div>
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-primary">
+        <div className="text-center px-4 py-6 rounded-lg hover:shadow-md transition-shadow">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-pink/20 text-brand-blue">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-8 w-8"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -64,8 +64,8 @@ export default function HowItWorks() {
               />
             </svg>
           </div>
-          <h3 className="mt-4 text-lg font-medium text-neutral-800">3. Enjoy Peace of Mind</h3>
-          <p className="mt-2 text-base text-neutral-600">
+          <h3 className="mt-6 text-xl font-medium text-brand-blue">3. Enjoy Peace of Mind</h3>
+          <p className="mt-3 text-base text-neutral-600">
             After the booking, rate and review your sitter. Build a reliable care network for your family.
           </p>
         </div>

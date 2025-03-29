@@ -13,7 +13,7 @@ export default function MobileNav() {
     <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white shadow-t border-t border-neutral-200 z-10">
       <div className="flex justify-around">
         <Link href="/">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/") ? "text-primary" : "text-neutral-600"}`}>
+          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -34,7 +34,7 @@ export default function MobileNav() {
         
         <button 
           onClick={handleRequestSitter}
-          className="flex flex-col items-center py-3 px-4 text-neutral-600"
+          className="flex flex-col items-center py-3 px-4 text-neutral-600 hover:text-brand-blue"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +54,7 @@ export default function MobileNav() {
         </button>
 
         <Link href="/bookings">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/bookings") ? "text-primary" : "text-neutral-600"}`}>
+          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/bookings") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -74,7 +74,7 @@ export default function MobileNav() {
         </Link>
 
         <Link href="/messages">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/messages") ? "text-primary" : "text-neutral-600"}`}>
+          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -94,7 +94,7 @@ export default function MobileNav() {
         </Link>
 
         <Link href="/profile">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/profile") ? "text-primary" : "text-neutral-600"}`}>
+          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/profile") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"

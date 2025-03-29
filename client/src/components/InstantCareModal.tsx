@@ -287,7 +287,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                     </FormControl>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {field.value?.map((child) => (
-                        <Badge key={child.id} variant="secondary" className="py-1">
+                        <Badge key={child.id} variant="outline" className="py-1 border-brand-pink text-brand-blue">
                           {child.name}
                           <X 
                             className="ml-1 h-3 w-3 cursor-pointer" 
@@ -327,7 +327,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full btn-brand-primary"
               >
                 Find Available Sitters
               </Button>
