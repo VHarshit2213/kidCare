@@ -185,6 +185,31 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Hours Needed</label>
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      value={hoursNeeded.toString()}
+                      onValueChange={(value) => {
+                        const hours = parseInt(value);
+                        setHoursNeeded(hours);
+                        updateEndTime(form.getValues("startTime"), hours);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select hours" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
+                          <SelectItem key={hours} value={hours.toString()}>
+                            {hours} {hours === 1 ? 'hour' : 'hours'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
                 <FormField
                   control={form.control}
                   name="startTime"
@@ -226,31 +251,6 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                     </FormItem>
                   )}
                 />
-                
-                <div>
-                  <label className="block text-sm font-medium mb-2">Hours Needed</label>
-                  <div className="flex items-center space-x-2">
-                    <Select
-                      value={hoursNeeded.toString()}
-                      onValueChange={(value) => {
-                        const hours = parseInt(value);
-                        setHoursNeeded(hours);
-                        updateEndTime(form.getValues("startTime"), hours);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select hours" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
-                          <SelectItem key={hours} value={hours.toString()}>
-                            {hours} {hours === 1 ? 'hour' : 'hours'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
                 <FormField
                   control={form.control}

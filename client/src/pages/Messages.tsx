@@ -15,9 +15,9 @@ export default function Messages() {
 
   // Extract unique conversation partners
   const conversationPartners = messages
-    ? [...new Set(messages.map(message => 
+    ? Array.from(new Set(messages.map(message => 
         message.senderId === currentUser?.id ? message.receiverId : message.senderId
-      ))]
+      )))
     : [];
 
   // Fetch user data for conversation partners
@@ -58,7 +58,7 @@ export default function Messages() {
         {!isAuthenticated ? (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600">Please log in to view your messages.</p>
-            <button className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
+            <button className="mt-4 px-4 py-2 text-white rounded-md hover:opacity-90" style={{ backgroundColor: "#3c5679" }}>
               Log In
             </button>
           </div>
