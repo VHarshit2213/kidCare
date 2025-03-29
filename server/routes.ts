@@ -13,9 +13,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return { data: schema.parse(data), error: null };
     } catch (error) {
       if (error instanceof ZodError) {
-        return { data: null, error: fromZodError(error) };
+        const validationError = fromZodError(error);
+        return { data: null, error: { message: validationError.message } };
       }
-      return { data: null, error };
+      if (error instanceof Error) {
+        return { data: null, error: { message: error.message } };
+      }
+      return { data: null, error: { message: 'Unknown validation error' } };
     }
   };
 
@@ -120,8 +124,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message || "Failed to get babysitters" });
     }
   });
+  
+  // Endpoint to get nearby babysitters for instant booking
+  app.get("/api/nearby-babysitters", async (req, res) => {
+    try {
+      // Get filter parameters from query string
+      const { 
+        latitude, 
+        longitude, 
+        radius = "8", // default radius of 8 miles
+        requiresFirstAid,
+        requiresTransportation,
+        minExperience
+      } = req.query;
+      
+      if (!latitude || !longitude) {
+        return res.status(400).json({ message: "Latitude and longitude are required" });
+      }
+      
+      const userLat = parseFloat(latitude as string);
+      const userLng = parseFloat(longitude as string);
+      const radiusMiles = parseFloat(radius as string);
+      
+      // Get all babysitters
+      const allBabysitters = await storage.getAllBabysitters();
+      
+      // Filter out babysitters based on criteria and calculate distance
+      const nearbyBabysitters = allBabysitters
+        .filter(sitter => {
+          // Apply additional filters if specified
+          if (requiresFirstAid === 'true' && !sitter.firstAidCertified) return false;
+          if (requiresTransportation === 'true' && !sitter.hasTransportation) return false;
+          
+          // Experience check with null safety
+          const experience = sitter.yearsExperience as number | null;
+          if (minExperience && (!experience || experience < parseInt(minExperience as string))) return false;
+          
+          // Always return true for demo purposes
+          // In a real app, we would use the location to calculate distance
+          return true;
+        })
+        .map(sitter => {
+          // In a real app, we would parse the location and calculate actual distance
+          // For demo purposes, we assign a random distance within the radius
+          const distance = Math.random() * radiusMiles;
+          
+          // Estimated arrival time: roughly 2 minutes per mile
+          const estimatedArrivalMinutes = Math.round(distance * 2);
+          
+          const { password, ...sitterWithoutPassword } = sitter;
+          return {
+            ...sitterWithoutPassword,
+            distance,
+            estimatedArrivalMinutes
+          };
+        })
+        // Sort by distance (closest first)
+        .sort((a, b) => a.distance - b.distance)
+        // Limit to max 3 results
+        .slice(0, 3);
+      
+      res.status(200).json(nearbyBabysitters);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get nearby babysitters" });
+    }
+  });
 
   // Booking Routes
+  // Authenticated booking creation for registered parents
   app.post("/api/bookings", authenticate, async (req: Request, res: Response) => {
     const { data, error } = validateRequest(insertBookingSchema, req.body);
     
@@ -145,6 +215,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(booking);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to create booking" });
+    }
+  });
+  
+  // Anonymous booking creation (instant care) for non-authenticated users
+  app.post("/api/instant-bookings", async (req: Request, res: Response) => {
+    const { data, error } = validateRequest(insertBookingSchema.omit({ parentId: true }), req.body);
+    
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    try {
+      // For anonymous bookings, we'll use a placeholder parent ID (1) for now
+      // In a real app, this would be associated with a guest account or a newly created account
+      const booking = await storage.createBooking({
+        ...data,
+        parentId: 1, // Using a placeholder parent ID
+      });
+      
+      res.status(201).json(booking);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create instant booking" });
     }
   });
 

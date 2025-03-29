@@ -28,8 +28,9 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-primary font-bold text-xl">KidCare</span>
+            <Link href="/" className="flex-shrink-0 flex items-center gap-2">
+              <img src="/images/enchanted-logo.jpg" alt="The Enchanted Co." className="h-10 w-10 rounded-full" />
+              <span className="text-primary font-bold text-xl">The Enchanted Co.</span>
             </Link>
             <nav className="hidden sm:ml-10 sm:flex sm:space-x-8">
               <Link

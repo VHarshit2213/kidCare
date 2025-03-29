@@ -43,6 +43,15 @@ export class MemStorage implements IStorage {
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
     
+    // Add guest parent account for anonymous bookings
+    this.createUser({
+      username: "guest_parent",
+      password: "guest123",
+      email: "guest@example.com",
+      fullName: "Guest Parent",
+      userType: "parent",
+    });
+    
     // Add some demo babysitters
     this.addDemoBabysitters();
   }
@@ -60,7 +69,18 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      profileImageUrl: insertUser.profileImageUrl || null,
+      bio: insertUser.bio || null,
+      hourlyRate: insertUser.hourlyRate || null,
+      skills: insertUser.skills || null,
+      firstAidCertified: insertUser.firstAidCertified || null,
+      hasTransportation: insertUser.hasTransportation || null,
+      yearsExperience: insertUser.yearsExperience || null,
+      location: insertUser.location || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -80,7 +100,11 @@ export class MemStorage implements IStorage {
       id,
       babysitterId: null,
       status: "pending",
-      createdAt: now
+      createdAt: now,
+      careInstructions: insertBooking.careInstructions || null,
+      requiresFirstAid: insertBooking.requiresFirstAid || null,
+      requiresTransportation: insertBooking.requiresTransportation || null,
+      requiresExperience: insertBooking.requiresExperience || null
     };
     this.bookings.set(id, booking);
     return booking;
@@ -127,6 +151,7 @@ export class MemStorage implements IStorage {
     const message: Message = {
       ...insertMessage,
       id,
+      bookingId: insertMessage.bookingId || null,
       timestamp: now,
       isRead: false,
     };
@@ -145,7 +170,12 @@ export class MemStorage implements IStorage {
       (message) => 
         (message.senderId === user1Id && message.receiverId === user2Id) ||
         (message.senderId === user2Id && message.receiverId === user1Id),
-    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    ).sort((a, b) => {
+      if (!a.timestamp && !b.timestamp) return 0;
+      if (!a.timestamp) return -1;
+      if (!b.timestamp) return 1;
+      return a.timestamp.getTime() - b.timestamp.getTime();
+    });
   }
 
   async markMessageAsRead(id: number): Promise<void> {

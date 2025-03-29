@@ -1,19 +1,27 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { HomeIcon } from "lucide-react";
+import { Link } from "wouter";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md shadow-lg border-primary/20">
+        <CardContent className="pt-8 pb-8 text-center">
+          <div className="mb-6">
+            <img src="/images/enchanted-logo.jpg" alt="The Enchanted Co." className="h-20 w-20 rounded-full mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Oops! Page Not Found</h1>
+            <p className="text-lg text-gray-600">
+              We couldn't find the page you were looking for.
+            </p>
           </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
+          
+          <Link href="/">
+            <Button className="mx-auto mt-4 flex items-center gap-2 px-6">
+              <HomeIcon className="h-4 w-4" />
+              Return Home
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>
