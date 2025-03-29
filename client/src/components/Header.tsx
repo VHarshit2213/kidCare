@@ -49,8 +49,22 @@ export default function Header() {
               </Link>
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-sitter-request'))}
-                className="border-transparent text-neutral-600 hover:text-brand-blue hover:border-brand-blue border-b-2 px-1 pt-1 font-medium text-sm"
+                className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md px-3 py-1.5 font-medium text-sm shadow-sm"
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
                 Request a Sitter
               </button>
               <Link
@@ -111,8 +125,27 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
+          {/* Mobile buttons */}
+          <div className="flex items-center sm:hidden space-x-2">
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('open-sitter-request'))}
+              className="inline-flex items-center justify-center p-2 bg-[#3c5679] text-white rounded-md"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </button>
             <button className="inline-flex items-center justify-center p-2 rounded-md text-neutral-600 hover:text-brand-blue hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-blue">
               <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

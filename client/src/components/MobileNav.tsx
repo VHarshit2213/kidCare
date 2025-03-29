@@ -34,11 +34,14 @@ export default function MobileNav() {
         
         <button 
           onClick={handleRequestSitter}
-          className="flex flex-col items-center py-3 px-4 text-neutral-600 hover:text-brand-blue"
+          className="flex flex-col items-center py-3 px-4 text-[#3c5679] font-medium relative"
         >
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-[#3c5679] text-white text-[10px] px-2 py-0.5 rounded-full">
+            Book
+          </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
+            className="h-6 w-6"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
