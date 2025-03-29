@@ -1,0 +1,213 @@
+import { 
+  users, bookings, messages, 
+  type User, type InsertUser, 
+  type Booking, type InsertBooking,
+  type Message, type InsertMessage 
+} from "@shared/schema";
+
+export interface IStorage {
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  getAllBabysitters(): Promise<User[]>;
+  
+  // Booking methods
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  getBooking(id: number): Promise<Booking | undefined>;
+  getBookingsByParentId(parentId: number): Promise<Booking[]>;
+  getBookingsByBabysitterId(babysitterId: number): Promise<Booking[]>;
+  updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
+  assignBabysitterToBooking(bookingId: number, babysitterId: number): Promise<Booking | undefined>;
+  
+  // Message methods
+  createMessage(message: InsertMessage): Promise<Message>;
+  getMessagesByUserId(userId: number): Promise<Message[]>;
+  getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]>;
+  markMessageAsRead(id: number): Promise<void>;
+}
+
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  private bookings: Map<number, Booking>;
+  private messages: Map<number, Message>;
+  private userIdCounter: number;
+  private bookingIdCounter: number;
+  private messageIdCounter: number;
+
+  constructor() {
+    this.users = new Map();
+    this.bookings = new Map();
+    this.messages = new Map();
+    this.userIdCounter = 1;
+    this.bookingIdCounter = 1;
+    this.messageIdCounter = 1;
+    
+    // Add some demo babysitters
+    this.addDemoBabysitters();
+  }
+
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.userIdCounter++;
+    const user: User = { ...insertUser, id };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async getAllBabysitters(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(
+      (user) => user.userType === "babysitter",
+    );
+  }
+
+  // Booking methods
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const id = this.bookingIdCounter++;
+    const now = new Date();
+    const booking: Booking = {
+      ...insertBooking,
+      id,
+      babysitterId: null,
+      status: "pending",
+      createdAt: now
+    };
+    this.bookings.set(id, booking);
+    return booking;
+  }
+
+  async getBooking(id: number): Promise<Booking | undefined> {
+    return this.bookings.get(id);
+  }
+
+  async getBookingsByParentId(parentId: number): Promise<Booking[]> {
+    return Array.from(this.bookings.values()).filter(
+      (booking) => booking.parentId === parentId,
+    );
+  }
+
+  async getBookingsByBabysitterId(babysitterId: number): Promise<Booking[]> {
+    return Array.from(this.bookings.values()).filter(
+      (booking) => booking.babysitterId === babysitterId,
+    );
+  }
+
+  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+    const booking = this.bookings.get(id);
+    if (!booking) return undefined;
+    
+    const updatedBooking = { ...booking, status };
+    this.bookings.set(id, updatedBooking);
+    return updatedBooking;
+  }
+
+  async assignBabysitterToBooking(bookingId: number, babysitterId: number): Promise<Booking | undefined> {
+    const booking = this.bookings.get(bookingId);
+    if (!booking) return undefined;
+    
+    const updatedBooking = { ...booking, babysitterId, status: "accepted" };
+    this.bookings.set(bookingId, updatedBooking);
+    return updatedBooking;
+  }
+
+  // Message methods
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const id = this.messageIdCounter++;
+    const now = new Date();
+    const message: Message = {
+      ...insertMessage,
+      id,
+      timestamp: now,
+      isRead: false,
+    };
+    this.messages.set(id, message);
+    return message;
+  }
+
+  async getMessagesByUserId(userId: number): Promise<Message[]> {
+    return Array.from(this.messages.values()).filter(
+      (message) => message.senderId === userId || message.receiverId === userId,
+    );
+  }
+
+  async getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]> {
+    return Array.from(this.messages.values()).filter(
+      (message) => 
+        (message.senderId === user1Id && message.receiverId === user2Id) ||
+        (message.senderId === user2Id && message.receiverId === user1Id),
+    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
+
+  async markMessageAsRead(id: number): Promise<void> {
+    const message = this.messages.get(id);
+    if (!message) return;
+    
+    this.messages.set(id, { ...message, isRead: true });
+  }
+
+  // Helper to add demo babysitters
+  private addDemoBabysitters() {
+    // Demo babysitter 1
+    this.createUser({
+      username: "emily_wilson",
+      password: "password123", // In a real app, this would be hashed
+      email: "emily@example.com",
+      fullName: "Emily Wilson",
+      userType: "babysitter",
+      profileImageUrl: "https://images.unsplash.com/photo-1499887142886-791eca5918cd?ixlib=rb-4.0.3",
+      bio: "5 years experience, CPR certified. I love working with children of all ages and have a background in early childhood education.",
+      hourlyRate: 18,
+      skills: ["First Aid", "Teacher", "Art & Craft"],
+      firstAidCertified: true,
+      hasTransportation: true,
+      yearsExperience: 5,
+      location: "New York, NY"
+    });
+
+    // Demo babysitter 2
+    this.createUser({
+      username: "marcus_johnson",
+      password: "password123",
+      email: "marcus@example.com",
+      fullName: "Marcus Johnson",
+      userType: "babysitter",
+      profileImageUrl: "https://images.unsplash.com/photo-1580894742597-87bc8789db3d?ixlib=rb-4.0.3",
+      bio: "3 years experience, background checked. I'm an energetic babysitter who loves sports and outdoor activities.",
+      hourlyRate: 20,
+      skills: ["First Aid", "Sports", "Cooking"],
+      firstAidCertified: true,
+      hasTransportation: true,
+      yearsExperience: 3,
+      location: "Chicago, IL"
+    });
+
+    // Demo babysitter 3
+    this.createUser({
+      username: "sophia_martinez",
+      password: "password123",
+      email: "sophia@example.com",
+      fullName: "Sophia Martinez",
+      userType: "babysitter",
+      profileImageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3",
+      bio: "8 years experience, child development degree. I speak English, Spanish, and French.",
+      hourlyRate: 25,
+      skills: ["First Aid", "Music", "Multilingual"],
+      firstAidCertified: true,
+      hasTransportation: false,
+      yearsExperience: 8,
+      location: "Los Angeles, CA"
+    });
+  }
+}
+
+export const storage = new MemStorage();

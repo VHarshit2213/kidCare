@@ -1,0 +1,327 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertUserSchema, insertBookingSchema, insertMessageSchema } from "@shared/schema";
+import { ZodError } from "zod";
+import { fromZodError } from "zod-validation-error";
+import express from "express";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Utility function to handle validation errors
+  const validateRequest = (schema: any, data: any) => {
+    try {
+      return { data: schema.parse(data), error: null };
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return { data: null, error: fromZodError(error) };
+      }
+      return { data: null, error };
+    }
+  };
+
+  // Authentication middleware - this is a simplified version for demo
+  const authenticate = async (req: Request, res: Response, next: Function) => {
+    // In a real app, this would validate JWT tokens or session cookies
+    const userId = req.headers["user-id"];
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const user = await storage.getUser(Number(userId));
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    // Add user to request
+    (req as any).user = user;
+    next();
+  };
+
+  // User Routes
+  app.post("/api/users/register", async (req, res) => {
+    const { data, error } = validateRequest(insertUserSchema, req.body);
+    
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    try {
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+      
+      const user = await storage.createUser(data);
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create user" });
+    }
+  });
+
+  app.post("/api/users/login", async (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password required" });
+    }
+    
+    try {
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Don't send the password back
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.status(200).json({ 
+        ...userWithoutPassword,
+        // In a real app, you would generate a JWT token here
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Login failed" });
+    }
+  });
+
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.getUser(Number(req.params.id));
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get user" });
+    }
+  });
+
+  app.get("/api/babysitters", async (_req, res) => {
+    try {
+      const babysitters = await storage.getAllBabysitters();
+      
+      // Remove passwords from the response
+      const babysittersWithoutPasswords = babysitters.map(babysitter => {
+        const { password, ...babysitterWithoutPassword } = babysitter;
+        return babysitterWithoutPassword;
+      });
+      
+      res.status(200).json(babysittersWithoutPasswords);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get babysitters" });
+    }
+  });
+
+  // Booking Routes
+  app.post("/api/bookings", authenticate, async (req: Request, res: Response) => {
+    const { data, error } = validateRequest(insertBookingSchema, req.body);
+    
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    try {
+      const user = (req as any).user;
+      
+      // Only parents can create bookings
+      if (user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parents can create bookings" });
+      }
+      
+      const booking = await storage.createBooking({
+        ...data,
+        parentId: user.id,
+      });
+      
+      res.status(201).json(booking);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create booking" });
+    }
+  });
+
+  app.get("/api/bookings/parent", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only parents can view their bookings
+      if (user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parents can view their bookings" });
+      }
+      
+      const bookings = await storage.getBookingsByParentId(user.id);
+      res.status(200).json(bookings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get bookings" });
+    }
+  });
+
+  app.get("/api/bookings/babysitter", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only babysitters can view their bookings
+      if (user.userType !== "babysitter") {
+        return res.status(403).json({ message: "Only babysitters can view their bookings" });
+      }
+      
+      const bookings = await storage.getBookingsByBabysitterId(user.id);
+      res.status(200).json(bookings);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get bookings" });
+    }
+  });
+
+  app.patch("/api/bookings/:id/status", authenticate, async (req: Request, res: Response) => {
+    const { status } = req.body;
+    
+    if (!status || !["pending", "accepted", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+    
+    try {
+      const bookingId = Number(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      const user = (req as any).user;
+      
+      // Validate user permissions for status update
+      if (user.userType === "parent" && user.id !== booking.parentId) {
+        return res.status(403).json({ message: "You can only update your own bookings" });
+      }
+      
+      if (user.userType === "babysitter" && booking.babysitterId !== user.id) {
+        return res.status(403).json({ message: "You can only update bookings assigned to you" });
+      }
+      
+      const updatedBooking = await storage.updateBookingStatus(bookingId, status);
+      res.status(200).json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update booking status" });
+    }
+  });
+
+  app.patch("/api/bookings/:id/assign", authenticate, async (req: Request, res: Response) => {
+    const { babysitterId } = req.body;
+    
+    if (!babysitterId) {
+      return res.status(400).json({ message: "Babysitter ID is required" });
+    }
+    
+    try {
+      const bookingId = Number(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      const user = (req as any).user;
+      
+      // Only babysitters can assign themselves
+      if (user.userType !== "babysitter" || user.id !== Number(babysitterId)) {
+        return res.status(403).json({ message: "Only babysitters can assign themselves to bookings" });
+      }
+      
+      // Check if booking is already assigned
+      if (booking.babysitterId) {
+        return res.status(409).json({ message: "Booking is already assigned to a babysitter" });
+      }
+      
+      const updatedBooking = await storage.assignBabysitterToBooking(bookingId, Number(babysitterId));
+      res.status(200).json(updatedBooking);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to assign babysitter to booking" });
+    }
+  });
+
+  // Message Routes
+  app.post("/api/messages", authenticate, async (req: Request, res: Response) => {
+    const { data, error } = validateRequest(insertMessageSchema, req.body);
+    
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    try {
+      const user = (req as any).user;
+      
+      // Ensure sender ID matches authenticated user
+      if (data.senderId !== user.id) {
+        return res.status(403).json({ message: "Sender ID must match authenticated user" });
+      }
+      
+      // Check if receiver exists
+      const receiver = await storage.getUser(data.receiverId);
+      if (!receiver) {
+        return res.status(404).json({ message: "Receiver not found" });
+      }
+      
+      const message = await storage.createMessage(data);
+      res.status(201).json(message);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to send message" });
+    }
+  });
+
+  app.get("/api/messages/:userId", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const requestedUserId = Number(req.params.userId);
+      
+      // Users can only view their own conversations
+      if (user.id !== requestedUserId) {
+        return res.status(403).json({ message: "You can only view your own messages" });
+      }
+      
+      const messages = await storage.getMessagesByUserId(requestedUserId);
+      res.status(200).json(messages);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get messages" });
+    }
+  });
+
+  app.get("/api/messages/:user1Id/:user2Id", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const user1Id = Number(req.params.user1Id);
+      const user2Id = Number(req.params.user2Id);
+      
+      // Users can only view their own conversations
+      if (user.id !== user1Id && user.id !== user2Id) {
+        return res.status(403).json({ message: "You can only view your own conversations" });
+      }
+      
+      const messages = await storage.getMessagesBetweenUsers(user1Id, user2Id);
+      res.status(200).json(messages);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get conversation" });
+    }
+  });
+
+  app.patch("/api/messages/:id/read", authenticate, async (req: Request, res: Response) => {
+    try {
+      const messageId = Number(req.params.id);
+      await storage.markMessageAsRead(messageId);
+      res.status(200).json({ message: "Message marked as read" });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to mark message as read" });
+    }
+  });
+
+  const httpServer = createServer(app);
+
+  return httpServer;
+}
