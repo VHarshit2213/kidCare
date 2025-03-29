@@ -58,11 +58,16 @@ export default function Home() {
         
         {/* Logo Section */}
         <div className="py-16 flex flex-col items-center justify-center border-t border-neutral-200">
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-xs flex items-center justify-center">
             <img 
               src={enchantedLogo} 
               alt="The Enchanted Co. Logo" 
-              className="w-full rounded-lg shadow-md"
+              className="w-full mix-blend-multiply"
+              style={{ 
+                backgroundColor: 'transparent',
+                maxHeight: '180px',
+                objectFit: 'contain'
+              }}
             />
           </div>
         </div>
