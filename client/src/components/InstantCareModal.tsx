@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
-import { InstantCareFormData } from "@/lib/types";
+import { InstantCareFormData, Child } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import AvailableSittersPopup from "@/components/AvailableSittersPopup";
+import { X, Plus, Check } from "lucide-react";
 
 import {
   Dialog,
@@ -29,6 +30,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface InstantCareModalProps {
   isOpen: boolean;
@@ -38,7 +53,10 @@ interface InstantCareModalProps {
 const instantCareSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
-  childName: z.string().min(1, "Child's name is required"),
+  children: z.array(z.object({
+    id: z.string(),
+    name: z.string()
+  })).min(1, "Please select at least one child"),
   careInstructions: z.string().optional(),
 }).refine(data => new Date(data.startTime) < new Date(data.endTime), {
   message: "End time must be after start time",
@@ -49,22 +67,37 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const { toast } = useToast();
   const [bookingDetails, setBookingDetails] = useState<InstantCareFormData | null>(null);
   const [showSittersPopup, setShowSittersPopup] = useState(false);
+  const [childInput, setChildInput] = useState("");
+  // Mock children for demonstration purposes
+  const [childOptions] = useState<Child[]>([
+    { id: "1", name: "Emma" },
+    { id: "2", name: "Noah" },
+    { id: "3", name: "Olivia" },
+    { id: "4", name: "Liam" },
+    { id: "5", name: "Ava" }
+  ]);
 
   const form = useForm<InstantCareFormData>({
     resolver: zodResolver(instantCareSchema),
     defaultValues: {
       startTime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       endTime: format(new Date(new Date().getTime() + 4 * 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
-      childName: "",
+      children: [],
       careInstructions: "",
     },
   });
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: InstantCareFormData) => {
+      // Transform the data to match what the backend expects
+      const childNames = data.children.map(child => child.name).join(", ");
+      
       const response = await apiRequest("POST", "/api/bookings", {
         parentId: 1, // Using a default parent ID since we're not requiring login
-        ...data,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        childName: childNames, // Combine child names for the backend
+        careInstructions: data.careInstructions,
         // Adding these fields with default values since they're required by the backend
         requiresFirstAid: false,
         requiresTransportation: false,
@@ -201,13 +234,74 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
 
               <FormField
                 control={form.control}
-                name="childName"
+                name="children"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Child's Name</FormLabel>
+                    <FormLabel>Select Children</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value?.length && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value?.length > 0
+                              ? `${field.value.length} children selected`
+                              : "Select children..."}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <div className="p-4 space-y-2">
+                            {childOptions.map((child) => {
+                              const isSelected = field.value?.some(
+                                (selectedChild) => selectedChild.id === child.id
+                              );
+                              return (
+                                <div
+                                  key={child.id}
+                                  className="flex items-center space-x-2 rounded px-2 py-1 hover:bg-accent cursor-pointer"
+                                  onClick={() => {
+                                    const newValue = isSelected
+                                      ? field.value.filter(
+                                          (selectedChild) => selectedChild.id !== child.id
+                                        )
+                                      : [...(field.value || []), child];
+                                    field.onChange(newValue);
+                                  }}
+                                >
+                                  <Checkbox checked={isSelected} />
+                                  <div>{child.name}</div>
+                                  {isSelected && (
+                                    <Check className="ml-auto h-4 w-4" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </FormControl>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {field.value?.map((child) => (
+                        <Badge key={child.id} variant="secondary" className="py-1">
+                          {child.name}
+                          <X 
+                            className="ml-1 h-3 w-3 cursor-pointer" 
+                            onClick={() => {
+                              field.onChange(
+                                field.value.filter(
+                                  (selectedChild) => selectedChild.id !== child.id
+                                )
+                              );
+                            }} 
+                          />
+                        </Badge>
+                      ))}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

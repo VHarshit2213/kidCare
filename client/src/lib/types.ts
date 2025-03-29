@@ -39,10 +39,15 @@ export interface Message {
   isRead: boolean;
 }
 
+export interface Child {
+  id: string;
+  name: string;
+}
+
 export interface InstantCareFormData {
   startTime: string;
   endTime: string;
-  childName: string;
+  children: Child[];
   careInstructions?: string;
 }
 

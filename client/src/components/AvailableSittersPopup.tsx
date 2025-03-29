@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User } from "@/lib/types";
+import { User, InstantCareFormData } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { Booking } from "@/lib/types";
 import { Spinner } from "./ui/spinner";
@@ -13,7 +13,7 @@ import BookingConfirmation from "./BookingConfirmation";
 interface AvailableSittersPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  bookingDetails: Pick<Booking, "startTime" | "endTime" | "childName" | "careInstructions">;
+  bookingDetails: InstantCareFormData;
 }
 
 // This function simulates calculating distance between two points

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/lib/types";
+import { User, InstantCareFormData } from "@/lib/types";
 import { Booking } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { Spinner } from "./ui/spinner";
@@ -13,7 +13,7 @@ interface BookingConfirmationProps {
   isOpen: boolean;
   onClose: () => void;
   sitter: User & { distance: number };
-  bookingDetails: Pick<Booking, "startTime" | "endTime" | "childName" | "careInstructions">;
+  bookingDetails: InstantCareFormData;
 }
 
 export default function BookingConfirmation({
@@ -177,7 +177,14 @@ export default function BookingConfirmation({
         <div className="mt-6">
           <h3 className="text-md font-medium mb-2">Booking Details</h3>
           <div className="text-sm space-y-1 text-muted-foreground">
-            <p><span className="font-medium text-foreground">Child:</span> {bookingDetails.childName}</p>
+            <p>
+              <span className="font-medium text-foreground">Children:</span>{" "}
+              {bookingDetails.children.map((child, index) => (
+                <span key={child.id}>
+                  {child.name}{index < bookingDetails.children.length - 1 ? ", " : ""}
+                </span>
+              ))}
+            </p>
             <p>
               <span className="font-medium text-foreground">Time:</span>{" "}
               {format(new Date(bookingDetails.startTime), "MMM d, h:mm a")} - {format(new Date(bookingDetails.endTime), "h:mm a")}
