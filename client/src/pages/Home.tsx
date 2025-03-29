@@ -5,7 +5,6 @@ import BookingCard from "@/components/BookingCard";
 import { useContext } from "react";
 import { AppContext } from "@/App";
 import { Booking } from "@/lib/types";
-import enchantedLogo from "../assets/enchanted-logo-full.jpg";
 
 export default function Home() {
   const { currentUser, isAuthenticated } = useContext(AppContext);
@@ -55,22 +54,6 @@ export default function Home() {
             )}
           </div>
         )}
-        
-        {/* Logo Section */}
-        <div className="py-16 flex flex-col items-center justify-center border-t border-neutral-200">
-          <div className="w-full max-w-xs flex items-center justify-center">
-            <img 
-              src={enchantedLogo} 
-              alt="The Enchanted Co. Logo" 
-              className="w-full mix-blend-multiply"
-              style={{ 
-                backgroundColor: 'transparent',
-                maxHeight: '180px',
-                objectFit: 'contain'
-              }}
-            />
-          </div>
-        </div>
       </div>
     </Layout>
   );
