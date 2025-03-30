@@ -263,7 +263,19 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 variant="outline" 
                                 className="h-7 w-7"
                                 onClick={() => {
-                                  const currentDate = new Date(field.value);
+                                  // Get current time value or use now if not set
+                                  let currentDate;
+                                  try {
+                                    currentDate = new Date(field.value);
+                                    // Check if date is valid
+                                    if (isNaN(currentDate.getTime())) {
+                                      currentDate = new Date();
+                                    }
+                                  } catch (e) {
+                                    currentDate = new Date();
+                                  }
+                                  
+                                  // Add 30 minutes
                                   currentDate.setMinutes(currentDate.getMinutes() + 30);
                                   const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
                                   field.onChange(newValue);
@@ -280,7 +292,19 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 variant="outline" 
                                 className="h-7 w-7 mt-1"
                                 onClick={() => {
-                                  const currentDate = new Date(field.value);
+                                  // Get current time value or use now if not set
+                                  let currentDate;
+                                  try {
+                                    currentDate = new Date(field.value);
+                                    // Check if date is valid
+                                    if (isNaN(currentDate.getTime())) {
+                                      currentDate = new Date();
+                                    }
+                                  } catch (e) {
+                                    currentDate = new Date();
+                                  }
+                                  
+                                  // Subtract 30 minutes
                                   currentDate.setMinutes(currentDate.getMinutes() - 30);
                                   const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
                                   field.onChange(newValue);
@@ -348,7 +372,19 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 variant="outline" 
                                 className="h-7 w-7"
                                 onClick={() => {
-                                  const currentDate = new Date(field.value);
+                                  // Get current time value or use now if not set
+                                  let currentDate;
+                                  try {
+                                    currentDate = new Date(field.value);
+                                    // Check if date is valid
+                                    if (isNaN(currentDate.getTime())) {
+                                      currentDate = new Date();
+                                    }
+                                  } catch (e) {
+                                    currentDate = new Date();
+                                  }
+                                  
+                                  // Add 30 minutes
                                   currentDate.setMinutes(currentDate.getMinutes() + 30);
                                   const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
                                   field.onChange(newValue);
@@ -364,7 +400,19 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 variant="outline" 
                                 className="h-7 w-7 mt-1"
                                 onClick={() => {
-                                  const currentDate = new Date(field.value);
+                                  // Get current time value or use now if not set
+                                  let currentDate;
+                                  try {
+                                    currentDate = new Date(field.value);
+                                    // Check if date is valid
+                                    if (isNaN(currentDate.getTime())) {
+                                      currentDate = new Date();
+                                    }
+                                  } catch (e) {
+                                    currentDate = new Date();
+                                  }
+                                  
+                                  // Subtract 30 minutes
                                   currentDate.setMinutes(currentDate.getMinutes() - 30);
                                   const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
                                   field.onChange(newValue);
