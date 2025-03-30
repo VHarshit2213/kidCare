@@ -49,7 +49,7 @@ export default function Hero() {
                 Find trusted childcare in minutes
               </h1>
               <p className="mt-4 text-lg text-[#3c5679]/80">
-                The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone or computer.
+                The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone.
               </p>
             </div>
             
