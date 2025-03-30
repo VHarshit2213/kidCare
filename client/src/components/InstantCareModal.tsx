@@ -103,11 +103,16 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     { id: "5", name: "Ava" }
   ]);
 
+  // Initialize with current time and current time + hours needed
+  const now = new Date();
+  const nowPlusHours = new Date(now);
+  nowPlusHours.setHours(nowPlusHours.getHours() + hoursNeeded);
+  
   const form = useForm<InstantCareFormData>({
     resolver: zodResolver(instantCareSchema),
     defaultValues: {
-      startTime: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-      endTime: format(new Date(new Date().getTime() + 4 * 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
+      startTime: format(now, "yyyy-MM-dd'T'HH:mm"),
+      endTime: format(nowPlusHours, "yyyy-MM-dd'T'HH:mm"),
       children: [],
       careInstructions: "",
     },
@@ -215,7 +220,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time</FormLabel>
+                      <FormLabel>Start Time (Today)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -230,19 +235,24 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
                           </div>
                           <Input
-                            type="datetime-local"
+                            type="time"
                             className="pl-10"
-                            min={minDate}
-                            max={maxDate}
                             {...field}
                             onChange={(e) => {
-                              field.onChange(e);
-                              updateEndTime(e.target.value, hoursNeeded);
+                              // Convert time-only input to datetime
+                              const today = new Date();
+                              const [hours, minutes] = e.target.value.split(':');
+                              today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                              
+                              // Format as datetime-local value
+                              const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                              field.onChange(dateTimeValue);
+                              updateEndTime(dateTimeValue, hoursNeeded);
                             }}
                           />
                         </div>
@@ -257,7 +267,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time</FormLabel>
+                      <FormLabel>End Time (Today)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -272,16 +282,25 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
                           </div>
                           <Input
-                            type="datetime-local"
+                            type="time"
                             className="pl-10"
-                            min={minDate}
-                            max={maxDate}
                             {...field}
+                            value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
+                            onChange={(e) => {
+                              // Convert time-only input to datetime
+                              const today = new Date();
+                              const [hours, minutes] = e.target.value.split(':');
+                              today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                              
+                              // Format as datetime-local value
+                              const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                              field.onChange(dateTimeValue);
+                            }}
                           />
                         </div>
                       </FormControl>
