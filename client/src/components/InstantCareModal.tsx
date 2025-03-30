@@ -239,22 +239,60 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               />
                             </svg>
                           </div>
-                          <Input
-                            type="time"
-                            className="pl-10"
-                            {...field}
-                            onChange={(e) => {
-                              // Convert time-only input to datetime
-                              const today = new Date();
-                              const [hours, minutes] = e.target.value.split(':');
-                              today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-                              
-                              // Format as datetime-local value
-                              const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
-                              field.onChange(dateTimeValue);
-                              updateEndTime(dateTimeValue, hoursNeeded);
-                            }}
-                          />
+                          <div className="flex w-full items-center">
+                            <Input
+                              type="time"
+                              className="pl-10"
+                              {...field}
+                              onChange={(e) => {
+                                // Convert time-only input to datetime
+                                const today = new Date();
+                                const [hours, minutes] = e.target.value.split(':');
+                                today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                                
+                                // Format as datetime-local value
+                                const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                                field.onChange(dateTimeValue);
+                                updateEndTime(dateTimeValue, hoursNeeded);
+                              }}
+                            />
+                            <div className="flex flex-col ml-2">
+                              <Button 
+                                type="button" 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  const currentDate = new Date(field.value);
+                                  currentDate.setMinutes(currentDate.getMinutes() + 30);
+                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  field.onChange(newValue);
+                                  updateEndTime(newValue, hoursNeeded);
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m18 15-6-6-6 6"/>
+                                </svg>
+                              </Button>
+                              <Button 
+                                type="button" 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-7 w-7 mt-1"
+                                onClick={() => {
+                                  const currentDate = new Date(field.value);
+                                  currentDate.setMinutes(currentDate.getMinutes() - 30);
+                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  field.onChange(newValue);
+                                  updateEndTime(newValue, hoursNeeded);
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m6 9 6 6 6-6"/>
+                                </svg>
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -286,22 +324,58 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               />
                             </svg>
                           </div>
-                          <Input
-                            type="time"
-                            className="pl-10"
-                            {...field}
-                            value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
-                            onChange={(e) => {
-                              // Convert time-only input to datetime
-                              const today = new Date();
-                              const [hours, minutes] = e.target.value.split(':');
-                              today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-                              
-                              // Format as datetime-local value
-                              const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
-                              field.onChange(dateTimeValue);
-                            }}
-                          />
+                          <div className="flex w-full items-center">
+                            <Input
+                              type="time"
+                              className="pl-10"
+                              {...field}
+                              value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
+                              onChange={(e) => {
+                                // Convert time-only input to datetime
+                                const today = new Date();
+                                const [hours, minutes] = e.target.value.split(':');
+                                today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                                
+                                // Format as datetime-local value
+                                const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                                field.onChange(dateTimeValue);
+                              }}
+                            />
+                            <div className="flex flex-col ml-2">
+                              <Button 
+                                type="button" 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  const currentDate = new Date(field.value);
+                                  currentDate.setMinutes(currentDate.getMinutes() + 30);
+                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  field.onChange(newValue);
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m18 15-6-6-6 6"/>
+                                </svg>
+                              </Button>
+                              <Button 
+                                type="button" 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-7 w-7 mt-1"
+                                onClick={() => {
+                                  const currentDate = new Date(field.value);
+                                  currentDate.setMinutes(currentDate.getMinutes() - 30);
+                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  field.onChange(newValue);
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m6 9 6 6 6-6"/>
+                                </svg>
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       </FormControl>
                       <FormMessage />
