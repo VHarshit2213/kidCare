@@ -219,11 +219,11 @@ export default function AvailableScheduledSitters({
             ))}
           </div>
           
-          <div className="mt-6 pt-4 border-t flex justify-end">
+          <div className="mt-6 pt-4 border-t flex justify-center sm:justify-end">
             <Button 
               onClick={onClose} 
               style={{ backgroundColor: "#3c5679" }}
-              className="text-white font-medium"
+              className="text-white font-medium px-8 py-2 text-base w-full sm:w-auto"
             >
               Close
             </Button>
