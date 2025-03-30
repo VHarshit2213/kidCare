@@ -42,49 +42,25 @@ export default function Hero() {
         
         {/* Content overlay */}
         <div className="relative flex flex-col justify-center min-h-screen max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-            {/* Main content card */}
-            <div className="lg:col-span-3 bg-white/90 backdrop-blur-sm rounded-xl p-8 md:p-10 shadow-xl">
-              <div className="mb-8">
-                <img 
-                  src={logoImage} 
-                  alt="The Enchanted Co. Logo" 
-                  className="h-16 mb-6 mx-auto lg:mx-0"
-                />
-                <h1 className="text-3xl font-bold text-[#3c5679] sm:text-4xl lg:text-5xl">
-                  Find trusted childcare in minutes
-                </h1>
-                <p className="mt-4 text-lg text-[#3c5679]/80">
-                  The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone or computer.
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 lg:justify-start justify-center">
-                <button 
-                  onClick={toggleModal}
-                  className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
-                >
-                  Request a Sitter Now
-                </button>
-                <ScheduledCareModal />
-              </div>
+          {/* Main content card */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 md:p-10 shadow-xl max-w-2xl mx-auto">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-bold text-[#3c5679] sm:text-4xl lg:text-5xl">
+                Find trusted childcare in minutes
+              </h1>
+              <p className="mt-4 text-lg text-[#3c5679]/80">
+                The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone or computer.
+              </p>
             </div>
             
-            {/* Image card - Only visible on large screens */}
-            <div className="hidden lg:block lg:col-span-2">
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-xl overflow-hidden">
-                <img 
-                  src={nurseryCribImage} 
-                  alt="Peaceful nursery crib" 
-                  className="w-full h-auto rounded-lg object-cover"
-                />
-                <div className="mt-6 p-4 bg-brand-pink/10 rounded-lg border border-brand-pink/20">
-                  <h3 className="text-xl font-semibold text-[#3c5679] mb-2">Peace of Mind</h3>
-                  <p className="text-[#3c5679]/80">
-                    All our sitters undergo thorough background checks and are experienced in childcare.
-                  </p>
-                </div>
-              </div>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button 
+                onClick={toggleModal}
+                className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
+              >
+                Request a Sitter Now
+              </button>
+              <ScheduledCareModal />
             </div>
           </div>
         </div>

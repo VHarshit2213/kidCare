@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import Hero from "@/components/Hero";
 import BookingCard from "@/components/BookingCard";
-import HowItWorks from "@/components/HowItWorks";
 import { useContext } from "react";
 import { AppContext } from "@/App";
 import { Booking } from "@/lib/types";
@@ -20,9 +19,6 @@ export default function Home() {
       <Hero />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* How it Works section */}
-        <HowItWorks />
-        
         {/* User's Bookings - Only shown if logged in as parent */}
         {isAuthenticated && currentUser?.userType === "parent" && (
           <div className="py-8 border-t border-neutral-200">
