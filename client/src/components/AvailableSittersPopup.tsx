@@ -177,7 +177,15 @@ export default function AvailableSittersPopup({
                       ))}
                     </div>
                     
-                    <div className="mt-3 flex justify-end">
+                    <div className="mt-3 flex justify-end gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => window.alert(`Viewing ${sitter.fullName}'s profile...`)}
+                        style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                      >
+                        View Profile
+                      </Button>
                       <Button 
                         size="sm" 
                         onClick={() => handleBookNow(sitter.id)}

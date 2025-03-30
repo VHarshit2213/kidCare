@@ -157,6 +157,13 @@ export default function AvailableScheduledSitters({
                             <MessageSquare size={16} />
                             Message
                           </Button>
+                          <Button 
+                            variant="outline"
+                            style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                            onClick={() => window.alert(`Viewing ${sitter.fullName}'s profile...`)}
+                          >
+                            View Profile
+                          </Button>
                         </div>
                       </div>
                     ) : playAndGreetStatus[sitter.id.toString()] ? (
@@ -164,13 +171,22 @@ export default function AvailableScheduledSitters({
                         <div className="mt-3 p-3 bg-green-50 text-green-700 rounded-md text-sm mb-4">
                           Great! {sitter.fullName} has been notified of your play and greet request.
                         </div>
-                        <Button 
-                          onClick={() => onBookNow(sitter.id)}
-                          style={{ backgroundColor: "#3c5679" }}
-                          className="text-white font-medium"
-                        >
-                          Book Now
-                        </Button>
+                        <div className="flex flex-wrap gap-3">
+                          <Button 
+                            onClick={() => onBookNow(sitter.id)}
+                            style={{ backgroundColor: "#3c5679" }}
+                            className="text-white font-medium"
+                          >
+                            Book Now
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                            onClick={() => window.alert(`Viewing ${sitter.fullName}'s profile...`)}
+                          >
+                            View Profile
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-3">
@@ -187,6 +203,13 @@ export default function AvailableScheduledSitters({
                           className="text-white font-medium"
                         >
                           Book Now
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                          onClick={() => window.alert(`Viewing ${sitter.fullName}'s profile...`)}
+                        >
+                          View Profile
                         </Button>
                       </div>
                     )}
