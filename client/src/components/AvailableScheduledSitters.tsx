@@ -82,7 +82,7 @@ export default function AvailableScheduledSitters({
       )}
       
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Available Sitters</DialogTitle>
             <DialogDescription>
@@ -219,11 +219,12 @@ export default function AvailableScheduledSitters({
             ))}
           </div>
           
-          <div className="mt-6 pt-4 border-t flex justify-center sm:justify-end">
+          <div className="sticky bottom-0 pb-4 pt-4 bg-white border-t mt-6 flex justify-center sm:justify-end">
             <Button 
               onClick={onClose} 
               style={{ backgroundColor: "#3c5679" }}
-              className="text-white font-medium px-8 py-2 text-base w-full sm:w-auto"
+              className="text-white font-medium px-8 py-3 text-base w-full sm:w-auto shadow-md hover:shadow-lg transition-all"
+              size="lg"
             >
               Close
             </Button>
