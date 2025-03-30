@@ -108,6 +108,9 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const nowPlusHours = new Date(now);
   nowPlusHours.setHours(nowPlusHours.getHours() + hoursNeeded);
   
+  console.log("Initialize form with start time:", format(now, "yyyy-MM-dd'T'HH:mm"));
+  console.log("Initialize form with end time:", format(nowPlusHours, "yyyy-MM-dd'T'HH:mm"));
+  
   const form = useForm<InstantCareFormData>({
     resolver: zodResolver(instantCareSchema),
     defaultValues: {
@@ -117,6 +120,9 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
       careInstructions: "",
     },
   });
+  
+  // Log form values after initialization
+  console.log("Form values after initialization:", form.getValues());
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: InstantCareFormData) => {
@@ -244,6 +250,7 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               type="time"
                               className="pl-10"
                               {...field}
+                              value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
                               onChange={(e) => {
                                 // Convert time-only input to datetime
                                 const today = new Date();
@@ -263,23 +270,34 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                 variant="outline" 
                                 className="h-7 w-7"
                                 onClick={() => {
+                                  console.log("Start Time UP Button Clicked");
+                                  console.log("Current field value:", field.value);
+                                  
                                   // Get current time value or use now if not set
                                   let currentDate;
                                   try {
                                     currentDate = new Date(field.value);
+                                    console.log("Parsed date:", currentDate);
+                                    
                                     // Check if date is valid
                                     if (isNaN(currentDate.getTime())) {
+                                      console.log("Invalid date, using current time");
                                       currentDate = new Date();
                                     }
                                   } catch (e) {
+                                    console.log("Error parsing date:", e);
                                     currentDate = new Date();
                                   }
                                   
                                   // Add 30 minutes
                                   currentDate.setMinutes(currentDate.getMinutes() + 30);
                                   const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  console.log("New value:", newValue);
+                                  
                                   field.onChange(newValue);
                                   updateEndTime(newValue, hoursNeeded);
+                                  
+                                  console.log("After change, field value:", field.value);
                                 }}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
