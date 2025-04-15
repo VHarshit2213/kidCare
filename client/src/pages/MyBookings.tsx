@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import { AppContext } from "@/App";
 import Layout from "@/components/Layout";
 import BookingCard from "@/components/BookingCard";
 import { Booking } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MyBookings() {
-  const { currentUser, isAuthenticated } = useContext(AppContext);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const { data: bookings, isLoading } = useQuery<Booking[]>({
     queryKey: ["/api/bookings/parent"],
-    enabled: isAuthenticated && currentUser?.userType === "parent",
+    enabled: isAuthenticated && user?.userType === "parent",
   });
 
   return (

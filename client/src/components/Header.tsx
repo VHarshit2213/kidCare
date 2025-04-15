@@ -1,17 +1,17 @@
-import { useContext } from "react";
 import { Link, useLocation } from "wouter";
-import { AppContext } from "@/App";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import logo from "../assets/enchanted-logo-full.jpg";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
-  const { currentUser, isAuthenticated, setCurrentUser } = useContext(AppContext);
-  const [location] = useLocation();
+  const { user, logoutMutation } = useAuth();
+  const [location, navigate] = useLocation();
+  const isAuthenticated = !!user;
 
   const handleLogout = () => {
-    setCurrentUser(null);
+    logoutMutation.mutate();
   };
 
   const getInitials = (name: string) => {
@@ -96,13 +96,13 @@ export default function Header() {
                   <PopoverTrigger asChild>
                     <button className="flex items-center max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
                       <Avatar className="h-8 w-8">
-                        {currentUser?.profileImageUrl ? (
-                          <AvatarImage src={currentUser.profileImageUrl} alt={currentUser.fullName} />
+                        {user?.profileImageUrl ? (
+                          <AvatarImage src={user.profileImageUrl} alt={user.fullName} />
                         ) : (
-                          <AvatarFallback>{getInitials(currentUser?.fullName || "User")}</AvatarFallback>
+                          <AvatarFallback>{getInitials(user?.fullName || "User")}</AvatarFallback>
                         )}
                       </Avatar>
-                      <span className="ml-2 text-neutral-600 font-medium">{currentUser?.fullName?.split(" ")[0]}</span>
+                      <span className="ml-2 text-neutral-600 font-medium">{user?.fullName?.split(" ")[0]}</span>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56">
@@ -119,8 +119,21 @@ export default function Header() {
               </div>
             ) : (
               <div className="ml-4 flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="text-brand-blue hover:text-brand-blue/90">Login</Button>
-                <Button style={{ backgroundColor: "#3c5679" }} className="text-white font-medium">Sign Up</Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-brand-blue hover:text-brand-blue/90"
+                  onClick={() => navigate("/auth")}
+                >
+                  Login
+                </Button>
+                <Button 
+                  style={{ backgroundColor: "#3c5679" }} 
+                  className="text-white font-medium"
+                  onClick={() => navigate("/auth")}
+                >
+                  Sign Up
+                </Button>
               </div>
             )}
           </div>

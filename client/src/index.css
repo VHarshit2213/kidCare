@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --brand-blue: #3c5679;
+    --brand-pink: #f6b8cc;
+  }
+  
   * {
     @apply border-border;
   }

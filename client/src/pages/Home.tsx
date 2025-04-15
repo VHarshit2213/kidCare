@@ -2,16 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import Hero from "@/components/Hero";
 import BookingCard from "@/components/BookingCard";
-import { useContext } from "react";
-import { AppContext } from "@/App";
+import { useAuth } from "@/hooks/use-auth";
 import { Booking } from "@/lib/types";
 
 export default function Home() {
-  const { currentUser, isAuthenticated } = useContext(AppContext);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const { data: bookings, isLoading: isLoadingBookings } = useQuery<Booking[]>({
     queryKey: ["/api/bookings/parent"],
-    enabled: isAuthenticated && currentUser?.userType === "parent",
+    enabled: isAuthenticated && user?.userType === "parent",
   });
 
   return (
@@ -20,7 +20,7 @@ export default function Home() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* User's Bookings - Only shown if logged in as parent */}
-        {isAuthenticated && currentUser?.userType === "parent" && (
+        {isAuthenticated && user?.userType === "parent" && (
           <div className="py-8 border-t border-neutral-200">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-neutral-800">Your Bookings</h2>

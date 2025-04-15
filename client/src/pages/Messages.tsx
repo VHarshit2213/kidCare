@@ -1,22 +1,22 @@
-import { useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AppContext } from "@/App";
 import Layout from "@/components/Layout";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Message, User } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Messages() {
-  const { currentUser, isAuthenticated } = useContext(AppContext);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery<Message[]>({
-    queryKey: ["/api/messages", currentUser?.id],
+    queryKey: ["/api/messages", user?.id],
     enabled: isAuthenticated,
   });
 
   // Extract unique conversation partners
   const conversationPartners = messages
     ? Array.from(new Set(messages.map(message => 
-        message.senderId === currentUser?.id ? message.receiverId : message.senderId
+        message.senderId === user?.id ? message.receiverId : message.senderId
       )))
     : [];
 
@@ -101,7 +101,7 @@ export default function Messages() {
                       </div>
                       {latestMessage && (
                         <p className="text-sm text-neutral-600 truncate">
-                          {latestMessage.senderId === currentUser?.id ? "You: " : ""}
+                          {latestMessage.senderId === user?.id ? "You: " : ""}
                           {latestMessage.content}
                         </p>
                       )}

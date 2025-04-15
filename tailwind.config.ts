@@ -43,7 +43,7 @@ export default {
           foreground: "hsl(var(--destructive-foreground))",
         },
         brand: {
-          pink: "#d4aea8",
+          pink: "#f6b8cc",
           blue: "#3c5679",
         },
         border: "hsl(var(--border))",

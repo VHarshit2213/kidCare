@@ -1,9 +1,9 @@
-import { useState, createContext } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import { AppContextType, User } from "./lib/types";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 // Pages
 import Home from "@/pages/Home";
@@ -12,31 +12,23 @@ import Messages from "@/pages/Messages";
 import Profile from "@/pages/Profile";
 import SitterProfile from "@/pages/SitterProfile";
 import NotFound from "@/pages/NotFound";
-
-// Create context
-export const AppContext = createContext<AppContextType>({
-  currentUser: null,
-  setCurrentUser: () => {},
-  isAuthenticated: false,
-});
+import AuthPage from "@/pages/auth-page";
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const isAuthenticated = !!currentUser;
-
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContext.Provider value={{ currentUser, setCurrentUser, isAuthenticated }}>
+      <AuthProvider>
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/bookings" component={MyBookings} />
-          <Route path="/messages" component={Messages} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/sitter/:id" component={SitterProfile} />
+          <Route path="/auth" component={AuthPage} />
+          <ProtectedRoute path="/bookings" component={MyBookings} />
+          <ProtectedRoute path="/messages" component={Messages} />
+          <ProtectedRoute path="/profile" component={Profile} />
+          <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
           <Route component={NotFound} />
         </Switch>
         <Toaster />
-      </AppContext.Provider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

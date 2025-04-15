@@ -1,12 +1,12 @@
-import { useContext } from "react";
-import { AppContext } from "@/App";
 import Layout from "@/components/Layout";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Skill from "@/components/common/Skill";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Profile() {
-  const { currentUser, isAuthenticated } = useContext(AppContext);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const getInitials = (name: string) => {
     return name
@@ -39,51 +39,51 @@ export default function Profile() {
             <div className="sm:flex sm:items-center sm:justify-between">
               <div className="sm:flex sm:items-center">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
-                  {currentUser?.profileImageUrl ? (
-                    <AvatarImage src={currentUser.profileImageUrl} alt={currentUser.fullName} />
+                  {user?.profileImageUrl ? (
+                    <AvatarImage src={user.profileImageUrl} alt={user.fullName} />
                   ) : (
-                    <AvatarFallback className="text-xl">{getInitials(currentUser?.fullName || "User")}</AvatarFallback>
+                    <AvatarFallback className="text-xl">{getInitials(user?.fullName || "User")}</AvatarFallback>
                   )}
                 </Avatar>
                 <div className="mt-4 sm:mt-0 sm:ml-6">
-                  <h1 className="text-2xl font-bold text-neutral-800">{currentUser?.fullName}</h1>
-                  <p className="mt-1 text-sm text-neutral-600">{currentUser?.email}</p>
-                  <p className="mt-1 text-sm font-medium text-primary capitalize">{currentUser?.userType}</p>
+                  <h1 className="text-2xl font-bold text-neutral-800">{user?.fullName}</h1>
+                  <p className="mt-1 text-sm text-neutral-600">{user?.email}</p>
+                  <p className="mt-1 text-sm font-medium text-primary capitalize">{user?.userType}</p>
                 </div>
               </div>
               <Button className="mt-6 sm:mt-0">Edit Profile</Button>
             </div>
 
-            {currentUser?.userType === "babysitter" && (
+            {user?.userType === "babysitter" && (
               <div className="mt-8">
                 <div className="border-t border-neutral-200 pt-8">
                   <h2 className="text-lg font-medium text-neutral-800">About Me</h2>
-                  <p className="mt-2 text-neutral-600">{currentUser.bio || "No bio provided."}</p>
+                  <p className="mt-2 text-neutral-600">{user.bio || "No bio provided."}</p>
                 </div>
 
                 <div className="mt-8 border-t border-neutral-200 pt-8">
                   <h2 className="text-lg font-medium text-neutral-800">Skills & Qualifications</h2>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {currentUser.skills?.map((skill, index) => (
+                    {user.skills?.map((skill: string, index: number) => (
                       <Skill key={index} name={skill} />
                     ))}
                   </div>
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-sm font-medium text-neutral-800">Experience</h3>
-                      <p className="mt-1 text-neutral-600">{currentUser.yearsExperience} years</p>
+                      <p className="mt-1 text-neutral-600">{user.yearsExperience} years</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-neutral-800">Hourly Rate</h3>
-                      <p className="mt-1 text-neutral-600">${currentUser.hourlyRate}/hour</p>
+                      <p className="mt-1 text-neutral-600">${user.hourlyRate}/hour</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-neutral-800">First Aid Certified</h3>
-                      <p className="mt-1 text-neutral-600">{currentUser.firstAidCertified ? "Yes" : "No"}</p>
+                      <p className="mt-1 text-neutral-600">{user.firstAidCertified ? "Yes" : "No"}</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-neutral-800">Has Transportation</h3>
-                      <p className="mt-1 text-neutral-600">{currentUser.hasTransportation ? "Yes" : "No"}</p>
+                      <p className="mt-1 text-neutral-600">{user.hasTransportation ? "Yes" : "No"}</p>
                     </div>
                   </div>
                 </div>

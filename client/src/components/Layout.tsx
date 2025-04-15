@@ -1,15 +1,15 @@
-import { useContext } from "react";
-import { AppContext } from "@/App";
 import Header from "./Header";
 import Footer from "./Footer";
 import MobileNav from "./MobileNav";
+import { useAuth } from "@/hooks/use-auth";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { isAuthenticated } = useContext(AppContext);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   return (
     <div className="flex flex-col h-screen">
