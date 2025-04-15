@@ -5,6 +5,9 @@ import {
   type Message, type InsertMessage 
 } from "@shared/schema";
 
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -25,6 +28,9 @@ export interface IStorage {
   getMessagesByUserId(userId: number): Promise<Message[]>;
   getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]>;
   markMessageAsRead(id: number): Promise<void>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -34,6 +40,7 @@ export class MemStorage implements IStorage {
   private userIdCounter: number;
   private bookingIdCounter: number;
   private messageIdCounter: number;
+  public sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -42,6 +49,12 @@ export class MemStorage implements IStorage {
     this.userIdCounter = 1;
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
+    
+    // Initialize the session store
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    });
     
     // Add guest parent account for anonymous bookings
     this.createUser({

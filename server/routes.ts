@@ -5,8 +5,11 @@ import { insertUserSchema, insertBookingSchema, insertMessageSchema } from "@sha
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import express from "express";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication routes
+  setupAuth(app);
   // Utility function to handle validation errors
   const validateRequest = (schema: any, data: any) => {
     try {
