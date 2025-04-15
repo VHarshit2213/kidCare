@@ -1,3 +1,9 @@
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phoneNumber: string;
+}
+
 export interface User {
   id: number;
   username: string;
@@ -12,6 +18,17 @@ export interface User {
   hasTransportation?: boolean;
   yearsExperience?: number;
   location?: string;
+  // Parent profile fields
+  firstName?: string;
+  lastName?: string;
+  address?: string;
+  phoneNumber?: string;
+  parentingStyle?: string;
+  familyDescription?: string;
+  familyActivities?: string;
+  medicalDietaryRestrictions?: string;
+  emergencyContacts?: EmergencyContact[];
+  profileCompleted?: boolean;
 }
 
 export interface Booking {
@@ -40,8 +57,14 @@ export interface Message {
 }
 
 export interface Child {
-  id: string;
-  name: string;
+  id: number;
+  parentId: number;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  personality?: string;
+  specialCare?: string;
+  createdAt: string;
 }
 
 export interface InstantCareFormData {

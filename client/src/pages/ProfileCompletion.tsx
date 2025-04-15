@@ -1,0 +1,50 @@
+import { useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
+import { Loader2 } from 'lucide-react';
+import ParentProfileForm from '@/components/ParentProfileForm';
+
+export default function ProfileCompletion() {
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Redirect to home if the user is a babysitter or if profile is already completed
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (user.userType === 'babysitter' || user.profileCompleted) {
+        setLocation('/');
+      }
+    }
+  }, [user, isLoading, setLocation]);
+
+  // Redirect to auth page if not logged in
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation('/auth');
+    }
+  }, [user, isLoading, setLocation]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || user.userType !== 'parent' || user.profileCompleted) {
+    return null; // Will be redirected by the useEffect
+  }
+
+  return (
+    <div className="container py-10 px-4 md:px-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-2">Complete Your Profile</h1>
+        <p className="text-center text-muted-foreground mb-8">
+          Help us personalize your experience by providing more information about you and your family.
+        </p>
+        <ParentProfileForm />
+      </div>
+    </div>
+  );
+}

@@ -13,6 +13,7 @@ import Profile from "@/pages/Profile";
 import SitterProfile from "@/pages/SitterProfile";
 import NotFound from "@/pages/NotFound";
 import AuthPage from "@/pages/auth-page";
+import ProfileCompletion from "@/pages/ProfileCompletion";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/auth" component={AuthPage} />
+          <ProtectedRoute path="/profile-completion" component={ProfileCompletion} />
           <ProtectedRoute path="/bookings" component={MyBookings} />
           <ProtectedRoute path="/messages" component={Messages} />
           <ProtectedRoute path="/profile" component={Profile} />

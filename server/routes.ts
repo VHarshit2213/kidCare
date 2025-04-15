@@ -1,8 +1,14 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertBookingSchema, insertMessageSchema } from "@shared/schema";
-import { ZodError } from "zod";
+import { 
+  insertUserSchema, 
+  insertBookingSchema, 
+  insertMessageSchema, 
+  insertChildSchema,
+  users
+} from "@shared/schema";
+import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import express from "express";
 import { setupAuth } from "./auth";
@@ -413,6 +419,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ message: "Message marked as read" });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to mark message as read" });
+    }
+  });
+
+  // Profile Management Routes
+  const parentProfileSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    address: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    parentingStyle: z.string().optional(),
+    familyDescription: z.string().optional(),
+    familyActivities: z.string().optional(),
+    medicalDietaryRestrictions: z.string().optional(),
+    emergencyContacts: z.array(
+      z.object({
+        name: z.string(),
+        relationship: z.string(),
+        phoneNumber: z.string(),
+      })
+    ).optional(),
+    profileCompleted: z.boolean().optional()
+  });
+
+  // Update user profile
+  app.patch("/api/users/profile", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only parents can update their profile with this endpoint
+      if (user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parents can update their profile with this endpoint" });
+      }
+
+      const { data, error } = validateRequest(parentProfileSchema, req.body);
+      
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      const updatedUser = await storage.updateUserProfile(user.id, {
+        ...data,
+        profileCompleted: true // Mark profile as completed
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update profile" });
+    }
+  });
+
+  // Child Management Routes
+  // Add a child to a parent's profile
+  app.post("/api/children", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only parents can add children
+      if (user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parents can add children" });
+      }
+
+      const { data, error } = validateRequest(insertChildSchema, req.body);
+      
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      // Ensure parentId matches authenticated user
+      if (data.parentId !== user.id) {
+        return res.status(403).json({ message: "Parent ID must match authenticated user" });
+      }
+
+      const child = await storage.createChild(data);
+      res.status(201).json(child);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to add child" });
+    }
+  });
+
+  // Get all children for a parent
+  app.get("/api/children", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only parents can view their children
+      if (user.userType !== "parent") {
+        return res.status(403).json({ message: "Only parents can view their children" });
+      }
+
+      const children = await storage.getChildrenByParentId(user.id);
+      res.status(200).json(children);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get children" });
+    }
+  });
+
+  // Update a child's information
+  app.patch("/api/children/:id", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const childId = Number(req.params.id);
+      
+      // Verify the child exists
+      const child = await storage.getChildById(childId);
+      if (!child) {
+        return res.status(404).json({ message: "Child not found" });
+      }
+      
+      // Verify the child belongs to the authenticated parent
+      if (child.parentId !== user.id) {
+        return res.status(403).json({ message: "You can only update your own children's information" });
+      }
+
+      const { data, error } = validateRequest(
+        insertChildSchema.partial().omit({ parentId: true }), 
+        req.body
+      );
+      
+      if (error) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      const updatedChild = await storage.updateChild(childId, data);
+      res.status(200).json(updatedChild);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update child" });
+    }
+  });
+
+  // Get a specific child by ID
+  app.get("/api/children/:id", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const childId = Number(req.params.id);
+      
+      // Verify the child exists
+      const child = await storage.getChildById(childId);
+      if (!child) {
+        return res.status(404).json({ message: "Child not found" });
+      }
+      
+      // Verify the child belongs to the authenticated parent
+      if (child.parentId !== user.id) {
+        return res.status(403).json({ message: "You can only view your own children's information" });
+      }
+
+      res.status(200).json(child);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get child" });
     }
   });
 
