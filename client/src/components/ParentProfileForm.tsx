@@ -23,7 +23,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 const childSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().nullable().optional(),
+  dateOfBirth: z.string().optional(),
   personality: z.string().optional(),
   specialCare: z.string().optional(),
 });
@@ -130,7 +130,7 @@ export default function ParentProfileForm() {
     mutationFn: async (data: {
       firstName: string;
       lastName: string;
-      dateOfBirth: string | null;
+      dateOfBirth?: string;
       personality?: string;
       specialCare?: string;
       parentId: number;
@@ -189,16 +189,16 @@ export default function ParentProfileForm() {
       return;
     }
     
-    // Format the date properly or set it to empty string if not provided
+    // Format the date properly or set it to undefined (for optional column)
     const dateOfBirth = childFormValues.dateOfBirth 
       ? new Date(childFormValues.dateOfBirth).toISOString() 
-      : null;
+      : undefined;
     
     // Create a new object without spreading to avoid type conflicts
     const childData = {
       firstName: childFormValues.firstName,
       lastName: childFormValues.lastName,
-      dateOfBirth: dateOfBirth,
+      dateOfBirth,
       personality: childFormValues.personality || undefined,
       specialCare: childFormValues.specialCare || undefined,
       parentId: user.id,
@@ -483,7 +483,7 @@ export default function ParentProfileForm() {
                         <Input 
                           id="childDOB"
                           type="date"
-                          value={childFormValues.dateOfBirth}
+                          value={childFormValues.dateOfBirth || ""}
                           onChange={(e) => handleChildFormChange('dateOfBirth', e.target.value)}
                         />
                       </div>
