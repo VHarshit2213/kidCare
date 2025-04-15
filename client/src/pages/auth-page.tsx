@@ -20,7 +20,8 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  email: z.string().email("Please enter a valid email address"),
+  // We'll treat the username as the email, but keep basic validation
+  email: z.string(),
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   userType: z.enum(["parent", "babysitter"], {
     required_error: "Please select a user type",
@@ -178,30 +179,30 @@ export default function AuthPage() {
 
                       <FormField
                         control={registerForm.control}
-                        name="email"
+                        name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Username/Email</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="Enter your email" {...field} />
+                              <Input 
+                                placeholder="Choose a username (will also be your email)" 
+                                {...field} 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Set email to the same value as username
+                                  registerForm.setValue("email", e.target.value);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Choose a username" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      {/* Hidden email field that automatically syncs with username */}
+                      <input 
+                        type="hidden" 
+                        {...registerForm.register("email")} 
                       />
 
                       <FormField
