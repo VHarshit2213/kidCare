@@ -35,21 +35,21 @@ const emergencyContactSchema = z.object({
   phoneNumber: z.string().min(1, 'Phone number is required'),
 });
 
-// Schema for the parent profile form
+// Schema for the parent profile form with less strict validation
 const profileFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  address: z.string().min(1, 'Address is required'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
+  address: z.string().optional(),
+  phoneNumber: z.string().optional(),
   hasSecondParent: z.boolean().default(false),
-  secondParentFirstName: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent first name is required'),
-  secondParentLastName: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent last name is required'),
-  secondParentPhone: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent phone is required'),
-  parentingStyle: z.string().min(1, 'Parenting style is required'),
-  familyDescription: z.string().min(1, 'Family description is required'),
-  familyActivities: z.string().min(1, 'Family activities are required'),
-  medicalDietaryRestrictions: z.string().min(1, 'Medical & dietary information is required'),
-  emergencyContacts: z.array(emergencyContactSchema).min(1, 'At least one emergency contact is required'),
+  secondParentFirstName: z.string().optional(),
+  secondParentLastName: z.string().optional(),
+  secondParentPhone: z.string().optional(),
+  parentingStyle: z.string().optional(),
+  familyDescription: z.string().optional(),
+  familyActivities: z.string().optional(),
+  medicalDietaryRestrictions: z.string().optional(),
+  emergencyContacts: z.array(emergencyContactSchema).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -173,6 +173,28 @@ export default function ParentProfileForm() {
 
   // Function to update each section of the profile
   const onSubmit = (values: ProfileFormValues) => {
+    // Ensure we have at least one emergency contact if it's the emergency tab
+    if (activeTab === 'emergency' && (!values.emergencyContacts || values.emergencyContacts.length === 0)) {
+      toast({
+        title: 'Missing emergency contacts',
+        description: 'Please add at least one emergency contact.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Log form validation errors if any
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.log('Form validation errors:', form.formState.errors);
+      toast({
+        title: 'Form validation failed',
+        description: 'Please check all required fields are filled correctly.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Proceed with mutation if validation passes
     profileMutation.mutate(values);
   };
 
