@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -38,13 +39,17 @@ const emergencyContactSchema = z.object({
 const profileFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  address: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  parentingStyle: z.string().optional(),
-  familyDescription: z.string().optional(),
-  familyActivities: z.string().optional(),
-  medicalDietaryRestrictions: z.string().optional(),
-  emergencyContacts: z.array(emergencyContactSchema).optional(),
+  address: z.string().min(1, 'Address is required'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  hasSecondParent: z.boolean().default(false),
+  secondParentFirstName: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent first name is required'),
+  secondParentLastName: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent last name is required'),
+  secondParentPhone: z.string().optional().refine(val => !val || val.length > 0, 'If provided, second parent phone is required'),
+  parentingStyle: z.string().min(1, 'Parenting style is required'),
+  familyDescription: z.string().min(1, 'Family description is required'),
+  familyActivities: z.string().min(1, 'Family activities are required'),
+  medicalDietaryRestrictions: z.string().min(1, 'Medical & dietary information is required'),
+  emergencyContacts: z.array(emergencyContactSchema).min(1, 'At least one emergency contact is required'),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -55,6 +60,7 @@ export default function ParentProfileForm() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal-info');
   const [isAddingChild, setIsAddingChild] = useState(false);
+  const [isAddingMultipleChildren, setIsAddingMultipleChildren] = useState(false);
   const [childFormValues, setChildFormValues] = useState<ChildFormValues>({
     firstName: '',
     lastName: '',
@@ -71,6 +77,10 @@ export default function ParentProfileForm() {
       lastName: user?.lastName || '',
       address: user?.address || '',
       phoneNumber: user?.phoneNumber || '',
+      hasSecondParent: false,
+      secondParentFirstName: '',
+      secondParentLastName: '',
+      secondParentPhone: '',
       parentingStyle: user?.parentingStyle || '',
       familyDescription: user?.familyDescription || '',
       familyActivities: user?.familyActivities || '',
@@ -127,7 +137,11 @@ export default function ParentProfileForm() {
         title: 'Child added',
         description: 'Your child has been added successfully.',
       });
-      setIsAddingChild(false);
+      // Only close the form if not adding multiple children
+      if (!isAddingMultipleChildren) {
+        setIsAddingChild(false);
+      }
+      // Reset form values regardless
       setChildFormValues({
         firstName: '',
         lastName: '',
@@ -280,6 +294,76 @@ export default function ParentProfileForm() {
                     )}
                   />
                 </div>
+                
+                <div className="space-y-4 border rounded-md p-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="hasSecondParent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-2">
+                        <FormControl>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              id="hasSecondParent"
+                            />
+                            <Label htmlFor="hasSecondParent" className="font-medium">
+                              Add a second parent
+                            </Label>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {form.watch('hasSecondParent') && (
+                    <div className="space-y-4 mt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="secondParentFirstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Second Parent First Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Enter first name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="secondParentLastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Second Parent Last Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Enter last name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="secondParentPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Second Parent Phone Number</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Enter phone number" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
                 <Button 
                   type="submit" 
                   className="mt-4"
@@ -401,26 +485,38 @@ export default function ParentProfileForm() {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setIsAddingChild(false)}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handleAddChild}
-                      disabled={addChildMutation.isPending}
-                    >
-                      {addChildMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Save Child
-                        </>
-                      )}
-                    </Button>
+                  <CardFooter className="flex flex-col space-y-4">
+                    <div className="flex items-center w-full justify-between">
+                      <Button variant="outline" onClick={() => setIsAddingChild(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleAddChild}
+                        disabled={addChildMutation.isPending}
+                      >
+                        {addChildMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="mr-2 h-4 w-4" />
+                            Save Child
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="flex items-center space-x-2 w-full justify-center pt-2 border-t">
+                      <Checkbox 
+                        id="addMultipleChildren"
+                        checked={isAddingMultipleChildren}
+                        onCheckedChange={(checked) => setIsAddingMultipleChildren(checked === true)}
+                      />
+                      <Label htmlFor="addMultipleChildren">
+                        Keep form open to add multiple children
+                      </Label>
+                    </div>
                   </CardFooter>
                 </Card>
               ) : (
@@ -488,7 +584,7 @@ export default function ParentProfileForm() {
                         <FormControl>
                           <Textarea 
                             {...field} 
-                            placeholder="Tell us about your family (size, composition, etc.)" 
+                            placeholder="Tell us about your family" 
                             rows={3}
                           />
                         </FormControl>
