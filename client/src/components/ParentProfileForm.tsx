@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { Child } from '@/lib/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -79,7 +80,7 @@ export default function ParentProfileForm() {
   });
 
   // Query to get children data
-  const { data: children = [], isLoading: isLoadingChildren } = useQuery({
+  const { data: children = [], isLoading: isLoadingChildren } = useQuery<Child[]>({
     queryKey: ['/api/children'],
     enabled: !!user,
   });
@@ -311,7 +312,7 @@ export default function ParentProfileForm() {
                 </div>
               ) : children.length > 0 ? (
                 <div className="space-y-4">
-                  {children.map((child: any) => (
+                  {children.map((child) => (
                     <Card key={child.id}>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{child.firstName} {child.lastName}</CardTitle>

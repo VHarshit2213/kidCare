@@ -33,7 +33,9 @@ export default function ProfileCompletion() {
   }
 
   if (!user || user.userType !== 'parent' || user.profileCompleted) {
-    return null; // Will be redirected by the useEffect
+    // If this component doesn't meet the criteria to be shown, render an empty div instead of null
+    // This prevents type errors with the ProtectedRoute component
+    return <div></div>;
   }
 
   return (

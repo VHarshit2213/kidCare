@@ -36,9 +36,15 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
 
-  // Redirect if already logged in
+  // Redirect based on user status
   if (user) {
-    navigate("/");
+    // If user is a parent and profile is not completed, redirect to profile completion
+    if (user.userType === "parent" && !user.profileCompleted) {
+      navigate("/profile-completion");
+    } else {
+      // Otherwise, redirect to home
+      navigate("/");
+    }
     return null;
   }
 
