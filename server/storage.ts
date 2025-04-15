@@ -56,9 +56,11 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.bookings = new Map();
     this.messages = new Map();
+    this.children = new Map();
     this.userIdCounter = 1;
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
+    this.childIdCounter = 1;
     
     // Initialize the session store
     const MemoryStore = createMemoryStore(session);
@@ -102,10 +104,30 @@ export class MemStorage implements IStorage {
       firstAidCertified: insertUser.firstAidCertified || null,
       hasTransportation: insertUser.hasTransportation || null,
       yearsExperience: insertUser.yearsExperience || null,
-      location: insertUser.location || null
+      location: insertUser.location || null,
+      // Initialize parent profile fields
+      firstName: null,
+      lastName: null,
+      address: null,
+      phoneNumber: null,
+      parentingStyle: null,
+      familyDescription: null,
+      familyActivities: null,
+      medicalDietaryRestrictions: null,
+      emergencyContacts: null,
+      profileCompleted: false
     };
     this.users.set(id, user);
     return user;
+  }
+  
+  async updateUserProfile(userId: number, profileData: Partial<User>): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...profileData };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 
   async getAllBabysitters(): Promise<User[]> {
@@ -206,6 +228,41 @@ export class MemStorage implements IStorage {
     if (!message) return;
     
     this.messages.set(id, { ...message, isRead: true });
+  }
+
+  // Child methods
+  async createChild(insertChild: InsertChild): Promise<Child> {
+    const id = this.childIdCounter++;
+    const now = new Date();
+    const child: Child = {
+      ...insertChild,
+      id,
+      dateOfBirth: insertChild.dateOfBirth || null,
+      personality: insertChild.personality || null,
+      specialCare: insertChild.specialCare || null,
+      createdAt: now
+    };
+    this.children.set(id, child);
+    return child;
+  }
+
+  async getChildById(id: number): Promise<Child | undefined> {
+    return this.children.get(id);
+  }
+
+  async getChildrenByParentId(parentId: number): Promise<Child[]> {
+    return Array.from(this.children.values()).filter(
+      (child) => child.parentId === parentId
+    );
+  }
+
+  async updateChild(id: number, updateData: Partial<Child>): Promise<Child | undefined> {
+    const child = this.children.get(id);
+    if (!child) return undefined;
+    
+    const updatedChild = { ...child, ...updateData };
+    this.children.set(id, updatedChild);
+    return updatedChild;
   }
 
   // Helper to add demo babysitters

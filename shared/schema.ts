@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -28,7 +28,7 @@ export const users = pgTable("users", {
   familyDescription: text("family_description"),
   familyActivities: text("family_activities"),
   medicalDietaryRestrictions: text("medical_dietary_restrictions"),
-  emergencyContacts: text("emergency_contacts"),
+  emergencyContacts: jsonb("emergency_contacts"),
   profileCompleted: boolean("profile_completed").default(false),
 });
 
