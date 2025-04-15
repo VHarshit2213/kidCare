@@ -1,8 +1,9 @@
 import { 
-  users, bookings, messages, 
+  users, bookings, messages, children,
   type User, type InsertUser, 
   type Booking, type InsertBooking,
-  type Message, type InsertMessage 
+  type Message, type InsertMessage,
+  type Child, type InsertChild
 } from "@shared/schema";
 
 import session from "express-session";
@@ -14,6 +15,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllBabysitters(): Promise<User[]>;
+  updateUserProfile(userId: number, profileData: Partial<User>): Promise<User | undefined>;
   
   // Booking methods
   createBooking(booking: InsertBooking): Promise<Booking>;
@@ -29,6 +31,12 @@ export interface IStorage {
   getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]>;
   markMessageAsRead(id: number): Promise<void>;
   
+  // Child methods
+  createChild(child: InsertChild): Promise<Child>;
+  getChildById(id: number): Promise<Child | undefined>;
+  getChildrenByParentId(parentId: number): Promise<Child[]>;
+  updateChild(id: number, updateData: Partial<Child>): Promise<Child | undefined>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -37,9 +45,11 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private bookings: Map<number, Booking>;
   private messages: Map<number, Message>;
+  private children: Map<number, Child>;
   private userIdCounter: number;
   private bookingIdCounter: number;
   private messageIdCounter: number;
+  private childIdCounter: number;
   public sessionStore: session.Store;
 
   constructor() {

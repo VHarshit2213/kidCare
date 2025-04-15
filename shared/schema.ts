@@ -18,6 +18,18 @@ export const users = pgTable("users", {
   hasTransportation: boolean("has_transportation").default(false), // for babysitters
   yearsExperience: integer("years_experience"), // for babysitters
   location: text("location"), // General location information
+  
+  // Parent profile fields
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  address: text("address"),
+  phoneNumber: text("phone_number"),
+  parentingStyle: text("parenting_style"),
+  familyDescription: text("family_description"),
+  familyActivities: text("family_activities"),
+  medicalDietaryRestrictions: text("medical_dietary_restrictions"),
+  emergencyContacts: text("emergency_contacts"),
+  profileCompleted: boolean("profile_completed").default(false),
 });
 
 // Booking requests schema
@@ -47,6 +59,18 @@ export const messages = pgTable("messages", {
   isRead: boolean("is_read").default(false),
 });
 
+// Children schema
+export const children = pgTable("children", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth"),
+  personality: text("personality"), // interests, special qualities
+  specialCare: text("special_care"), // any special care requirements
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema for inserting a user
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -67,6 +91,12 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   isRead: true,
 });
 
+// Schema for inserting a child
+export const insertChildSchema = createInsertSchema(children).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -76,3 +106,6 @@ export type Booking = typeof bookings.$inferSelect;
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+
+export type InsertChild = z.infer<typeof insertChildSchema>;
+export type Child = typeof children.$inferSelect;
