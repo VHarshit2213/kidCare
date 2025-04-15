@@ -176,9 +176,15 @@ export default function ParentProfileForm() {
       });
       return;
     }
+    
+    // Format the date properly or set it to null if empty
+    const dateOfBirth = childFormValues.dateOfBirth 
+      ? new Date(childFormValues.dateOfBirth).toISOString() 
+      : null;
 
     addChildMutation.mutate({
       ...childFormValues,
+      dateOfBirth,
       parentId: user.id,
     });
   };
@@ -309,7 +315,7 @@ export default function ParentProfileForm() {
                               id="hasSecondParent"
                             />
                             <Label htmlFor="hasSecondParent" className="font-medium">
-                              Add a second parent
+                              Add Parent 2
                             </Label>
                           </div>
                         </FormControl>
@@ -326,7 +332,7 @@ export default function ParentProfileForm() {
                           name="secondParentFirstName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Second Parent First Name</FormLabel>
+                              <FormLabel>Parent 2 First Name</FormLabel>
                               <FormControl>
                                 <Input {...field} placeholder="Enter first name" />
                               </FormControl>
@@ -339,7 +345,7 @@ export default function ParentProfileForm() {
                           name="secondParentLastName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Second Parent Last Name</FormLabel>
+                              <FormLabel>Parent 2 Last Name</FormLabel>
                               <FormControl>
                                 <Input {...field} placeholder="Enter last name" />
                               </FormControl>
@@ -353,7 +359,7 @@ export default function ParentProfileForm() {
                         name="secondParentPhone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Second Parent Phone Number</FormLabel>
+                            <FormLabel>Parent 2 Phone Number</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Enter phone number" />
                             </FormControl>
