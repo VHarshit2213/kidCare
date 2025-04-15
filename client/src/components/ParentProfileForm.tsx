@@ -23,7 +23,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 const childSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string().optional().nullable(),
   personality: z.string().optional(),
   specialCare: z.string().optional(),
 });
@@ -189,10 +189,22 @@ export default function ParentProfileForm() {
       return;
     }
     
-    // Format the date properly or set it to undefined (for optional column)
-    const dateOfBirth = childFormValues.dateOfBirth 
-      ? new Date(childFormValues.dateOfBirth).toISOString() 
-      : undefined;
+    // Format the date properly or set it to null if empty
+    let dateOfBirth = null;
+    
+    // Only try to convert to date if the field has a valid non-empty value
+    if (childFormValues.dateOfBirth && childFormValues.dateOfBirth.trim() !== '') {
+      try {
+        dateOfBirth = new Date(childFormValues.dateOfBirth).toISOString();
+      } catch (error) {
+        toast({
+          title: 'Invalid date format',
+          description: 'Please provide a valid date or leave the field empty.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
     
     // Create a new object without spreading to avoid type conflicts
     const childData = {
