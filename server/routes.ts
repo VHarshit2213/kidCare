@@ -32,74 +32,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // Authentication middleware - this is a simplified version for demo
+  // Authentication middleware using Passport.js session
   const authenticate = async (req: Request, res: Response, next: Function) => {
-    // In a real app, this would validate JWT tokens or session cookies
-    const userId = req.headers["user-id"];
-    
-    if (!userId) {
+    if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
-    const user = await storage.getUser(Number(userId));
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-    
-    // Add user to request
-    (req as any).user = user;
     next();
   };
 
   // User Routes
-  app.post("/api/users/register", async (req, res) => {
-    const { data, error } = validateRequest(insertUserSchema, req.body);
-    
-    if (error) {
-      return res.status(400).json({ message: error.message });
-    }
-    
-    try {
-      const existingUser = await storage.getUserByUsername(data.username);
-      if (existingUser) {
-        return res.status(409).json({ message: "Username already exists" });
-      }
-      
-      const user = await storage.createUser(data);
-      // Don't send the password back
-      const { password, ...userWithoutPassword } = user;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || "Failed to create user" });
-    }
-  });
-
-  app.post("/api/users/login", async (req, res) => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ message: "Username and password required" });
-    }
-    
-    try {
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Don't send the password back
-      const { password: _, ...userWithoutPassword } = user;
-      
-      res.status(200).json({ 
-        ...userWithoutPassword,
-        // In a real app, you would generate a JWT token here
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message || "Login failed" });
-    }
-  });
+  // These routes are now handled by the auth middleware in auth.ts
+  // We're keeping these route definitions empty as references
 
   app.get("/api/users/:id", async (req, res) => {
     try {
