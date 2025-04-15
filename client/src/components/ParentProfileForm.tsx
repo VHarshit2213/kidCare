@@ -23,7 +23,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 const childSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().optional(),
+  dateOfBirth: z.string().nullable().optional(),
   personality: z.string().optional(),
   specialCare: z.string().optional(),
 });
@@ -127,7 +127,14 @@ export default function ParentProfileForm() {
 
   // Mutation to add a child
   const addChildMutation = useMutation({
-    mutationFn: async (data: ChildFormValues & { parentId: number }) => {
+    mutationFn: async (data: {
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string | null;
+      personality?: string;
+      specialCare?: string;
+      parentId: number;
+    }) => {
       const res = await apiRequest('POST', '/api/children', data);
       return await res.json();
     },
@@ -151,9 +158,14 @@ export default function ParentProfileForm() {
       });
     },
     onError: (error) => {
+      // Check for specific validation errors
+      const errorMessage = error.message.includes("date") 
+        ? "Please ensure the date of birth is in a valid format or leave it empty" 
+        : error.message;
+      
       toast({
         title: 'Error adding child',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },
@@ -177,16 +189,22 @@ export default function ParentProfileForm() {
       return;
     }
     
-    // Format the date properly or set it to null if empty
+    // Format the date properly or set it to empty string if not provided
     const dateOfBirth = childFormValues.dateOfBirth 
       ? new Date(childFormValues.dateOfBirth).toISOString() 
       : null;
-
-    addChildMutation.mutate({
-      ...childFormValues,
-      dateOfBirth,
+    
+    // Create a new object without spreading to avoid type conflicts
+    const childData = {
+      firstName: childFormValues.firstName,
+      lastName: childFormValues.lastName,
+      dateOfBirth: dateOfBirth,
+      personality: childFormValues.personality || undefined,
+      specialCare: childFormValues.specialCare || undefined,
       parentId: user.id,
-    });
+    };
+
+    addChildMutation.mutate(childData);
   };
 
   // Function to handle changes to child form
