@@ -29,5 +29,6 @@ export function ProtectedRoute({
     );
   }
 
-  return <Route path={path} component={Component} />;
+  // Wrap the component in a function that always returns an Element
+  return <Route path={path}>{() => <Component />}</Route>;
 }
