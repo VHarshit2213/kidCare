@@ -15,6 +15,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllBabysitters(): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
   updateUserProfile(userId: number, profileData: Partial<User>): Promise<User | undefined>;
   
   // Booking methods
@@ -134,6 +135,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).filter(
       (user) => user.userType === "babysitter",
     );
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
   // Booking methods

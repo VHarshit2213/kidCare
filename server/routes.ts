@@ -6,7 +6,8 @@ import {
   insertBookingSchema, 
   insertMessageSchema, 
   insertChildSchema,
-  users
+  users,
+  User
 } from "@shared/schema";
 import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -416,6 +417,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json(userWithoutPassword);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to update profile" });
+    }
+  });
+
+  // Admin Routes
+  // Get all users (for admin purposes)
+  app.get("/api/admin/users", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Check if the user is an admin (for simplicity, we'll check by username)
+      if (user.username !== "admin") {
+        return res.status(403).json({ message: "Unauthorized: Admin access required" });
+      }
+      
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      
+      // Remove passwords from the response
+      const safeUsers = allUsers.map((user: User) => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.status(200).json(safeUsers);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to fetch users" });
     }
   });
 
