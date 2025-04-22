@@ -31,7 +31,12 @@ const profileFormSchema = z.object({
   caregiverStyle: z.string().min(10, 'Please share your caregiving style'),
   hasVideo: z.boolean().default(false),
   videoUrl: z.string().optional(),
-  hourlyRate: z.string().min(1, 'Please specify your hourly rate'),
+  hourlyRate: z.string()
+    .min(1, 'Please specify your hourly rate')
+    .refine(val => {
+      const rate = Number(val);
+      return !isNaN(rate) && rate >= 35 && rate <= 50;
+    }, 'Hourly rate must be between $35 and $50'),
   firstAidCertified: z.boolean().default(false),
   hasTransportation: z.boolean().default(false),
   skills: z.array(z.string()).min(1, 'Please select at least one skill'),
@@ -462,12 +467,13 @@ export default function BabysitterProfileForm() {
                         <Input
                           {...field}
                           type="number"
-                          min="10"
+                          min="35"
+                          max="50"
                           placeholder="35"
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter your hourly rate in USD
+                        Hourly rates must be between $35 and $50
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
