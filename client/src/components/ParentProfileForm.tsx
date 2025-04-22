@@ -586,6 +586,7 @@ export default function ParentProfileForm() {
               
               <div className="mt-6">
                 <Button 
+                  type="button"
                   onClick={() => {
                     form.handleSubmit(onSubmit)();
                   }}
