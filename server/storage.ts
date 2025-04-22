@@ -69,6 +69,15 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000, // prune expired entries every 24h
     });
     
+    // Add admin user
+    this.createUser({
+      username: "admin",
+      password: "admin123",
+      email: "admin@enchantedco.com",
+      fullName: "System Administrator",
+      userType: "parent", // using parent type for simplicity
+    });
+    
     // Add guest parent account for anonymous bookings
     this.createUser({
       username: "guest_parent",

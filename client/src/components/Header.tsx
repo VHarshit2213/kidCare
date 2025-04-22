@@ -102,7 +102,12 @@ export default function Header() {
                           <AvatarFallback>{getInitials(user?.fullName || "User")}</AvatarFallback>
                         )}
                       </Avatar>
-                      <span className="ml-2 text-neutral-600 font-medium">{user?.fullName?.split(" ")[0]}</span>
+                      <div className="flex items-center">
+                        <span className="ml-2 text-neutral-600 font-medium">{user?.fullName?.split(" ")[0]}</span>
+                        {user?.username === "admin" && (
+                          <span className="ml-2 text-xs bg-red-100 text-red-800 rounded-full px-2 py-0.5">Admin</span>
+                        )}
+                      </div>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56">
@@ -110,6 +115,11 @@ export default function Header() {
                       <Link href="/profile" className="text-sm font-medium">
                         Profile
                       </Link>
+                      {user?.username === "admin" && (
+                        <Link href="/admin" className="text-sm font-medium text-red-600">
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <Button variant="ghost" size="sm" className="justify-start" onClick={handleLogout}>
                         Logout
                       </Button>

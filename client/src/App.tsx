@@ -14,6 +14,7 @@ import SitterProfile from "@/pages/SitterProfile";
 import NotFound from "@/pages/NotFound";
 import AuthPage from "@/pages/auth-page";
 import ProfileCompletion from "@/pages/ProfileCompletion";
+import AdminPage from "@/pages/AdminPage";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <ProtectedRoute path="/messages" component={Messages} />
           <ProtectedRoute path="/profile" component={Profile} />
           <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
+          <ProtectedRoute path="/admin" component={AdminPage} />
           <Route component={NotFound} />
         </Switch>
         <Toaster />
