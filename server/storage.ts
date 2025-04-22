@@ -87,8 +87,10 @@ export class MemStorage implements IStorage {
       userType: "parent",
     });
     
-    // Add some demo babysitters
-    this.addDemoBabysitters();
+    // Add demo babysitters only in development mode
+    if (process.env.NODE_ENV === 'development') {
+      this.addDemoBabysitters();
+    }
   }
 
   // User methods
