@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
+import UserDetailsDialog from "@/components/admin/UserDetailsDialog";
 
 type SafeUser = Omit<User, "password">;
 
@@ -90,9 +91,14 @@ export default function AdminPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
+                  <UserDetailsDialog 
+                    user={user}
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ))
