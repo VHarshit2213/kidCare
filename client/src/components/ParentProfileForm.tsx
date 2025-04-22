@@ -101,12 +101,22 @@ export default function ParentProfileForm() {
       const res = await apiRequest('PATCH', '/api/users/profile', data);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been updated successfully.',
-      });
+      
+      // Different messages based on which tab was completed
+      if (activeTab === 'emergency') {
+        toast({
+          title: 'Profile completed!',
+          description: 'Your full profile has been successfully completed.',
+        });
+      } else {
+        toast({
+          title: 'Section saved',
+          description: 'Your profile has been updated successfully.',
+        });
+      }
+      
       // Move to the next tab after successful update
       if (activeTab === 'personal-info') {
         setActiveTab('children');
@@ -114,6 +124,11 @@ export default function ParentProfileForm() {
         setActiveTab('family');
       } else if (activeTab === 'family') {
         setActiveTab('emergency');
+      } else if (activeTab === 'emergency') {
+        // Add profileCompleted flag if it doesn't already exist
+        if (!data.profileCompleted) {
+          apiRequest('PATCH', '/api/users/profile', { profileCompleted: true });
+        }
       }
     },
     onError: (error) => {
@@ -211,8 +226,8 @@ export default function ParentProfileForm() {
       return;
     }
     
-    // Format the date properly or set it to null if empty
-    let dateOfBirth = null;
+    // Format the date properly or set it to undefined if empty
+    let dateOfBirth: string | undefined = undefined;
     
     // Only try to convert to date if the field has a valid non-empty value
     if (childFormValues.dateOfBirth && childFormValues.dateOfBirth.trim() !== '') {
