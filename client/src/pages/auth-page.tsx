@@ -6,9 +6,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 
 // Define form schemas
@@ -26,6 +29,14 @@ const registerSchema = z.object({
   userType: z.enum(["parent", "babysitter"], {
     required_error: "Please select a user type",
   }),
+  // Basic babysitter fields
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  experienceYears: z.string().optional(),
+  ageRangeExperience: z.array(z.string()).optional(),
+  enjoymentReason: z.string().optional(),
+  caregiverStyle: z.string().optional(),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -255,6 +266,124 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Babysitter-specific fields */}
+                      {registerForm.watch('userType') === 'babysitter' && (
+                        <div className="space-y-4 border rounded-md p-4 mt-4">
+                          <h3 className="font-medium text-sm">Babysitter Information</h3>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>First Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your first name" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={registerForm.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Last Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Your last name" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="phoneNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Your phone number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="experienceYears"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>How long have you been a babysitter?</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select your experience" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="0-1">Less than 1 year</SelectItem>
+                                    <SelectItem value="1-2">1-2 years</SelectItem>
+                                    <SelectItem value="3-5">3-5 years</SelectItem>
+                                    <SelectItem value="5-10">5-10 years</SelectItem>
+                                    <SelectItem value="10+">More than 10 years</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="enjoymentReason"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What do you enjoy most about working with children?</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Share your passion for childcare..."
+                                    className="resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="caregiverStyle"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Share your caregiving style</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Describe your approach to childcare..."
+                                    className="resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Parents want to know what makes you special as a caregiver
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
 
                       <Button 
                         type="submit" 
