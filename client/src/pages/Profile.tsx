@@ -59,7 +59,28 @@ export default function Profile() {
                 <div className="border-t border-neutral-200 pt-8">
                   <h2 className="text-lg font-medium text-neutral-800">About Me</h2>
                   <p className="mt-2 text-neutral-600">{user.bio || "No bio provided."}</p>
+                  
+                  {user.phoneNumber && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium text-neutral-800">Contact</h3>
+                      <p className="mt-1 text-neutral-600">Phone: {user.phoneNumber}</p>
+                    </div>
+                  )}
                 </div>
+                
+                {user.enjoymentReason && (
+                  <div className="mt-8 border-t border-neutral-200 pt-8">
+                    <h2 className="text-lg font-medium text-neutral-800">Why I Love Working With Children</h2>
+                    <p className="mt-2 text-neutral-600">{user.enjoymentReason}</p>
+                  </div>
+                )}
+                
+                {user.caregiverStyle && (
+                  <div className="mt-8 border-t border-neutral-200 pt-8">
+                    <h2 className="text-lg font-medium text-neutral-800">My Caregiving Style</h2>
+                    <p className="mt-2 text-neutral-600">{user.caregiverStyle}</p>
+                  </div>
+                )}
 
                 <div className="mt-8 border-t border-neutral-200 pt-8">
                   <h2 className="text-lg font-medium text-neutral-800">Skills & Qualifications</h2>
@@ -87,6 +108,30 @@ export default function Profile() {
                     </div>
                   </div>
                 </div>
+                
+                {user.ageRangeExperience && user.ageRangeExperience.length > 0 && (
+                  <div className="mt-8 border-t border-neutral-200 pt-8">
+                    <h2 className="text-lg font-medium text-neutral-800">Age Ranges I Have Experience With</h2>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {user.ageRangeExperience.map((age: string, index: number) => (
+                        <Skill key={index} name={age} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {user.videoUrl && (
+                  <div className="mt-8 border-t border-neutral-200 pt-8">
+                    <h2 className="text-lg font-medium text-neutral-800">Introduction Video</h2>
+                    <div className="mt-4">
+                      <video 
+                        controls 
+                        className="w-full max-h-96 rounded-lg"
+                        src={user.videoUrl}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

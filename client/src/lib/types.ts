@@ -18,17 +18,29 @@ export interface User {
   hasTransportation?: boolean;
   yearsExperience?: number;
   location?: string;
-  // Parent profile fields
+  // Shared profile fields
   firstName?: string;
   lastName?: string;
   address?: string;
   phoneNumber?: string;
+  profileCompleted?: boolean;
+  // Parent profile fields
   parentingStyle?: string;
   familyDescription?: string;
   familyActivities?: string;
   medicalDietaryRestrictions?: string;
   emergencyContacts?: EmergencyContact[];
-  profileCompleted?: boolean;
+  hasSecondParent?: boolean;
+  secondParentFirstName?: string;
+  secondParentLastName?: string;
+  secondParentPhone?: string;
+  // Babysitter profile fields
+  experienceYears?: string;
+  ageRangeExperience?: string[];
+  enjoymentReason?: string;
+  caregiverStyle?: string;
+  hasVideo?: boolean;
+  videoUrl?: string;
 }
 
 export interface Booking {
