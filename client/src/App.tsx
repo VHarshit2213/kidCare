@@ -18,6 +18,13 @@ import AdminPage from "@/pages/AdminPage";
 import MembershipPage from "@/pages/MembershipPage";
 import MembershipSuccess from "@/pages/MembershipSuccess";
 
+// Wrapper to ensure components never return null
+const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
+  const content = Component();
+  // This ensures we always return a valid React Element, never null
+  return <>{content || <div></div>}</>;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -32,7 +39,7 @@ function App() {
           <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
           <ProtectedRoute path="/admin" component={AdminPage} />
           <ProtectedRoute path="/membership" component={MembershipPage} />
-          <ProtectedRoute path="/membership-success" component={MembershipSuccess} />
+          <ProtectedRoute path="/membership-success" component={() => <EnsureRender Component={MembershipSuccess} />} />
           <Route component={NotFound} />
         </Switch>
         <Toaster />
