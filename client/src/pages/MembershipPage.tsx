@@ -67,7 +67,14 @@ const MembershipPaymentForm: React.FC<{
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+      <PaymentElement options={{
+        // Enable Apple Pay & Google Pay, disable Affirm & Klarna
+        paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
+        wallets: {
+          applePay: 'auto',
+          googlePay: 'auto'
+        }
+      }} />
       <Button 
         type="submit" 
         className="w-full" 
@@ -251,6 +258,36 @@ export default function MembershipPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-700 font-medium mb-2">Available Payment Methods:</p>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center border rounded-md px-3 py-1.5 gap-2">
+                        <div className="w-8 h-5 flex items-center justify-center bg-neutral-100 rounded">
+                          <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 4H2c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H2V6h20v12z" fill="#888" />
+                            <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" fill="#888" />
+                          </svg>
+                        </div>
+                        <span className="text-sm">Credit Card</span>
+                      </div>
+                      <div className="flex items-center border rounded-md px-3 py-1.5 gap-2">
+                        <div className="w-8 h-5 flex items-center justify-center bg-black rounded">
+                          <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.5 12.5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm-11-4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm5.5 6.5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" fill="white" />
+                          </svg>
+                        </div>
+                        <span className="text-sm">Apple Pay</span>
+                      </div>
+                      <div className="flex items-center border rounded-md px-3 py-1.5 gap-2">
+                        <div className="w-8 h-5 flex items-center justify-center bg-gradient-to-r from-teal-400 to-blue-500 rounded">
+                          <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20.5 11.5h-17c-.55 0-1 .45-1 1s.45 1 1 1h17c.55 0 1-.45 1-1s-.45-1-1-1z" fill="white" />
+                          </svg>
+                        </div>
+                        <span className="text-sm">Google Pay</span>
+                      </div>
+                    </div>
+                  </div>
                   <Elements stripe={stripePromise} options={{ clientSecret }}>
                     <MembershipPaymentForm 
                       clientSecret={clientSecret} 

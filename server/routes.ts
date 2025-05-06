@@ -585,6 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentIntent = await stripe.paymentIntents.create({
           amount,
           currency: "usd",
+          payment_method_types: ['card', 'apple_pay', 'google_pay'],
           metadata: {
             userId: userId.toString(),
             paymentType,
