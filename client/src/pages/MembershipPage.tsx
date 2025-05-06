@@ -1,57 +1,45 @@
-import { useState, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import Layout from "@/components/Layout";
+import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
+// Load stripe outside of component rendering to avoid recreating the Stripe object on every render
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
-const MembershipForm = ({ paymentOption }: { paymentOption: "full" | "installment" }) => {
-  const stripe = useStripe();
-  const elements = useElements();
+const MembershipPaymentForm: React.FC<{
+  clientSecret: string;
+  onSuccess: () => void;
+}> = ({ clientSecret, onSuccess }) => {
+  const stripe = stripePromise;
   const { toast } = useToast();
-  const [, navigate] = useLocation();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
+    setIsSubmitting(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
-        elements,
+      const stripeInstance = await stripe;
+      if (!stripeInstance) {
+        throw new Error("Failed to load Stripe");
+      }
+
+      // Confirm the payment
+      const { error } = await stripeInstance.confirmPayment({
+        elements: undefined as any, // We're using redirect flow, not Elements
         confirmParams: {
-          return_url: window.location.origin + "/membership-success",
+          return_url: `${window.location.origin}/membership-success`,
         },
+        redirect: "always",
       });
 
       if (error) {
@@ -61,114 +49,78 @@ const MembershipForm = ({ paymentOption }: { paymentOption: "full" | "installmen
           variant: "destructive",
         });
       } else {
-        // Payment succeeded - this part won't execute due to the page redirect
-        toast({
-          title: "Payment Successful",
-          description: "Your membership is active!",
-        });
-
-        // Update user's membership status in our database
-        await apiRequest("PATCH", "/api/users/membership", {
-          userId: user?.id,
-          membershipStatus: paymentOption === "full" ? "active" : "installment_1",
-        });
-
-        navigate("/");
+        onSuccess();
       }
     } catch (error: any) {
       toast({
         title: "Payment Error",
-        description: error.message || "Something went wrong with your payment",
+        description: error.message || "An error occurred processing your payment",
         variant: "destructive",
       });
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Button 
         type="submit" 
         className="w-full" 
-        style={{ backgroundColor: "#3c5679" }}
-        disabled={!stripe || !elements || isProcessing}
+        disabled={isSubmitting}
+        size="lg"
       >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          `Pay $${paymentOption === "full" ? "500" : "250"} Now`
-        )}
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Complete Payment
       </Button>
     </form>
   );
 };
 
 export default function MembershipPage() {
-  const [match, params] = useRoute("/membership/:userId");
+  const [_, navigate] = useLocation();
   const { user } = useAuth();
-  const [clientSecret, setClientSecret] = useState("");
-  const [selectedTab, setSelectedTab] = useState("full");
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [paymentType, setPaymentType] = useState<"full" | "installment">("full");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if no user is logged in
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-
-  // Request payment intent on component mount
   useEffect(() => {
-    const fetchPaymentIntent = async () => {
-      setIsLoading(true);
-      try {
-        const response = await apiRequest("POST", "/api/create-membership-intent", {
-          paymentType: selectedTab as "full" | "installment",
-          userId: user?.id,
-        });
-        
-        const data = await response.json();
-        setClientSecret(data.clientSecret);
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description: "Could not initialize payment. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchPaymentIntent();
-    }
-  }, [selectedTab, user, toast]);
-
-  // Handle tab change
-  const handleTabChange = async (value: string) => {
-    setSelectedTab(value);
+    if (!user) return;
     
-    // Request new payment intent when tab changes
+    // If user already has active membership, redirect to home
+    if (user.membershipStatus === "active") {
+      navigate("/");
+      return;
+    }
+    
+    // If user is a babysitter, redirect to profile completion
+    if (user.userType !== "parent") {
+      navigate("/profile-completion");
+    }
+  }, [user, navigate]);
+
+  const createPaymentIntent = async () => {
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", "/api/create-membership-intent", {
-        paymentType: value as "full" | "installment",
+        paymentType,
         userId: user?.id,
       });
-      
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create payment intent");
+      }
+
       const data = await response.json();
       setClientSecret(data.clientSecret);
-    } catch (error) {
+      setPaymentIntentId(data.paymentIntentId);
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Could not initialize payment. Please try again.",
+        title: "Payment Setup Failed",
+        description: error.message || "An error occurred setting up your payment",
         variant: "destructive",
       });
     } finally {
@@ -176,111 +128,205 @@ export default function MembershipPage() {
     }
   };
 
-  const stripeOptions = {
-    clientSecret,
-    appearance: {
-      theme: 'stripe' as const,
-      variables: {
-        colorPrimary: '#3c5679',
-      },
-    },
+  const handlePaymentTypeChange = (value: string) => {
+    setPaymentType(value as "full" | "installment");
+    // Clear existing client secret when payment type changes
+    setClientSecret(null);
+    setPaymentIntentId(null);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#3c5679]">Membership Registration</h1>
-          <p className="mt-2 text-gray-600">
-            Complete your membership registration to access our trusted babysitting services
-          </p>
+  const handlePaymentSuccess = async () => {
+    if (!paymentIntentId || !user) return;
+    
+    try {
+      const response = await apiRequest("POST", "/api/verify-membership-payment", {
+        paymentIntentId,
+        userId: user.id,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to verify payment");
+      }
+
+      toast({
+        title: "Payment Successful",
+        description: "Your membership has been activated. Welcome to The Enchanted Co.!",
+      });
+
+      // Redirect to success page
+      navigate("/membership-success");
+    } catch (error: any) {
+      toast({
+        title: "Verification Failed",
+        description: error.message || "An error occurred verifying your payment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!user) {
+    return (
+      <Layout>
+        <div className="container max-w-6xl py-10">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
+          </div>
         </div>
+      </Layout>
+    );
+  }
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Membership Option</CardTitle>
-            <CardDescription>
-              Choose how you'd like to pay for your non-refundable membership
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="full" value={selectedTab} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="full">One-time Payment</TabsTrigger>
-                <TabsTrigger value="installment">Installment Plan</TabsTrigger>
-              </TabsList>
-              <TabsContent value="full" className="space-y-4">
-                <div className="p-4 border rounded-md bg-blue-50 mt-4">
-                  <h3 className="font-semibold text-lg text-[#3c5679]">$500 Single Payment</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Pay your entire membership fee in one payment and get immediate access to all services.
-                  </p>
-                  <div className="mt-4 bg-white p-3 rounded-md shadow-sm">
-                    <span className="font-bold text-2xl text-[#3c5679]">$500</span>
-                    <span className="text-gray-500 ml-2">one-time payment</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    This is a non-refundable membership fee.
-                  </p>
-                </div>
-
-                {isLoading ? (
-                  <div className="flex justify-center p-6">
-                    <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
-                  </div>
-                ) : clientSecret ? (
-                  <Elements stripe={stripePromise} options={stripeOptions}>
-                    <MembershipForm paymentOption="full" />
-                  </Elements>
-                ) : (
-                  <div className="p-4 text-center text-red-500">
-                    Could not load payment form. Please try again.
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="installment" className="space-y-4">
-                <div className="p-4 border rounded-md bg-blue-50 mt-4">
-                  <h3 className="font-semibold text-lg text-[#3c5679]">Two $250 Payments</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Split your membership fee into two equal payments. Pay the first installment now and the second one later.
-                  </p>
-                  <div className="mt-4 bg-white p-3 rounded-md shadow-sm">
-                    <span className="font-bold text-2xl text-[#3c5679]">$250</span>
-                    <span className="text-gray-500 ml-2">first payment</span>
-                  </div>
-                  <div className="mt-2 bg-white p-3 rounded-md shadow-sm opacity-70">
-                    <span className="font-bold text-xl text-[#3c5679]">$250</span>
-                    <span className="text-gray-500 ml-2">second payment (due later)</span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    This is a non-refundable membership fee.
-                  </p>
-                </div>
-
-                {isLoading ? (
-                  <div className="flex justify-center p-6">
-                    <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
-                  </div>
-                ) : clientSecret ? (
-                  <Elements stripe={stripePromise} options={stripeOptions}>
-                    <MembershipForm paymentOption="installment" />
-                  </Elements>
-                ) : (
-                  <div className="p-4 text-center text-red-500">
-                    Could not load payment form. Please try again.
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t pt-6">
-            <p className="text-sm text-gray-500 text-center">
-              By proceeding with payment, you agree to our Terms of Service and acknowledge that membership fees are non-refundable.
+  return (
+    <Layout>
+      <div className="container max-w-6xl py-10">
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Left side: Membership options */}
+          <div>
+            <h1 className="text-3xl font-bold mb-6">Membership Registration</h1>
+            <p className="mb-8 text-gray-700">
+              Welcome to The Enchanted Co.! To access our premium babysitting services, 
+              please complete your membership registration. We offer two payment options 
+              for your convenience.
             </p>
-          </CardFooter>
-        </Card>
+
+            <div className="mb-8">
+              <RadioGroup value={paymentType} onValueChange={handlePaymentTypeChange} className="space-y-4">
+                <div className="border rounded-lg p-4 hover:border-brand-blue">
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="full" id="full-payment" />
+                    <div className="flex-1">
+                      <Label htmlFor="full-payment" className="text-lg font-medium">
+                        One-time Payment
+                      </Label>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Pay the full membership fee of $500 at once and get immediate access to all our services.
+                      </p>
+                      <p className="text-lg font-semibold mt-2">$500</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 hover:border-brand-blue">
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="installment" id="installment-payment" />
+                    <div className="flex-1">
+                      <Label htmlFor="installment-payment" className="text-lg font-medium">
+                        Installment Plan
+                      </Label>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Pay $250 now and $250 in 30 days. You'll get immediate access to our services.
+                      </p>
+                      <p className="text-lg font-semibold mt-2">$250 now + $250 later</p>
+                    </div>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {!clientSecret ? (
+              <Button 
+                onClick={createPaymentIntent} 
+                disabled={isLoading}
+                size="lg"
+                className="w-full"
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Continue to Payment
+              </Button>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Complete Your Payment</CardTitle>
+                  <CardDescription>
+                    {paymentType === "full" 
+                      ? "You'll be charged $500 for your annual membership" 
+                      : "You'll be charged $250 now, and $250 in 30 days"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <MembershipPaymentForm 
+                      clientSecret={clientSecret} 
+                      onSuccess={handlePaymentSuccess} 
+                    />
+                  </Elements>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setClientSecret(null)}>
+                    Back
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+          </div>
+
+          {/* Right side: Membership benefits */}
+          <div className="bg-brand-blue text-white p-8 rounded-lg">
+            <h2 className="text-2xl font-bold mb-6">Membership Benefits</h2>
+            <ul className="space-y-4">
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Access to our network of verified, professional babysitters</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Book last-minute care with our Instant Care feature</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Schedule babysitting up to 7 days in advance</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>"Play and Greet" meetings with potential babysitters</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>Priority booking with popular sitters</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span>24/7 customer support</span>
+              </li>
+            </ul>
+
+            <div className="border-t border-white/20 mt-8 pt-8">
+              <p className="text-sm mb-4">
+                <strong>Important:</strong> All memberships are non-refundable and require a one-time 
+                $500 fee, which can be paid in full or in two $250 installments.
+              </p>
+              <p className="text-sm">
+                By proceeding with payment, you agree to our Terms of Service and Privacy Policy.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }

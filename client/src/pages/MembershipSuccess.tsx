@@ -1,161 +1,113 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Layout from "@/components/Layout";
+import { CheckCircle2 } from "lucide-react";
 
 export default function MembershipSuccess() {
-  const [, navigate] = useLocation();
+  const [_, navigate] = useLocation();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
-  const [paymentType, setPaymentType] = useState<"full" | "installment" | null>(null);
 
   useEffect(() => {
-    // Get URL parameters
-    const query = new URLSearchParams(window.location.search);
-    const paymentIntentId = query.get('payment_intent');
-    const paymentIntentClientSecret = query.get('payment_intent_client_secret');
+    // If user is not logged in, redirect to login
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    // If user is a babysitter, redirect to profile completion
+    if (user.userType !== "parent") {
+      navigate("/profile-completion");
+      return;
+    }
+    
+    // If user doesn't have active membership, redirect to membership page
+    const status = user.membershipStatus || 'none';
+    if (status !== "active" && 
+        status !== "installment_1" && 
+        status !== "installment_2") {
+      navigate("/membership");
+    }
+  }, [user, navigate]);
 
-    const verifyPayment = async () => {
-      if (!paymentIntentId || !paymentIntentClientSecret || !user) {
-        setIsProcessing(false);
-        setPaymentStatus("error");
-        return;
-      }
+  if (!user) return null;
 
-      try {
-        const response = await apiRequest("POST", "/api/verify-membership-payment", {
-          paymentIntentId,
-          userId: user.id,
-        });
-
-        const data = await response.json();
-        setPaymentStatus("success");
-        setPaymentType(data.paymentType);
-
-        // Update user's membership status
-        await apiRequest("PATCH", "/api/users/membership", {
-          userId: user.id,
-          membershipStatus: data.paymentType === "full" ? "active" : "installment_1",
-        });
-
-        toast({
-          title: "Payment Successful",
-          description: "Your membership is now active!",
-        });
-      } catch (error) {
-        setPaymentStatus("error");
-        toast({
-          title: "Payment Verification Failed",
-          description: "There was an issue verifying your payment. Please contact support.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-
-    verifyPayment();
-  }, [user]);
-
-  if (isProcessing) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <Loader2 className="h-12 w-12 animate-spin text-[#3c5679] mb-4" />
-        <h1 className="text-2xl font-semibold text-[#3c5679]">Verifying your payment...</h1>
-        <p className="text-gray-600 mt-2">Please wait while we confirm your membership.</p>
-      </div>
-    );
-  }
-
-  if (paymentStatus === "error") {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="bg-red-100 rounded-full p-3 mb-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <h1 className="text-2xl font-semibold text-gray-800">Payment Verification Failed</h1>
-        <p className="text-gray-600 mt-2 text-center max-w-md">
-          There was an issue verifying your payment. Please contact our support team for assistance.
-        </p>
-        <div className="mt-6 space-x-4">
-          <Button
-            onClick={() => navigate("/membership")}
-            style={{ backgroundColor: "#3c5679" }}
-          >
-            Try Again
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/")}
-          >
-            Return Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const status = user.membershipStatus || 'none';
+  const isInstallment = status === "installment_1" || status === "installment_2";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="bg-green-100 rounded-full p-3 mb-4">
-        <CheckCircle className="h-12 w-12 text-green-600" />
-      </div>
-      <h1 className="text-3xl font-bold text-[#3c5679]">Welcome to The Enchanted Co.!</h1>
-      <p className="text-xl text-gray-700 mt-2">Your membership is now active.</p>
-      
-      <div className="max-w-md bg-white p-6 rounded-lg shadow-lg mt-8">
-        <h2 className="text-xl font-semibold text-[#3c5679] mb-4">Membership Details</h2>
-        {paymentType === "full" ? (
-          <div className="space-y-2">
-            <p className="text-gray-700">You've completed your full membership payment.</p>
-            <div className="bg-blue-50 p-3 rounded">
-              <p className="font-medium">$500 membership fee - Paid in full</p>
-              <p className="text-sm text-gray-600">You now have complete access to all our childcare services.</p>
+    <Layout>
+      <div className="container max-w-4xl py-20">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="text-center pb-4">
+            <div className="mx-auto mb-4 bg-green-100 w-20 h-20 rounded-full flex items-center justify-center">
+              <CheckCircle2 className="h-10 w-10 text-green-600" />
             </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-gray-700">You've completed your first installment payment.</p>
-            <div className="bg-blue-50 p-3 rounded mb-3">
-              <p className="font-medium">$250 First installment - Paid</p>
-              <p className="text-sm text-gray-600">You now have access to our childcare services.</p>
+            <CardTitle className="text-3xl font-bold text-green-700">Payment Successful!</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center pb-6 px-8">
+            <p className="text-lg mb-6">
+              {isInstallment 
+                ? "Thank you for your first installment payment of $250. Your membership is now active!" 
+                : "Thank you for your payment of $500. Your membership is now active!"}
+            </p>
+            
+            <div className="bg-gray-50 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-semibold mb-4">What's Next?</h3>
+              <ul className="text-left space-y-3">
+                <li className="flex items-start">
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Complete your <strong>parent profile</strong> with information about your family and children</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Browse our <strong>verified babysitters</strong> to find the perfect match for your family</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
+                  <span>Request babysitting services using our <strong>instant care</strong> or <strong>scheduled care</strong> options</span>
+                </li>
+              </ul>
             </div>
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="font-medium">$250 Second installment - Due later</p>
-              <p className="text-sm text-gray-600">We'll remind you when your next payment is due.</p>
-            </div>
-          </div>
-        )}
+            
+            {isInstallment && (
+              <div className="border border-amber-200 bg-amber-50 p-4 rounded-lg text-amber-800 mb-6">
+                <h4 className="font-semibold">Reminder about your installment plan:</h4>
+                <p>Your second payment of $250 will be automatically processed in 30 days. Please ensure your payment method remains valid.</p>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-center gap-4 pt-2 pb-8">
+            <Button 
+              onClick={() => navigate("/profile-completion")}
+              size="lg"
+            >
+              Complete Your Profile
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/")}
+              size="lg"
+            >
+              Go to Homepage
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
-
-      <div className="mt-8">
-        <Button
-          onClick={() => navigate("/")}
-          style={{ backgroundColor: "#3c5679" }}
-          size="lg"
-          className="px-6"
-        >
-          Start Using Your Membership
-        </Button>
-      </div>
-    </div>
+    </Layout>
   );
 }

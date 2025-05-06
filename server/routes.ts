@@ -21,7 +21,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -669,9 +669,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Invalid membership status" });
         }
         
-        // Update the user profile with membership status
-        const updatedUser = await storage.updateUserProfile(Number(userId), {
-          membershipStatus
+        // Update the user's membership status
+        const updatedUser = await storage.updateUserMembership(Number(userId), {
+          membershipStatus,
+          membershipType: membershipStatus === "active" ? "one-time" : "installment",
+          membershipPaymentDate: new Date()
         });
         
         if (!updatedUser) {
