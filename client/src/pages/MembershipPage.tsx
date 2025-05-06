@@ -133,24 +133,21 @@ export default function MembershipPage() {
     
     try {
       // In a real app, you would verify this with the backend
-      // For this demo, we'll mock some promo codes
-      const validPromoCodes = {
-        "WELCOME10": 10,
-        "FAMILY25": 25,
-        "SUMMER15": 15
-      };
+      // For this demo, we'll use a single valid promo code
+      const validPromoCode = "FAMILY24";
+      const discountPercentage = 100; // 100% discount
       
       const code = promoCode.trim().toUpperCase();
       
       // Simulate API call with a delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      if (code in validPromoCodes) {
-        setDiscount(validPromoCodes[code as keyof typeof validPromoCodes]);
+      if (code === validPromoCode) {
+        setDiscount(discountPercentage);
         setPromoApplied(true);
         toast({
           title: "Promo Code Applied!",
-          description: `You received a ${validPromoCodes[code as keyof typeof validPromoCodes]}% discount`,
+          description: `You received a ${discountPercentage}% discount - Your membership is FREE!`,
         });
       } else {
         toast({
@@ -173,6 +170,32 @@ export default function MembershipPage() {
   const createPaymentIntent = async () => {
     setIsLoading(true);
     try {
+      // Special handling for 100% discount - skip payment and directly activate membership
+      if (promoApplied && discount === 100) {
+        // Directly proceed to membership activation
+        const response = await apiRequest("PATCH", "/api/users/membership", {
+          userId: user?.id,
+          membershipStatus: paymentType === "full" ? "active" : "installment_1",
+          promoCode: promoCode,
+          discount: 100
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to activate membership");
+        }
+        
+        toast({
+          title: "Membership Activated!",
+          description: "Your free membership has been activated. Welcome to The Enchanted Co.!",
+        });
+        
+        // Redirect to success page
+        navigate("/membership-success");
+        return;
+      }
+      
+      // Normal flow for paid memberships
       const response = await apiRequest("POST", "/api/create-membership-intent", {
         paymentType,
         userId: user?.id,
@@ -369,7 +392,9 @@ export default function MembershipPage() {
                 className="w-full"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Continue to Payment
+                {promoApplied && discount === 100 
+                  ? "Activate Free Membership" 
+                  : "Continue to Payment"}
               </Button>
             ) : (
               <Card>

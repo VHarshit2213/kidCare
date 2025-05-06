@@ -669,7 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Update membership status endpoint
     app.patch("/api/users/membership", authenticate, async (req: Request, res: Response) => {
       try {
-        const { userId, membershipStatus } = req.body;
+        const { userId, membershipStatus, promoCode, discount } = req.body;
         
         if (!userId || !membershipStatus) {
           return res.status(400).json({ message: "User ID and membership status are required" });
@@ -680,12 +680,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Invalid membership status" });
         }
         
-        // Update the user's membership status
-        const updatedUser = await storage.updateUserMembership(Number(userId), {
+        // Log promo code information if available
+        if (promoCode && discount) {
+          console.log(`Applying promo code ${promoCode} with ${discount}% discount for user ${userId}`);
+        }
+        
+        // Create a metadata object for tracking promotion information
+        const metadata: any = {
           membershipStatus,
           membershipType: membershipStatus === "active" ? "one-time" : "installment",
           membershipPaymentDate: new Date()
-        });
+        };
+        
+        // Add promo code information if available
+        if (promoCode) {
+          metadata.promoCode = promoCode;
+          metadata.discountApplied = discount;
+        }
+        
+        // Update the user's membership status
+        const updatedUser = await storage.updateUserMembership(Number(userId), metadata);
         
         if (!updatedUser) {
           return res.status(404).json({ message: "User not found" });
