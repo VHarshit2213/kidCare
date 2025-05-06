@@ -9,6 +9,10 @@ export default function Header() {
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const isAuthenticated = !!user;
+  const hasMembership = !!user && (
+    user.membershipStatus === "active" || 
+    user.membershipStatus === "installment_2"
+  );
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -23,6 +27,16 @@ export default function Header() {
   };
 
   const isActive = (path: string) => location === path;
+  
+  const handleCareButtonClick = () => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    } else if (!hasMembership) {
+      navigate("/membership");
+    } else {
+      window.dispatchEvent(new CustomEvent('open-sitter-request'));
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
@@ -75,9 +89,15 @@ export default function Header() {
                 <PopoverContent className="w-48 p-2">
                   <div className="grid gap-2">
                     <Button 
-                      onClick={() => isAuthenticated 
-                        ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
-                        : navigate("/auth")}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          navigate("/auth");
+                        } else if (!hasMembership) {
+                          navigate("/membership");
+                        } else {
+                          window.dispatchEvent(new CustomEvent('open-sitter-request'));
+                        }
+                      }}
                       className="justify-start bg-[#3c5679] hover:bg-[#2c4059] text-white" 
                       size="sm"
                     >
@@ -98,9 +118,15 @@ export default function Header() {
                       Instant Care
                     </Button>
                     <Button 
-                      onClick={() => isAuthenticated 
-                        ? window.dispatchEvent(new CustomEvent('open-scheduled-care'))
-                        : navigate("/auth")}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          navigate("/auth");
+                        } else if (!hasMembership) {
+                          navigate("/membership");
+                        } else {
+                          window.dispatchEvent(new CustomEvent('open-scheduled-care'));
+                        }
+                      }}
                       variant="outline" 
                       className="justify-start border-brand-pink text-brand-blue"
                       size="sm"
@@ -216,9 +242,7 @@ export default function Header() {
           {/* Mobile buttons */}
           <div className="flex items-center sm:hidden space-x-2">
             <button 
-              onClick={() => isAuthenticated 
-                ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
-                : navigate("/auth")}
+              onClick={handleCareButtonClick}
               className="inline-flex items-center justify-center p-2 bg-[#3c5679] text-white rounded-md"
             >
               <svg

@@ -8,8 +8,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { InstantCareFormData, Child } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import AvailableSittersPopup from "@/components/AvailableSittersPopup";
-import { X, Plus, Check } from "lucide-react";
+import { X, Plus, Check, AlertCircle } from "lucide-react";
 
 import {
   Dialog,
@@ -65,12 +67,19 @@ const instantCareSchema = z.object({
 
 export default function InstantCareModal({ isOpen, onClose }: InstantCareModalProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
   const [bookingDetails, setBookingDetails] = useState<InstantCareFormData | null>(null);
   const [showSittersPopup, setShowSittersPopup] = useState(false);
   const [childInput, setChildInput] = useState("");
   const [minDate, setMinDate] = useState<string>("");
   const [maxDate, setMaxDate] = useState<string>("");
   const [hoursNeeded, setHoursNeeded] = useState<number>(2);
+  
+  const hasMembership = !!user && (
+    user.membershipStatus === "active" || 
+    user.membershipStatus === "installment_2"
+  );
   
   // Set time constraints for the current day only
   useEffect(() => {
@@ -192,6 +201,31 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
               Fill out the details below and connect with available babysitters near you.
             </DialogDescription>
           </DialogHeader>
+
+          {!hasMembership && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-amber-800">Membership Required</h3>
+                  <p className="text-sm text-amber-700 mt-1">
+                    You need an active membership to request childcare services.
+                  </p>
+                  <Button 
+                    className="mt-2" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      navigate("/membership");
+                    }}
+                  >
+                    Get Membership
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
