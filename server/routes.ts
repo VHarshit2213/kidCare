@@ -27,6 +27,32 @@ const stripe = process.env.STRIPE_SECRET_KEY
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Password reset request endpoint
+  app.post("/api/forgot-password", async (req: Request, res: Response) => {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    
+    // Check if user exists with that email
+    // In a real application, we would:
+    // 1. Find the user by email
+    // 2. Generate a secure token
+    // 3. Store the token with an expiration time
+    // 4. Send an email with a reset link
+    
+    // For now, just return a success message regardless of whether the email exists
+    // This is a security best practice to prevent email enumeration
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return res.status(200).json({ 
+      message: "If an account exists with that email, password reset instructions will be sent." 
+    });
+  });
   // Utility function to handle validation errors
   const validateRequest = (schema: any, data: any) => {
     try {

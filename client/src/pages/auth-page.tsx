@@ -31,13 +31,19 @@ const registerSchema = z.object({
   }),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
 type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
+  const [forgotPasswordStatus, setForgotPasswordStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   // Redirect based on user status
   if (user) {
@@ -94,6 +100,40 @@ export default function AuthPage() {
   function onRegisterSubmit(values: RegisterValues) {
     registerMutation.mutate(values);
   }
+  
+  // Forgot password form
+  const forgotPasswordForm = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  // Handle forgot password submission
+  async function onForgotPasswordSubmit(values: ForgotPasswordValues) {
+    try {
+      setForgotPasswordStatus("sending");
+      
+      // Make API call to request password reset
+      const response = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: values.email }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to process password reset request");
+      }
+      
+      setForgotPasswordStatus("sent");
+    } catch (error) {
+      console.error("Password reset error:", error);
+      setForgotPasswordStatus("error");
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-gradient-to-br from-blue-50 via-white to-pink-50">
@@ -110,9 +150,10 @@ export default function AuthPage() {
           </div>
 
           <Tabs defaultValue="login" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="forgot-password">Forgot Password</TabsTrigger>
             </TabsList>
 
             {/* Login Form */}
@@ -151,6 +192,16 @@ export default function AuthPage() {
                               <Input type="password" placeholder="Enter your password" {...field} />
                             </FormControl>
                             <FormMessage />
+                            <div className="text-right mt-1">
+                              <Button 
+                                variant="link" 
+                                className="p-0 h-auto text-xs text-blue-600" 
+                                onClick={() => setActiveTab("forgot-password")}
+                                type="button"
+                              >
+                                Forgot password?
+                              </Button>
+                            </div>
                           </FormItem>
                         )}
                       />
@@ -302,6 +353,88 @@ export default function AuthPage() {
                 <CardFooter className="flex justify-center">
                   <Button variant="link" onClick={() => setActiveTab("login")}>
                     Already have an account? Sign in
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            {/* Forgot Password Form */}
+            <TabsContent value="forgot-password">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reset your password</CardTitle>
+                  <CardDescription>
+                    Enter your email to receive a password reset link
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {forgotPasswordStatus === "sent" ? (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-green-50 rounded-md border border-green-200 text-green-700">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="font-semibold">Email sent!</span>
+                        </div>
+                        <p className="text-sm">
+                          If an account exists with that email, we've sent instructions to reset your password. Please check your inbox.
+                        </p>
+                      </div>
+                      <Button 
+                        type="button"
+                        className="w-full" 
+                        style={{ backgroundColor: "#3c5679" }}
+                        onClick={() => {
+                          setForgotPasswordStatus("idle");
+                          setActiveTab("login");
+                        }}
+                      >
+                        Return to Login
+                      </Button>
+                    </div>
+                  ) : (
+                    <Form {...forgotPasswordForm}>
+                      <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-4">
+                        <FormField
+                          control={forgotPasswordForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="email" 
+                                  placeholder="Enter your email address" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                We'll send you a link to reset your password.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          style={{ backgroundColor: "#3c5679" }}
+                          disabled={forgotPasswordStatus === "sending"}
+                        >
+                          {forgotPasswordStatus === "sending" ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Reset Password
+                        </Button>
+                      </form>
+                    </Form>
+                  )}
+                </CardContent>
+                <CardFooter className="flex justify-center">
+                  <Button variant="link" onClick={() => setActiveTab("login")}>
+                    Remember your password? Sign in
                   </Button>
                 </CardFooter>
               </Card>
