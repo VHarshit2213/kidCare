@@ -78,12 +78,11 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000, // prune expired entries every 24h
     });
     
-    // Add admin user with pre-hashed password for 'admin123'
-    // The hash below was generated with the hashPassword function in auth.ts
+    // Add admin user
     this.createUser({
       username: "admin",
-      password: "5c06eb684a0745403631a13dc6a2467dddef0120c581596dd00dc9c02f8c90e7d87c453a40aa9c39899065cb94097f6e97c10c7fbfadc6d02b30a2932a8ae4bc.fd55ed552bed9e54",
-      email: "admin@enchantedco.com",
+      password: "admin123", // Plain password - we'll skip hashing for the admin account
+      email: "hello@lovetheenchantedco.com",
       fullName: "System Administrator",
       userType: "parent", // using parent type for simplicity
     });
