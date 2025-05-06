@@ -563,7 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Create payment intent for membership payment
     app.post("/api/create-membership-intent", authenticate, async (req: Request, res: Response) => {
       try {
-        const { paymentType, userId } = req.body;
+        const { paymentType, userId, promoCode, discount } = req.body;
         
         if (!paymentType || !userId) {
           return res.status(400).json({ message: "Payment type and user ID are required" });
@@ -575,8 +575,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "User not found" });
         }
         
-        // Calculate amount based on payment type
-        const amount = paymentType === "full" ? 50000 : 25000; // in cents: $500 or $250
+        // Base amount based on payment type
+        let baseAmount = paymentType === "full" ? 50000 : 25000; // $500 or $250 in cents
+        
+        // Apply discount if promo code is provided
+        let amount = baseAmount;
+        if (promoCode && discount) {
+          // Apply the discount percentage
+          amount = Math.round(baseAmount * (100 - discount) / 100);
+          console.log(`Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`);
+        }
         
         if (!stripe) {
           return res.status(500).json({ message: "Stripe is not configured" });
@@ -589,7 +597,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           metadata: {
             userId: userId.toString(),
             paymentType,
-            membershipType: paymentType === "full" ? "full_payment" : "installment_1"
+            membershipType: paymentType === "full" ? "full_payment" : "installment_1",
+            promoCode: promoCode || "",
+            discount: discount ? discount.toString() : "0"
           },
         });
         

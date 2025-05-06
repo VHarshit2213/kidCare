@@ -6,11 +6,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Tag, Check } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 // Load stripe outside of component rendering to avoid recreating the Stripe object on every render
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -98,6 +99,10 @@ export default function MembershipPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [discount, setDiscount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -114,12 +119,65 @@ export default function MembershipPage() {
     }
   }, [user, navigate]);
 
+  const handleApplyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      toast({
+        title: "No Promo Code",
+        description: "Please enter a promo code",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setApplyingPromo(true);
+    
+    try {
+      // In a real app, you would verify this with the backend
+      // For this demo, we'll mock some promo codes
+      const validPromoCodes = {
+        "WELCOME10": 10,
+        "FAMILY25": 25,
+        "SUMMER15": 15
+      };
+      
+      const code = promoCode.trim().toUpperCase();
+      
+      // Simulate API call with a delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      if (code in validPromoCodes) {
+        setDiscount(validPromoCodes[code as keyof typeof validPromoCodes]);
+        setPromoApplied(true);
+        toast({
+          title: "Promo Code Applied!",
+          description: `You received a ${validPromoCodes[code as keyof typeof validPromoCodes]}% discount`,
+        });
+      } else {
+        toast({
+          title: "Invalid Promo Code",
+          description: "This promo code is invalid or expired",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred applying the promo code",
+        variant: "destructive",
+      });
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
   const createPaymentIntent = async () => {
     setIsLoading(true);
     try {
       const response = await apiRequest("POST", "/api/create-membership-intent", {
         paymentType,
         userId: user?.id,
+        promoCode: promoApplied ? promoCode : undefined,
+        discount: promoApplied ? discount : 0,
       });
 
       if (!response.ok) {
@@ -203,7 +261,7 @@ export default function MembershipPage() {
               for your convenience.
             </p>
 
-            <div className="mb-8">
+            <div className="mb-6">
               <RadioGroup value={paymentType} onValueChange={handlePaymentTypeChange} className="space-y-4">
                 <div className="border rounded-lg p-4 hover:border-brand-blue">
                   <div className="flex items-start space-x-3">
@@ -215,7 +273,16 @@ export default function MembershipPage() {
                       <p className="text-sm text-gray-500 mt-1">
                         Pay the full membership fee of $500 at once and get immediate access to all our services.
                       </p>
-                      <p className="text-lg font-semibold mt-2">$500</p>
+                      <p className="text-lg font-semibold mt-2">
+                        {promoApplied ? (
+                          <span>
+                            <span className="line-through text-gray-500 text-base mr-2">$500</span>
+                            ${(500 * (100 - discount) / 100).toFixed(0)}
+                          </span>
+                        ) : (
+                          "$500"
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -230,11 +297,68 @@ export default function MembershipPage() {
                       <p className="text-sm text-gray-500 mt-1">
                         Pay $250 now and $250 in 30 days. You'll get immediate access to our services.
                       </p>
-                      <p className="text-lg font-semibold mt-2">$250 now + $250 later</p>
+                      <p className="text-lg font-semibold mt-2">
+                        {promoApplied ? (
+                          <span>
+                            <span className="line-through text-gray-500 text-base mr-2">$250</span>
+                            ${(250 * (100 - discount) / 100).toFixed(0)} now + $250 later
+                          </span>
+                        ) : (
+                          "$250 now + $250 later"
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="mb-6">
+              <div className="border rounded-lg p-4">
+                <h3 className="text-md font-medium flex items-center gap-2 mb-2">
+                  <Tag className="h-4 w-4" />
+                  Promo Code
+                </h3>
+                
+                {promoApplied ? (
+                  <div className="bg-green-50 text-green-800 rounded-md px-3 py-2 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium">{promoCode.toUpperCase()}</p>
+                        <p className="text-xs">{discount}% discount applied</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setPromoApplied(false);
+                        setPromoCode("");
+                        setDiscount(0);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Enter promo code" 
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                      className="flex-1"
+                      disabled={applyingPromo}
+                    />
+                    <Button 
+                      onClick={handleApplyPromoCode}
+                      disabled={applyingPromo || !promoCode.trim()}
+                    >
+                      {applyingPromo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {!clientSecret ? (
@@ -253,8 +377,13 @@ export default function MembershipPage() {
                   <CardTitle>Complete Your Payment</CardTitle>
                   <CardDescription>
                     {paymentType === "full" 
-                      ? "You'll be charged $500 for your membership" 
-                      : "You'll be charged $250 now, and $250 in 30 days"}
+                      ? promoApplied 
+                        ? `You'll be charged $${(500 * (100 - discount) / 100).toFixed(0)} for your membership (${discount}% off)`
+                        : "You'll be charged $500 for your membership"
+                      : promoApplied
+                        ? `You'll be charged $${(250 * (100 - discount) / 100).toFixed(0)} now (${discount}% off), and $250 in 30 days`
+                        : "You'll be charged $250 now, and $250 in 30 days"
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
