@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, CalendarIcon, X, Clock } from "lucide-react";
+import { Check, CalendarIcon, X, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Child } from "@/lib/types";
 import { format, addDays } from "date-fns";
@@ -17,6 +17,7 @@ import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import AvailableScheduledSitters from "./AvailableScheduledSitters";
 
 // Form validation schema
@@ -48,11 +49,17 @@ interface ScheduledCareModalProps {
 
 export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareModalProps) {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [hoursNeeded, setHoursNeeded] = useState(2);
   const [showAvailableSitters, setShowAvailableSitters] = useState(false);
   const [playAndGreetStatus, setPlayAndGreetStatus] = useState<{[key: string]: boolean}>({});
   const [bookingStatus, setBookingStatus] = useState<{[key: string]: boolean}>({});
+  
+  const hasMembership = !!user && (
+    user.membershipStatus === "active" || 
+    user.membershipStatus === "installment_2"
+  );
   
   // Reset form when modal is opened
   useEffect(() => {
@@ -148,6 +155,31 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
               Request a babysitter up to 7 days in advance.
             </DialogDescription>
           </DialogHeader>
+
+          {!hasMembership && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-amber-800">Membership Required</h3>
+                  <p className="text-sm text-amber-700 mt-1">
+                    You need an active membership to schedule childcare services.
+                  </p>
+                  <Button 
+                    className="mt-2" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      navigate("/membership");
+                    }}
+                  >
+                    Get Membership
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

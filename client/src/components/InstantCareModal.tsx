@@ -597,8 +597,9 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                 type="submit"
                 style={{ backgroundColor: "#3c5679" }}
                 className="w-full text-white font-medium"
+                disabled={!hasMembership}
               >
-                Find Available Sitters
+                {hasMembership ? "Find Available Sitters" : "Membership Required"}
               </Button>
             </form>
           </Form>
