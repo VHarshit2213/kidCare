@@ -27,8 +27,8 @@ export default function MobileNav() {
   return (
     <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white shadow-t border-t border-neutral-200 z-10">
       <div className="grid grid-cols-5 divide-x divide-neutral-100">
-        <Link href="/">
-          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+        <div className="flex flex-col items-center py-3 px-2">
+          <Link href="/" className={`flex flex-col items-center ${isActive("/") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -44,8 +44,8 @@ export default function MobileNav() {
               />
             </svg>
             <span className="text-xs mt-1">Home</span>
-          </a>
-        </Link>
+          </Link>
+        </div>
         
         <button 
           onClick={handleRequestSitter}
@@ -95,8 +95,8 @@ export default function MobileNav() {
           <span className="text-xs mt-1">Schedule</span>
         </button>
 
-        <Link href="/messages">
-          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+        <div className="flex flex-col items-center py-3 px-2">
+          <Link href="/messages" className={`flex flex-col items-center ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -112,11 +112,11 @@ export default function MobileNav() {
               />
             </svg>
             <span className="text-xs mt-1">Messages</span>
-          </a>
-        </Link>
+          </Link>
+        </div>
 
-        <Link href="/profile">
-          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/profile") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+        <div className="flex flex-col items-center py-3 px-2">
+          <Link href="/profile" className={`flex flex-col items-center ${isActive("/profile") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -132,8 +132,8 @@ export default function MobileNav() {
               />
             </svg>
             <span className="text-xs mt-1">Profile</span>
-          </a>
-        </Link>
+          </Link>
+        </div>
       </div>
     </div>
   );
