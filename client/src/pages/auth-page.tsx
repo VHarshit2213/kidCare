@@ -88,7 +88,11 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-brand-blue mb-2">The Enchanted Co.</h1>
+            <img 
+              src="/src/assets/enchanted-logo.png" 
+              alt="The Enchanted Co. Logo" 
+              className="h-20 w-auto mx-auto mb-2"
+            />
             <p className="text-gray-600">Your trusted childcare partner</p>
           </div>
 

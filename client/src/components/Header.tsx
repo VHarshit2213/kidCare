@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import logo from "../assets/enchanted-logo-full.jpg";
+import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
@@ -33,7 +33,7 @@ export default function Header() {
               <img 
                 src={logo} 
                 alt="The Enchanted Co. Logo" 
-                className="h-8 w-auto mix-blend-multiply"
+                className="h-12 w-auto"
               />
             </Link>
             <nav className="hidden sm:ml-10 sm:flex sm:space-x-8">
