@@ -58,26 +58,20 @@ export default function MembershipSuccess() {
               <h3 className="text-xl font-semibold mb-4">What's Next?</h3>
               <ul className="text-left space-y-3">
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
-                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                    📝
                   </span>
                   <span>Complete your <strong>parent profile</strong> with information about your family and children</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
-                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                    👨‍👩‍👧‍👦
                   </span>
                   <span>Browse our <strong>verified babysitters</strong> to find the perfect match for your family</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1">
-                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                    🚀
                   </span>
                   <span>Request babysitting services using our <strong>instant care</strong> or <strong>scheduled care</strong> options</span>
                 </li>

@@ -185,11 +185,11 @@ export default function MembershipPage() {
 
   return (
     <Layout>
-      <div className="container max-w-6xl py-10">
-        <div className="grid gap-8 md:grid-cols-2">
+      <div className="container max-w-6xl py-10 mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
           {/* Left side: Membership options */}
           <div>
-            <h1 className="text-3xl font-bold mb-6">Membership Registration</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center md:text-left">Membership Registration</h1>
             <p className="mb-8 text-gray-700">
               Welcome to The Enchanted Co.! To access our premium babysitting services, 
               please complete your membership registration. We offer two payment options 
@@ -246,7 +246,7 @@ export default function MembershipPage() {
                   <CardTitle>Complete Your Payment</CardTitle>
                   <CardDescription>
                     {paymentType === "full" 
-                      ? "You'll be charged $500 for your annual membership" 
+                      ? "You'll be charged $500 for your membership" 
                       : "You'll be charged $250 now, and $250 in 30 days"}
                   </CardDescription>
                 </CardHeader>
@@ -272,50 +272,38 @@ export default function MembershipPage() {
             <h2 className="text-2xl font-bold mb-6">Membership Benefits</h2>
             <ul className="space-y-4">
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  👨‍👩‍👧‍👦
                 </span>
                 <span>Access to our network of verified, professional babysitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  ⚡
                 </span>
                 <span>Book last-minute care with our Instant Care feature</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  📅
                 </span>
                 <span>Schedule babysitting up to 7 days in advance</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  🤝
                 </span>
                 <span>"Play and Greet" meetings with potential babysitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  ⭐
                 </span>
                 <span>Priority booking with popular sitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                  🔄
                 </span>
                 <span>24/7 customer support</span>
               </li>
