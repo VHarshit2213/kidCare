@@ -47,28 +47,83 @@ export default function Header() {
               >
                 Home
               </Link>
-              <button 
-                onClick={() => isAuthenticated 
-                  ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
-                  : navigate("/auth")}
-                className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md px-3 py-1.5 font-medium text-sm shadow-sm"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Request a Sitter
-              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button 
+                    className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md px-3 py-1.5 font-medium text-sm shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Request Care
+                    <svg className="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2">
+                  <div className="grid gap-2">
+                    <Button 
+                      onClick={() => isAuthenticated 
+                        ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
+                        : navigate("/auth")}
+                      className="justify-start bg-[#3c5679] hover:bg-[#2c4059] text-white" 
+                      size="sm"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Instant Care
+                    </Button>
+                    <Button 
+                      onClick={() => isAuthenticated 
+                        ? window.dispatchEvent(new CustomEvent('open-scheduled-care'))
+                        : navigate("/auth")}
+                      variant="outline" 
+                      className="justify-start border-brand-pink text-brand-blue"
+                      size="sm"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-2 text-brand-pink"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Scheduled Care
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Link
                 href="/bookings"
                 className={`${

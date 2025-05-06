@@ -15,12 +15,20 @@ export default function MobileNav() {
       navigate("/auth");
     }
   };
+  
+  const handleScheduledCare = () => {
+    if (isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('open-scheduled-care'));
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <div className="sm:hidden fixed bottom-0 inset-x-0 bg-white shadow-t border-t border-neutral-200 z-10">
-      <div className="flex justify-around">
+      <div className="grid grid-cols-5 divide-x divide-neutral-100">
         <Link href="/">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -41,14 +49,14 @@ export default function MobileNav() {
         
         <button 
           onClick={handleRequestSitter}
-          className="flex flex-col items-center py-3 px-4 text-[#3c5679] font-medium relative"
+          className="flex flex-col items-center py-3 px-2 text-[#3c5679] font-medium relative"
         >
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 bg-[#3c5679] text-white text-[10px] px-2 py-0.5 rounded-full">
-            Book
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#3c5679] text-white text-[10px] px-2 py-0.5 rounded-full">
+            Now
           </div>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
+            className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -60,31 +68,35 @@ export default function MobileNav() {
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span className="text-xs mt-1">Request a Sitter</span>
+          <span className="text-xs mt-1">Instant</span>
+        </button>
+        
+        <button 
+          onClick={handleScheduledCare}
+          className="flex flex-col items-center py-3 px-2 text-brand-pink font-medium relative"
+        >
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-brand-pink text-white text-[10px] px-2 py-0.5 rounded-full">
+            Plan
+          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="text-xs mt-1">Schedule</span>
         </button>
 
-        <Link href="/bookings">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/bookings") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="text-xs mt-1">Bookings</span>
-          </a>
-        </Link>
-
         <Link href="/messages">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -104,7 +116,7 @@ export default function MobileNav() {
         </Link>
 
         <Link href="/profile">
-          <a className={`flex flex-col items-center py-3 px-4 ${isActive("/profile") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+          <a className={`flex flex-col items-center py-3 px-2 ${isActive("/profile") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 import AvailableScheduledSitters from "./AvailableScheduledSitters";
 
 // Form validation schema
@@ -46,14 +47,28 @@ interface ScheduledCareModalProps {
 }
 
 export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareModalProps) {
-  const [date, setDate] = useState<Date>();
+  const { user } = useAuth();
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [hoursNeeded, setHoursNeeded] = useState(2);
   const [showAvailableSitters, setShowAvailableSitters] = useState(false);
-  const [showPlayAndGreetSuccess, setShowPlayAndGreetSuccess] = useState<{[key: string]: boolean}>({});
+  const [playAndGreetStatus, setPlayAndGreetStatus] = useState<{[key: string]: boolean}>({});
   const [bookingStatus, setBookingStatus] = useState<{[key: string]: boolean}>({});
   
-  // Mock child data - in a real app, this would be fetched from your database
-  const childOptions: Child[] = [
+  // Reset form when modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        date: new Date(),
+        startTime: "",
+        endTime: "",
+        children: [],
+        careInstructions: ""
+      });
+    }
+  }, [isOpen]);
+  
+  // Mock child data - in a real app, this would be fetched from user's children
+  const childOptions: { id: string; name: string }[] = [
     { id: "1", name: "Emma" },
     { id: "2", name: "Noah" },
     { id: "3", name: "Olivia" },
@@ -63,6 +78,7 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
   const form = useForm<ScheduledCareFormData>({
     resolver: zodResolver(scheduledCareSchema),
     defaultValues: {
+      date: new Date(),
       children: [],
       careInstructions: "",
     },
@@ -94,7 +110,7 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
   };
   
   const handlePlayAndGreet = (sitterId: number) => {
-    setShowPlayAndGreetSuccess(prev => ({
+    setPlayAndGreetStatus(prev => ({
       ...prev,
       [sitterId.toString()]: true
     }));
@@ -120,20 +136,11 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
         date={date || new Date()}
         startTime={form.getValues().startTime || ""}
         endTime={form.getValues().endTime || ""}
-        playAndGreetStatus={showPlayAndGreetSuccess}
+        playAndGreetStatus={playAndGreetStatus}
         bookingStatus={bookingStatus}
       />
     
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="bg-white text-brand-blue hover:bg-gray-50 border-brand-pink"
-          >
-            <CalendarIcon className="mr-2 h-4 w-4 text-brand-pink" />
-            Schedule Care
-          </Button>
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Schedule Childcare</DialogTitle>

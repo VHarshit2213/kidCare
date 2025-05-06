@@ -1,29 +1,32 @@
 import { useState, useEffect } from "react";
-import InstantCareModal from "./InstantCareModal";
-import ScheduledCareModal from "./ScheduledCareModal";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
 import brandBackgroundImage from "../assets/IMG_1660.jpg";
 import logoImage from "../assets/enchanted-logo-full.jpg";
 import nurseryCribImage from "../assets/jenna-duxbury-KZ7cfMnSDh8-unsplash.jpg";
 
 export default function Hero() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const [, navigate] = useLocation();
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
+  const handleInstantCareRequest = () => {
+    if (isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('open-sitter-request'));
+    } else {
+      navigate("/auth");
+    }
   };
   
-  // Listen for the custom event to open the sitter request modal
-  useEffect(() => {
-    const handleOpenSitterRequest = () => {
-      setIsModalOpen(true);
-    };
-    
-    window.addEventListener('open-sitter-request', handleOpenSitterRequest);
-    
-    return () => {
-      window.removeEventListener('open-sitter-request', handleOpenSitterRequest);
-    };
-  }, []);
+  const handleScheduledCareRequest = () => {
+    if (isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('open-scheduled-care'));
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <>
@@ -54,19 +57,28 @@ export default function Hero() {
             </div>
             
             <div className="flex flex-wrap gap-3 justify-center">
-              <button 
-                onClick={toggleModal}
-                className="btn-brand-primary px-6 py-3 shadow-lg text-lg"
+              <Button 
+                onClick={handleInstantCareRequest}
+                size="lg"
+                style={{ backgroundColor: "#3c5679" }}
+                className="px-6 py-3 text-white text-lg shadow-lg"
               >
                 Request a Sitter Now
-              </button>
-              <ScheduledCareModal />
+              </Button>
+              
+              <Button 
+                onClick={handleScheduledCareRequest}
+                variant="outline" 
+                size="lg"
+                className="px-6 py-3 bg-white text-brand-blue hover:bg-gray-50 border-brand-pink text-lg shadow-lg"
+              >
+                <CalendarIcon className="mr-2 h-5 w-5 text-brand-pink" />
+                Schedule Care
+              </Button>
             </div>
           </div>
         </div>
       </div>
-
-      <InstantCareModal isOpen={isModalOpen} onClose={toggleModal} />
     </>
   );
 }
