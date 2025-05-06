@@ -325,8 +325,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Available 24/7</h3>
-                <p className="text-white/80">Find care whenever you need it, day or night</p>
+                <h3 className="font-semibold text-lg">Convenient Care Options</h3>
+                <p className="text-white/80">Find care with flexible scheduling options</p>
               </div>
             </div>
             <div className="flex items-start">
@@ -336,8 +336,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Flexible Options</h3>
-                <p className="text-white/80">Schedule in advance or book instantly</p>
+                <h3 className="font-semibold text-lg">Booking Flexibility</h3>
+                <p className="text-white/80">Schedule in advance or request same-day care</p>
               </div>
             </div>
           </div>
