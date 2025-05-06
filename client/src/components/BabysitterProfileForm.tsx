@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
-import { Save, Loader2, Upload } from 'lucide-react';
+import { Save, Loader2, Upload, AlertCircle } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Schema for the babysitter profile form
 const profileFormSchema = z.object({
@@ -37,7 +39,20 @@ const profileFormSchema = z.object({
       const rate = Number(val);
       return !isNaN(rate) && rate >= 35 && rate <= 50;
     }, 'Hourly rate must be between $35 and $50'),
-  firstAidCertified: z.boolean().default(false),
+  firstAidCertified: z.enum(['yes', 'no']).default('no'),
+  firstAidCertificationDoc: z.string().optional()
+    .refine(
+      (val: string | undefined, ctx: z.RefinementCtx) => {
+        // If firstAidCertified is 'yes', certification doc is required
+        if (ctx.path[0] === 'firstAidCertificationDoc' && 
+            ctx.parent && 
+            (ctx.parent as any).firstAidCertified === 'yes') {
+          return !!val;
+        }
+        return true;
+      }, 
+      { message: 'Certification document is required' }
+    ),
   hasTransportation: z.boolean().default(false),
   skills: z.array(z.string()).min(1, 'Please select at least one skill'),
 });
@@ -98,7 +113,8 @@ export default function BabysitterProfileForm() {
       hasVideo: false,
       videoUrl: '',
       hourlyRate: user?.hourlyRate ? String(user.hourlyRate) : '35',
-      firstAidCertified: user?.firstAidCertified || false,
+      firstAidCertified: user?.firstAidCertified ? 'yes' : 'no',
+      firstAidCertificationDoc: '',
       hasTransportation: user?.hasTransportation || false,
       skills: user?.skills || [],
     },
@@ -183,6 +199,25 @@ export default function BabysitterProfileForm() {
           description: 'Your introduction video has been uploaded successfully.',
         });
       }, 2000);
+    }
+  };
+  
+  // Function to handle certification document upload
+  const handleCertificationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setIsUploading(true);
+      
+      // Simulate upload process
+      setTimeout(() => {
+        const docURL = URL.createObjectURL(e.target.files![0]);
+        form.setValue('firstAidCertificationDoc', docURL);
+        setIsUploading(false);
+        
+        toast({
+          title: 'Document uploaded',
+          description: 'Your certification document has been uploaded successfully.',
+        });
+      }, 1500);
     }
   };
 
@@ -485,21 +520,98 @@ export default function BabysitterProfileForm() {
                     control={form.control}
                     name="firstAidCertified"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="space-y-3">
+                        <FormLabel>
+                          Are you First Aid / CPR certified?
+                        </FormLabel>
                         <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="yes" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Yes
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="no" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                No
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            First Aid Certified
-                          </FormLabel>
-                          <FormDescription>
-                            Do you have first aid or CPR certification?
-                          </FormDescription>
-                        </div>
+                        <FormDescription>
+                          First Aid and CPR certification is required to work as a babysitter with The Enchanted Co.
+                        </FormDescription>
+                        
+                        {field.value === 'no' && (
+                          <Alert className="bg-amber-50 text-amber-800 border-amber-200">
+                            <AlertCircle className="h-4 w-4 text-amber-800" />
+                            <AlertDescription>
+                              First Aid / CPR certification is required. Please obtain certification before you can start babysitting.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        {field.value === 'yes' && (
+                          <div className="space-y-3 mt-3">
+                            <FormField
+                              control={form.control}
+                              name="firstAidCertificationDoc"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Upload Certification Document</FormLabel>
+                                  <FormControl>
+                                    <div className="flex flex-col space-y-2">
+                                      <Input
+                                        type="file"
+                                        id="certification-upload"
+                                        onChange={handleCertificationUpload}
+                                        disabled={isUploading}
+                                        className="hidden"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                      />
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={() => document.getElementById('certification-upload')?.click()}
+                                          disabled={isUploading}
+                                        >
+                                          {isUploading ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Upload className="mr-2 h-4 w-4" />
+                                          )}
+                                          {field.value ? 'Change Document' : 'Upload Document'}
+                                        </Button>
+                                        {field.value && (
+                                          <span className="text-sm text-green-600">Document uploaded</span>
+                                        )}
+                                      </div>
+                                      {!field.value && (
+                                        <p className="text-sm text-gray-500">
+                                          Upload a copy of your certification (PDF, JPG, or PNG)
+                                        </p>
+                                      )}
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
