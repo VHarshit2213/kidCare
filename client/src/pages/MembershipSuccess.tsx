@@ -58,22 +58,22 @@ export default function MembershipSuccess() {
               <h3 className="text-xl font-semibold mb-4">What's Next?</h3>
               <ul className="text-left space-y-3">
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                  <span>Complete your <strong>parent profile</strong> with information about your family and children</span>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 ml-3 text-lg">
                     📝
                   </span>
-                  <span>Complete your <strong>parent profile</strong> with information about your family and children</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                  <span>Browse our <strong>verified babysitters</strong> to find the perfect match for your family</span>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 ml-3 text-lg">
                     👨‍👩‍👧‍👦
                   </span>
-                  <span>Browse our <strong>verified babysitters</strong> to find the perfect match for your family</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 mr-3 mt-1 text-lg">
+                  <span>Request babysitting services using our <strong>instant care</strong> or <strong>scheduled care</strong> options</span>
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-100 p-1 ml-3 text-lg">
                     🚀
                   </span>
-                  <span>Request babysitting services using our <strong>instant care</strong> or <strong>scheduled care</strong> options</span>
                 </li>
               </ul>
             </div>

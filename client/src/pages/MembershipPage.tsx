@@ -272,40 +272,40 @@ export default function MembershipPage() {
             <h2 className="text-2xl font-bold mb-6">Membership Benefits</h2>
             <ul className="space-y-4">
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>Access to our network of verified, professional babysitters</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   👨‍👩‍👧‍👦
                 </span>
-                <span>Access to our network of verified, professional babysitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>Book last-minute care with our Instant Care feature</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   ⚡
                 </span>
-                <span>Book last-minute care with our Instant Care feature</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>Schedule babysitting up to 7 days in advance</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   📅
                 </span>
-                <span>Schedule babysitting up to 7 days in advance</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>"Play and Greet" meetings with potential babysitters</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   🤝
                 </span>
-                <span>"Play and Greet" meetings with potential babysitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>Priority booking with popular sitters</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   ⭐
                 </span>
-                <span>Priority booking with popular sitters</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 mr-3 mt-1 text-lg">
+                <span>24/7 customer support</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-1 ml-3 text-lg">
                   🔄
                 </span>
-                <span>24/7 customer support</span>
               </li>
             </ul>
 
