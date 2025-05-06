@@ -30,7 +30,7 @@ type SafeUser = Omit<User, "password">;
 
 export default function AdminPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("parents");
+  const [activeTab, setActiveTab] = useState("pending-reviews");
 
   // Check if the user is authenticated and has admin privileges
   if (!user) {
@@ -56,6 +56,11 @@ export default function AdminPage() {
   // Filter users by type
   const parents = users.filter((user) => user.userType === "parent");
   const babysitters = users.filter((user) => user.userType === "babysitter");
+  
+  // Filter babysitters by review status
+  const pendingReviewBabysitters = babysitters.filter(
+    (sitter) => sitter.reviewStatus === "pending"
+  );
 
   const renderUserTable = (userList: SafeUser[]) => {
     return (
@@ -129,7 +134,15 @@ export default function AdminPage() {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="w-full grid grid-cols-2">
+                <TabsList className="w-full grid grid-cols-3">
+                  <TabsTrigger value="pending-reviews" className="relative">
+                    Pending Reviews
+                    {pendingReviewBabysitters.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        {pendingReviewBabysitters.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                   <TabsTrigger value="parents">
                     Parents ({parents.length})
                   </TabsTrigger>
@@ -141,6 +154,81 @@ export default function AdminPage() {
                   <h2 className="text-xl font-semibold mb-4">Parent Profiles</h2>
                   {renderUserTable(parents)}
                 </TabsContent>
+                <TabsContent value="pending-reviews" className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Pending Babysitter Profile Reviews
+                  </h2>
+                  <Table>
+                    <TableCaption>Babysitter profiles awaiting admin review</TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Full Name</TableHead>
+                        <TableHead>Certification</TableHead>
+                        <TableHead>Transportation</TableHead>
+                        <TableHead>Submission Date</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingReviewBabysitters.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center">
+                            No profiles awaiting review
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        pendingReviewBabysitters.map((sitter) => (
+                          <TableRow key={sitter.id}>
+                            <TableCell className="font-medium">{sitter.fullName}</TableCell>
+                            <TableCell>
+                              <Badge variant={sitter.firstAidCertified ? "success" : "destructive"}>
+                                {sitter.firstAidCertified ? "Yes" : "No"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={sitter.hasTransportation ? "success" : "destructive"}>
+                                {sitter.hasTransportation ? "Yes" : "No"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>May 06, 2025</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <UserDetailsDialog 
+                                  user={sitter}
+                                  trigger={
+                                    <Button variant="outline" size="sm">
+                                      View Profile
+                                    </Button>
+                                  }
+                                />
+                                <Button 
+                                  variant="default" 
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => {
+                                    // Will implement review approval function
+                                  }}
+                                >
+                                  Approve
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={() => {
+                                    // Will implement review rejection function
+                                  }}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+                
                 <TabsContent value="babysitters" className="mt-6">
                   <h2 className="text-xl font-semibold mb-4">
                     Caregiver Profiles

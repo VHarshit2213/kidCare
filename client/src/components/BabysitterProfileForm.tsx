@@ -142,6 +142,8 @@ export default function BabysitterProfileForm() {
         ...data,
         yearsExperience: data.experienceYears,
         profileCompleted: activeTab === 'additional-info' ? true : undefined,
+        // Add review status if profile is being completed
+        reviewStatus: activeTab === 'additional-info' ? 'pending' : undefined,
       };
       
       const res = await apiRequest('PATCH', '/api/users/profile', profileData);
@@ -154,7 +156,7 @@ export default function BabysitterProfileForm() {
       if (activeTab === 'additional-info') {
         toast({
           title: 'Profile completed!',
-          description: 'Your babysitter profile has been successfully completed.',
+          description: 'Your profile has been sent to admin for review and will be available soon.',
         });
       } else {
         toast({

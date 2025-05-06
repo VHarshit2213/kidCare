@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   address: text("address"),
   phoneNumber: text("phone_number"),
   profileCompleted: boolean("profile_completed").default(false),
+  reviewStatus: text("review_status").default("none"), // "none", "pending", "approved", "rejected"
   
   // Payment and membership fields
   membershipStatus: text("membership_status").default("none"), // "none", "pending", "active"
