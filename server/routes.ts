@@ -632,10 +632,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentType = paymentIntent.metadata.paymentType;
         const membershipStatus = paymentType === "full" ? "active" : "installment_1";
         
-        // Update user's membership status (we'll add this method to the storage interface)
+        // Update user's membership status with the new dedicated method
         try {
-          await storage.updateUserProfile(Number(userId), {
-            membershipStatus: membershipStatus
+          await storage.updateUserMembership(Number(userId), {
+            membershipStatus,
+            membershipType: paymentType === "full" ? "one-time" : "installment",
+            membershipPaymentDate: new Date(),
+            stripePaymentIntentId: paymentIntentId
           });
         } catch (err) {
           console.warn("Could not update user membership status:", err);

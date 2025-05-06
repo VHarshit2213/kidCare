@@ -19,18 +19,26 @@ export const users = pgTable("users", {
   yearsExperience: integer("years_experience"), // for babysitters
   location: text("location"), // General location information
   
-  // Parent profile fields
+  // Shared profile fields
   firstName: text("first_name"),
   lastName: text("last_name"),
   address: text("address"),
   phoneNumber: text("phone_number"),
+  profileCompleted: boolean("profile_completed").default(false),
+  
+  // Payment and membership fields
+  membershipStatus: text("membership_status").default("none"), // "none", "pending", "active"
+  membershipType: text("membership_type"), // "one-time" or "installment"
+  membershipPaymentDate: timestamp("membership_payment_date"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  
+  // Parent profile fields
   parentingStyle: text("parenting_style"),
   familyDescription: text("family_description"),
   familyActivities: text("family_activities"),
   medicalDietaryRestrictions: text("medical_dietary_restrictions"),
-  membershipStatus: text("membership_status"), // "active", "installment_1", "installment_2", or "expired"
   emergencyContacts: jsonb("emergency_contacts"),
-  profileCompleted: boolean("profile_completed").default(false),
 });
 
 // Booking requests schema

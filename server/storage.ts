@@ -18,6 +18,15 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserProfile(userId: number, profileData: Partial<User>): Promise<User | undefined>;
   
+  // Membership methods
+  updateUserMembership(userId: number, membershipData: {
+    membershipStatus: string;
+    membershipType: string;
+    membershipPaymentDate?: Date;
+    stripeCustomerId?: string;
+    stripePaymentIntentId?: string;
+  }): Promise<User | undefined>;
+  
   // Booking methods
   createBooking(booking: InsertBooking): Promise<Booking>;
   getBooking(id: number): Promise<Booking | undefined>;
@@ -117,17 +126,24 @@ export class MemStorage implements IStorage {
       hasTransportation: insertUser.hasTransportation || null,
       yearsExperience: insertUser.yearsExperience || null,
       location: insertUser.location || null,
-      // Initialize parent profile fields
+      // Initialize shared profile fields
       firstName: null,
       lastName: null,
       address: null,
       phoneNumber: null,
+      profileCompleted: false,
+      // Initialize membership fields
+      membershipStatus: 'none',
+      membershipType: null,
+      membershipPaymentDate: null,
+      stripeCustomerId: null,
+      stripePaymentIntentId: null,
+      // Initialize parent profile fields
       parentingStyle: null,
       familyDescription: null,
       familyActivities: null,
       medicalDietaryRestrictions: null,
-      emergencyContacts: null,
-      profileCompleted: false
+      emergencyContacts: null
     };
     this.users.set(id, user);
     return user;
@@ -138,6 +154,29 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
     
     const updatedUser = { ...user, ...profileData };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserMembership(userId: number, membershipData: {
+    membershipStatus: string;
+    membershipType: string;
+    membershipPaymentDate?: Date;
+    stripeCustomerId?: string;
+    stripePaymentIntentId?: string;
+  }): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { 
+      ...user, 
+      membershipStatus: membershipData.membershipStatus,
+      membershipType: membershipData.membershipType,
+      membershipPaymentDate: membershipData.membershipPaymentDate || null,
+      stripeCustomerId: membershipData.stripeCustomerId || null,
+      stripePaymentIntentId: membershipData.stripePaymentIntentId || null
+    };
+    
     this.users.set(userId, updatedUser);
     return updatedUser;
   }

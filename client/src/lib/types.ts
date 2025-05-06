@@ -24,6 +24,12 @@ export interface User {
   address?: string;
   phoneNumber?: string;
   profileCompleted?: boolean;
+  // Payment and membership fields
+  membershipStatus?: 'none' | 'pending' | 'active';
+  membershipType?: 'one-time' | 'installment';
+  membershipPaymentDate?: string;
+  stripeCustomerId?: string;
+  stripePaymentIntentId?: string;
   // Parent profile fields
   parentingStyle?: string;
   familyDescription?: string;
