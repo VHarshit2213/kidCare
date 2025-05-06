@@ -79,20 +79,42 @@ export class MemStorage implements IStorage {
     });
     
     // Create admin user with a complete profile
-    const adminUser = this.createUser({
+    const adminUser = {
+      id: this.userIdCounter++,
       username: "admin",
       password: "admin123", // Plain password - we'll skip hashing for the admin account
       email: "hello@lovetheenchantedco.com",
       fullName: "System Administrator",
       userType: "parent", // using parent type for simplicity
-    });
-    
-    // Update admin to have a completed profile
-    this.updateUserProfile(adminUser.id, {
       profileCompleted: true,
       firstName: "System",
-      lastName: "Administrator"
-    });
+      lastName: "Administrator",
+      // Initialize fields with default values
+      profileImageUrl: null,
+      bio: null,
+      hourlyRate: null,
+      skills: null,
+      firstAidCertified: null,
+      hasTransportation: null,
+      yearsExperience: null,
+      location: null,
+      address: null,
+      phoneNumber: null,
+      membershipStatus: 'none',
+      membershipType: null,
+      membershipPaymentDate: null,
+      stripeCustomerId: null,
+      stripePaymentIntentId: null,
+      parentingStyle: null,
+      familyDescription: null,
+      familyActivities: null,
+      medicalDietaryRestrictions: null,
+      emergencyContacts: null,
+      reviewStatus: null
+    };
+    
+    // Add admin user to the users map
+    this.users.set(adminUser.id, adminUser);
     
     // Add guest parent account for anonymous bookings with pre-hashed password
     this.createUser({
@@ -122,6 +144,8 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
+    
+    // Create a base user object with all fields properly initialized
     const user: User = { 
       ...insertUser, 
       id,
@@ -150,8 +174,16 @@ export class MemStorage implements IStorage {
       familyDescription: null,
       familyActivities: null,
       medicalDietaryRestrictions: null,
-      emergencyContacts: null
+      emergencyContacts: null,
+      // Initialize review status for babysitters
+      reviewStatus: null
     };
+    
+    // Handle any additional fields from insertUser
+    if ('reviewStatus' in insertUser) {
+      (user as any).reviewStatus = insertUser.reviewStatus || null;
+    }
+    
     this.users.set(id, user);
     return user;
   }
@@ -299,6 +331,8 @@ export class MemStorage implements IStorage {
     const child: Child = {
       ...insertChild,
       id,
+      // Create a name field from firstName and lastName if not provided
+      name: insertChild.name || `${insertChild.firstName} ${insertChild.lastName}`,
       dateOfBirth: insertChild.dateOfBirth || null,
       personality: insertChild.personality || null,
       specialCare: insertChild.specialCare || null,

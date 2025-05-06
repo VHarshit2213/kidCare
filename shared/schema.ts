@@ -75,6 +75,7 @@ export const children = pgTable("children", {
   parentId: integer("parent_id").notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
+  name: text("name").notNull(), // Added for convenience, combines firstName and lastName
   dateOfBirth: timestamp("date_of_birth"),
   personality: text("personality"), // interests, special qualities
   specialCare: text("special_care"), // any special care requirements
