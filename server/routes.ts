@@ -13,6 +13,16 @@ import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import express from "express";
 import { setupAuth } from "./auth";
+import Stripe from "stripe";
+
+// Initialize Stripe with secret key
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('Missing Stripe secret key. Stripe payment features will not work.');
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
