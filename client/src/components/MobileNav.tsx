@@ -1,12 +1,19 @@
 import { useLocation, Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MobileNav() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
 
   const isActive = (path: string) => location === path;
   
   const handleRequestSitter = () => {
-    window.dispatchEvent(new CustomEvent('open-sitter-request'));
+    if (isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('open-sitter-request'));
+    } else {
+      navigate("/auth");
+    }
   };
 
   return (

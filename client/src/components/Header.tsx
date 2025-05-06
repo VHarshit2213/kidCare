@@ -48,7 +48,9 @@ export default function Header() {
                 Home
               </Link>
               <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-sitter-request'))}
+                onClick={() => isAuthenticated 
+                  ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
+                  : navigate("/auth")}
                 className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md px-3 py-1.5 font-medium text-sm shadow-sm"
               >
                 <svg
@@ -159,7 +161,9 @@ export default function Header() {
           {/* Mobile buttons */}
           <div className="flex items-center sm:hidden space-x-2">
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-sitter-request'))}
+              onClick={() => isAuthenticated 
+                ? window.dispatchEvent(new CustomEvent('open-sitter-request'))
+                : navigate("/auth")}
               className="inline-flex items-center justify-center p-2 bg-[#3c5679] text-white rounded-md"
             >
               <svg
