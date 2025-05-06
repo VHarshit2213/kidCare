@@ -40,8 +40,12 @@ const scheduledCareSchema = z.object({
 
 type ScheduledCareFormData = z.infer<typeof scheduledCareSchema>;
 
-export default function ScheduledCareModal() {
-  const [isOpen, setIsOpen] = useState(false);
+interface ScheduledCareModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareModalProps) {
   const [date, setDate] = useState<Date>();
   const [hoursNeeded, setHoursNeeded] = useState(2);
   const [showAvailableSitters, setShowAvailableSitters] = useState(false);
@@ -86,7 +90,7 @@ export default function ScheduledCareModal() {
     console.log("Scheduled care form submitted:", data);
     // Here you would normally send this data to your backend
     setShowAvailableSitters(true);
-    setIsOpen(false);
+    onClose();
   };
   
   const handlePlayAndGreet = (sitterId: number) => {
@@ -120,7 +124,7 @@ export default function ScheduledCareModal() {
         bookingStatus={bookingStatus}
       />
     
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogTrigger asChild>
           <Button 
             variant="outline" 
