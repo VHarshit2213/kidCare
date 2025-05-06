@@ -78,19 +78,20 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000, // prune expired entries every 24h
     });
     
-    // Add admin user
+    // Add admin user with pre-hashed password for 'admin123'
+    // The hash below was generated with the hashPassword function in auth.ts
     this.createUser({
       username: "admin",
-      password: "admin123",
+      password: "5c06eb684a0745403631a13dc6a2467dddef0120c581596dd00dc9c02f8c90e7d87c453a40aa9c39899065cb94097f6e97c10c7fbfadc6d02b30a2932a8ae4bc.fd55ed552bed9e54",
       email: "admin@enchantedco.com",
       fullName: "System Administrator",
       userType: "parent", // using parent type for simplicity
     });
     
-    // Add guest parent account for anonymous bookings
+    // Add guest parent account for anonymous bookings with pre-hashed password
     this.createUser({
       username: "guest_parent",
-      password: "guest123",
+      password: "47cf919d3bec75c4a2e51c895c3b8f2d50bfc1f4bcf28e564e5a33ef3e3d38173b3d4a38e3cd65cad529cce3fc21fb48733a1839e4b9209c3c3f9c55fb8fd5d1.5ac3ad64c0e811a0",
       email: "guest@example.com",
       fullName: "Guest Parent",
       userType: "parent",
@@ -322,10 +323,10 @@ export class MemStorage implements IStorage {
 
   // Helper to add demo babysitters
   private addDemoBabysitters() {
-    // Demo babysitter 1
+    // Demo babysitter 1 - using pre-hashed password for "password123"
     this.createUser({
       username: "emily_wilson",
-      password: "password123", // In a real app, this would be hashed
+      password: "c82a7ac3fe35eb06fbf7ac2174cefa5e0fffc29d76ad9a3a6b5ac0be93203c8f0e01ae466400b2ea144d374a4215a232a84649cdb3072366a7b6a5c8d4bbc319.04e5ff2d3a97a75c",
       email: "emily@example.com",
       fullName: "Emily Wilson",
       userType: "babysitter",
@@ -336,13 +337,14 @@ export class MemStorage implements IStorage {
       firstAidCertified: true,
       hasTransportation: true,
       yearsExperience: 5,
-      location: "New York, NY"
+      location: "New York, NY",
+      reviewStatus: "pending"
     });
 
-    // Demo babysitter 2
+    // Demo babysitter 2 - using pre-hashed password for "password123"
     this.createUser({
       username: "marcus_johnson",
-      password: "password123",
+      password: "c82a7ac3fe35eb06fbf7ac2174cefa5e0fffc29d76ad9a3a6b5ac0be93203c8f0e01ae466400b2ea144d374a4215a232a84649cdb3072366a7b6a5c8d4bbc319.04e5ff2d3a97a75c",
       email: "marcus@example.com",
       fullName: "Marcus Johnson",
       userType: "babysitter",
@@ -353,13 +355,14 @@ export class MemStorage implements IStorage {
       firstAidCertified: true,
       hasTransportation: true,
       yearsExperience: 3,
-      location: "Chicago, IL"
+      location: "Chicago, IL",
+      reviewStatus: "pending"
     });
 
-    // Demo babysitter 3
+    // Demo babysitter 3 - using pre-hashed password for "password123"
     this.createUser({
       username: "sophia_martinez",
-      password: "password123",
+      password: "c82a7ac3fe35eb06fbf7ac2174cefa5e0fffc29d76ad9a3a6b5ac0be93203c8f0e01ae466400b2ea144d374a4215a232a84649cdb3072366a7b6a5c8d4bbc319.04e5ff2d3a97a75c",
       email: "sophia@example.com",
       fullName: "Sophia Martinez",
       userType: "babysitter",
@@ -370,7 +373,8 @@ export class MemStorage implements IStorage {
       firstAidCertified: true,
       hasTransportation: false,
       yearsExperience: 8,
-      location: "Los Angeles, CA"
+      location: "Los Angeles, CA",
+      reviewStatus: "pending"
     });
   }
 }
