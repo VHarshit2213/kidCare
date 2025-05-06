@@ -461,8 +461,9 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                 type="submit"
                 style={{ backgroundColor: "#3c5679" }}
                 className="w-full text-white font-medium"
+                disabled={!hasMembership}
               >
-                Schedule Sitter
+                {hasMembership ? "Schedule Sitter" : "Membership Required"}
               </Button>
             </form>
           </Form>
