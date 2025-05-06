@@ -30,16 +30,13 @@ export function ProtectedRoute({
     );
   }
 
-  // For the admin user, always allow access to the admin page regardless of profile completion
-  if (user.username === "admin" && path === "/admin") {
+  // Admin is exempt from profile completion check for all pages
+  if (user.username === "admin") {
     return <Route path={path}>{() => <Component />}</Route>;
   }
 
-  // If the user's profile is not complete and they're not trying to complete it
-  // and they're not the admin trying to access the admin page, redirect them
-  if (!user.profileCompleted && 
-      path !== "/profile-completion" && 
-      !(user.username === "admin" && path === "/admin")) {
+  // For regular users, check if their profile is complete
+  if (!user.profileCompleted && path !== "/profile-completion") {
     return (
       <Route path={path}>
         <Redirect to="/profile-completion" />
