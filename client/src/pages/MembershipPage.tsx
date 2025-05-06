@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Elements } from "@stripe/react-stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,27 +19,28 @@ const MembershipPaymentForm: React.FC<{
   clientSecret: string;
   onSuccess: () => void;
 }> = ({ clientSecret, onSuccess }) => {
-  const stripe = stripePromise;
+  const stripe = useStripe();
+  const elements = useElements();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!stripe || !elements) {
+      // Stripe.js hasn't loaded yet
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
-      const stripeInstance = await stripe;
-      if (!stripeInstance) {
-        throw new Error("Failed to load Stripe");
-      }
-
       // Confirm the payment
-      const { error } = await stripeInstance.confirmPayment({
-        elements: undefined as any, // We're using redirect flow, not Elements
+      const { error } = await stripe.confirmPayment({
+        elements,
         confirmParams: {
           return_url: `${window.location.origin}/membership-success`,
         },
-        redirect: "always",
       });
 
       if (error) {
@@ -49,6 +50,8 @@ const MembershipPaymentForm: React.FC<{
           variant: "destructive",
         });
       } else {
+        // This point will only be reached if there is an immediate error when confirming the payment.
+        // Otherwise, your customer will be redirected to your `return_url`
         onSuccess();
       }
     } catch (error: any) {
@@ -63,14 +66,17 @@ const MembershipPaymentForm: React.FC<{
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PaymentElement />
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isSubmitting}
+        disabled={isSubmitting || !stripe || !elements}
         size="lg"
       >
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isSubmitting ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : null}
         Complete Payment
       </Button>
     </form>

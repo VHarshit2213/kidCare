@@ -25,7 +25,7 @@ export interface User {
   phoneNumber?: string;
   profileCompleted?: boolean;
   // Payment and membership fields
-  membershipStatus?: 'none' | 'pending' | 'active';
+  membershipStatus?: 'none' | 'pending' | 'active' | 'installment_1' | 'installment_2' | 'expired';
   membershipType?: 'one-time' | 'installment';
   membershipPaymentDate?: string;
   stripeCustomerId?: string;
