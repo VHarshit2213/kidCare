@@ -15,6 +15,8 @@ import NotFound from "@/pages/NotFound";
 import AuthPage from "@/pages/auth-page";
 import ProfileCompletion from "@/pages/ProfileCompletion";
 import AdminPage from "@/pages/AdminPage";
+import MembershipPage from "@/pages/MembershipPage";
+import MembershipSuccess from "@/pages/MembershipSuccess";
 
 function App() {
   return (

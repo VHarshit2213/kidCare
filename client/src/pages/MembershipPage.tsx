@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { loadStripe } from "@stripe/stripe-js";
@@ -124,13 +124,13 @@ export default function MembershipPage() {
   }
 
   // Request payment intent on component mount
-  useState(() => {
+  useEffect(() => {
     const fetchPaymentIntent = async () => {
       setIsLoading(true);
       try {
         const response = await apiRequest("POST", "/api/create-membership-intent", {
           paymentType: selectedTab as "full" | "installment",
-          userId: user.id,
+          userId: user?.id,
         });
         
         const data = await response.json();
@@ -149,7 +149,7 @@ export default function MembershipPage() {
     if (user) {
       fetchPaymentIntent();
     }
-  }, [selectedTab, user?.id]);
+  }, [selectedTab, user, toast]);
 
   // Handle tab change
   const handleTabChange = async (value: string) => {
@@ -179,7 +179,7 @@ export default function MembershipPage() {
   const stripeOptions = {
     clientSecret,
     appearance: {
-      theme: 'stripe',
+      theme: 'stripe' as const,
       variables: {
         colorPrimary: '#3c5679',
       },

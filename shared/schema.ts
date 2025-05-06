@@ -28,6 +28,7 @@ export const users = pgTable("users", {
   familyDescription: text("family_description"),
   familyActivities: text("family_activities"),
   medicalDietaryRestrictions: text("medical_dietary_restrictions"),
+  membershipStatus: text("membership_status"), // "active", "installment_1", "installment_2", or "expired"
   emergencyContacts: jsonb("emergency_contacts"),
   profileCompleted: boolean("profile_completed").default(false),
 });

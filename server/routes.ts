@@ -558,6 +558,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Membership Payment Routes
+  if (process.env.STRIPE_SECRET_KEY) {
+    // Create payment intent for membership payment
+    app.post("/api/create-membership-intent", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { paymentType, userId } = req.body;
+        
+        if (!paymentType || !userId) {
+          return res.status(400).json({ message: "Payment type and user ID are required" });
+        }
+        
+        // Verify the user exists
+        const user = await storage.getUser(Number(userId));
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Calculate amount based on payment type
+        const amount = paymentType === "full" ? 50000 : 25000; // in cents: $500 or $250
+        
+        if (!stripe) {
+          return res.status(500).json({ message: "Stripe is not configured" });
+        }
+
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: "usd",
+          metadata: {
+            userId: userId.toString(),
+            paymentType,
+            membershipType: paymentType === "full" ? "full_payment" : "installment_1"
+          },
+        });
+        
+        res.status(200).json({
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+        });
+      } catch (error: any) {
+        console.error("Error creating payment intent:", error);
+        res.status(500).json({ message: error.message || "Failed to create payment intent" });
+      }
+    });
+    
+    // Verify a completed payment
+    app.post("/api/verify-membership-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { paymentIntentId, userId } = req.body;
+        
+        if (!paymentIntentId || !userId) {
+          return res.status(400).json({ message: "Payment intent ID and user ID are required" });
+        }
+        
+        // Verify the user exists
+        const user = await storage.getUser(Number(userId));
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        if (!stripe) {
+          return res.status(500).json({ message: "Stripe is not configured" });
+        }
+        
+        // Retrieve the payment intent
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        
+        if (paymentIntent.status !== "succeeded") {
+          return res.status(400).json({ message: "Payment has not succeeded" });
+        }
+        
+        // Extract payment type from metadata
+        const paymentType = paymentIntent.metadata.paymentType;
+        const membershipStatus = paymentType === "full" ? "active" : "installment_1";
+        
+        // Update user's membership status (we'll add this method to the storage interface)
+        try {
+          await storage.updateUserProfile(Number(userId), {
+            membershipStatus: membershipStatus
+          });
+        } catch (err) {
+          console.warn("Could not update user membership status:", err);
+        }
+        
+        res.status(200).json({
+          success: true,
+          paymentType,
+          membershipStatus,
+        });
+      } catch (error: any) {
+        console.error("Error verifying payment:", error);
+        res.status(500).json({ message: error.message || "Failed to verify payment" });
+      }
+    });
+    
+    // Update membership status endpoint
+    app.patch("/api/users/membership", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { userId, membershipStatus } = req.body;
+        
+        if (!userId || !membershipStatus) {
+          return res.status(400).json({ message: "User ID and membership status are required" });
+        }
+        
+        // Only allow specific membership status values
+        if (!["active", "installment_1", "installment_2", "expired"].includes(membershipStatus)) {
+          return res.status(400).json({ message: "Invalid membership status" });
+        }
+        
+        // Update the user profile with membership status
+        const updatedUser = await storage.updateUserProfile(Number(userId), {
+          membershipStatus
+        });
+        
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Don't send password back
+        const { password, ...userWithoutPassword } = updatedUser;
+        
+        res.status(200).json(userWithoutPassword);
+      } catch (error: any) {
+        res.status(500).json({ message: error.message || "Failed to update membership status" });
+      }
+    });
+  }
+
   const httpServer = createServer(app);
 
   return httpServer;
