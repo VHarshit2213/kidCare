@@ -53,7 +53,20 @@ const profileFormSchema = z.object({
       }, 
       { message: 'Certification document is required' }
     ),
-  hasTransportation: z.boolean().default(false),
+  hasTransportation: z.enum(['yes', 'no']).default('no'),
+  driversLicenseDoc: z.string().optional()
+    .refine(
+      (val: string | undefined, ctx: z.RefinementCtx) => {
+        // If hasTransportation is 'yes', driver's license doc is required
+        if (ctx.path[0] === 'driversLicenseDoc' && 
+            ctx.parent && 
+            (ctx.parent as any).hasTransportation === 'yes') {
+          return !!val;
+        }
+        return true;
+      }, 
+      { message: 'Driver\'s license document is required' }
+    ),
   skills: z.array(z.string()).min(1, 'Please select at least one skill'),
 });
 
@@ -115,7 +128,8 @@ export default function BabysitterProfileForm() {
       hourlyRate: user?.hourlyRate ? String(user.hourlyRate) : '35',
       firstAidCertified: user?.firstAidCertified ? 'yes' : 'no',
       firstAidCertificationDoc: '',
-      hasTransportation: user?.hasTransportation || false,
+      hasTransportation: user?.hasTransportation ? 'yes' : 'no',
+      driversLicenseDoc: '',
       skills: user?.skills || [],
     },
   });
@@ -216,6 +230,25 @@ export default function BabysitterProfileForm() {
         toast({
           title: 'Document uploaded',
           description: 'Your certification document has been uploaded successfully.',
+        });
+      }, 1500);
+    }
+  };
+  
+  // Function to handle driver's license document upload
+  const handleLicenseUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setIsUploading(true);
+      
+      // Simulate upload process
+      setTimeout(() => {
+        const docURL = URL.createObjectURL(e.target.files![0]);
+        form.setValue('driversLicenseDoc', docURL);
+        setIsUploading(false);
+        
+        toast({
+          title: 'Document uploaded',
+          description: 'Your driver\'s license has been uploaded successfully.',
         });
       }, 1500);
     }
@@ -620,21 +653,98 @@ export default function BabysitterProfileForm() {
                     control={form.control}
                     name="hasTransportation"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="space-y-3">
+                        <FormLabel>
+                          Do you have your own transportation?
+                        </FormLabel>
                         <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="yes" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Yes
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="no" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                No
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Has Transportation
-                          </FormLabel>
-                          <FormDescription>
-                            Do you have your own transportation?
-                          </FormDescription>
-                        </div>
+                        <FormDescription>
+                          Having your own transportation is preferred for babysitting positions that require travel.
+                        </FormDescription>
+                        
+                        {field.value === 'no' && (
+                          <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Without your own transportation, you may be limited to certain babysitting opportunities in your immediate area.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        {field.value === 'yes' && (
+                          <div className="space-y-3 mt-3">
+                            <FormField
+                              control={form.control}
+                              name="driversLicenseDoc"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Upload Driver's License</FormLabel>
+                                  <FormControl>
+                                    <div className="flex flex-col space-y-2">
+                                      <Input
+                                        type="file"
+                                        id="license-upload"
+                                        onChange={handleLicenseUpload}
+                                        disabled={isUploading}
+                                        className="hidden"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                      />
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          onClick={() => document.getElementById('license-upload')?.click()}
+                                          disabled={isUploading}
+                                        >
+                                          {isUploading ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <Upload className="mr-2 h-4 w-4" />
+                                          )}
+                                          {field.value ? 'Change Document' : 'Upload License'}
+                                        </Button>
+                                        {field.value && (
+                                          <span className="text-sm text-green-600">License uploaded</span>
+                                        )}
+                                      </div>
+                                      {!field.value && (
+                                        <p className="text-sm text-gray-500">
+                                          Upload a copy of your driver's license (PDF, JPG, or PNG)
+                                        </p>
+                                      )}
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                        
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
