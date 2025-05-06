@@ -41,12 +41,25 @@ export default function AuthPage() {
 
   // Redirect based on user status
   if (user) {
-    // If profile is not completed, redirect to profile completion
-    if (!user.profileCompleted) {
-      navigate("/profile-completion");
+    // For parents, check if they need to complete profile or membership
+    if (user.userType === "parent") {
+      if (!user.membershipStatus) {
+        // Parents without membership go to membership page
+        navigate("/membership");
+      } else if (!user.profileCompleted) {
+        // Parents with membership but incomplete profile go to profile completion
+        navigate("/profile-completion");
+      } else {
+        // Parents with completed profiles and membership go to home
+        navigate("/");
+      }
     } else {
-      // Otherwise, redirect to home
-      navigate("/");
+      // Babysitters
+      if (!user.profileCompleted) {
+        navigate("/profile-completion");
+      } else {
+        navigate("/");
+      }
     }
     return null;
   }

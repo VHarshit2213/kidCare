@@ -93,9 +93,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/user"], data);
+      
+      // If the user is a parent, redirect to membership page
+      if (data.userType === "parent") {
+        // Use window.location to force a full page reload and avoid React state issues
+        window.location.href = "/membership";
+      }
+      
       toast({
         title: "Registration successful",
-        description: `Welcome to The Enchanted Co., ${data.fullName}!`,
+        description: data.userType === "parent" 
+          ? `Welcome to The Enchanted Co., ${data.fullName}! Please complete your membership registration.`
+          : `Welcome to The Enchanted Co., ${data.fullName}!`,
       });
     },
     onError: (error) => {
