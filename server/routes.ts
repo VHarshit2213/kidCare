@@ -455,6 +455,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message || "Failed to fetch users" });
     }
   });
+  
+  // Update babysitter review status (for admin approval workflow)
+  app.patch("/api/admin/users/:id/review", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Check if the user is an admin
+      if (user.username !== "admin") {
+        return res.status(403).json({ message: "Unauthorized: Admin access required" });
+      }
+      
+      const userId = Number(req.params.id);
+      const { reviewStatus } = req.body;
+      
+      if (!reviewStatus || !['approved', 'rejected', 'pending'].includes(reviewStatus)) {
+        return res.status(400).json({ message: "Valid review status required (approved, rejected, or pending)" });
+      }
+      
+      // Get the user to check if it's a babysitter
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.userType !== "babysitter") {
+        return res.status(400).json({ message: "Review status can only be set for babysitters" });
+      }
+      
+      // Update the user's review status
+      const updatedUser = await storage.updateUserProfile(userId, { reviewStatus });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Failed to update user" });
+      }
+      
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update review status" });
+    }
+  });
 
   // Child Management Routes
   // Add a child to a parent's profile

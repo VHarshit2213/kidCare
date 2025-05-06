@@ -75,6 +75,24 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                         Profile Complete
                       </Badge>
                     )}
+                    {user.userType === "babysitter" && user.reviewStatus && (
+                      <Badge 
+                        variant={
+                          user.reviewStatus === "approved" 
+                            ? "success" 
+                            : user.reviewStatus === "rejected"
+                            ? "destructive"
+                            : "outline"
+                        } 
+                        className="ml-2"
+                      >
+                        {user.reviewStatus === "approved" 
+                          ? "Approved" 
+                          : user.reviewStatus === "rejected"
+                          ? "Rejected"
+                          : "Pending Review"}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -150,10 +168,24 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                         </p>
                       </div>
                       {user.userType === "babysitter" && (
-                        <div>
-                          <h4 className="font-medium">Brief Bio</h4>
-                          <p className="text-gray-600">{user.bio || "No bio provided"}</p>
-                        </div>
+                        <>
+                          <div>
+                            <h4 className="font-medium">Brief Bio</h4>
+                            <p className="text-gray-600">{user.bio || "No bio provided"}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium">Review Status</h4>
+                            <p className="text-gray-600">
+                              {user.reviewStatus === "approved" 
+                                ? "Approved - Caregiver is verified and ready to accept bookings" 
+                                : user.reviewStatus === "rejected"
+                                ? "Rejected - Caregiver profile has been rejected"
+                                : user.reviewStatus === "pending"
+                                ? "Pending Review - Caregiver profile is awaiting admin approval"
+                                : "Not submitted for review"}
+                            </p>
+                          </div>
+                        </>
                       )}
                       {user.userType === "parent" && (
                         <div>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 import UserDetailsDialog from "@/components/admin/UserDetailsDialog";
 
@@ -30,7 +32,64 @@ type SafeUser = Omit<User, "password">;
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("pending-reviews");
+  
+  // Mutation for approving babysitter profiles
+  const approveMutation = useMutation({
+    mutationFn: async (sitterId: number) => {
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/admin/users/${sitterId}/review`, 
+        { reviewStatus: "approved" }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Approved",
+        description: "Babysitter profile has been approved successfully.",
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve babysitter profile.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for rejecting babysitter profiles
+  const rejectMutation = useMutation({
+    mutationFn: async (sitterId: number) => {
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/admin/users/${sitterId}/review`, 
+        { reviewStatus: "rejected" }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Rejected",
+        description: "Babysitter profile has been rejected.",
+        variant: "default",
+      });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject babysitter profile.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Check if the user is authenticated and has admin privileges
   if (!user) {
@@ -204,20 +263,29 @@ export default function AdminPage() {
                                 <Button 
                                   variant="default" 
                                   size="sm"
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => {
-                                    // Will implement review approval function
-                                  }}
+                                  className="bg-green-600 hover:bg-green-700 flex items-center gap-1"
+                                  onClick={() => approveMutation.mutate(sitter.id)}
+                                  disabled={approveMutation.isPending}
                                 >
+                                  {approveMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <CheckCircle className="h-3 w-3" />
+                                  )}
                                   Approve
                                 </Button>
                                 <Button 
                                   variant="destructive" 
                                   size="sm"
-                                  onClick={() => {
-                                    // Will implement review rejection function
-                                  }}
+                                  onClick={() => rejectMutation.mutate(sitter.id)}
+                                  disabled={rejectMutation.isPending}
+                                  className="flex items-center gap-1"
                                 >
+                                  {rejectMutation.isPending ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <X className="h-3 w-3" />
+                                  )}
                                   Reject
                                 </Button>
                               </div>
