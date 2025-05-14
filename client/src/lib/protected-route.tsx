@@ -35,7 +35,19 @@ export function ProtectedRoute({
     return <Route path={path}>{() => <Component />}</Route>;
   }
 
-  // For regular users, check if their profile is complete
+  // For parent users, check if they need to complete membership first
+  if (user.userType === "parent" && 
+      (user.membershipStatus === "none" || !user.membershipStatus) && 
+      path !== "/membership" &&
+      path !== "/membership-success") {
+    return (
+      <Route path={path}>
+        <Redirect to="/membership" />
+      </Route>
+    );
+  }
+
+  // For all users, check if their profile is complete after membership (if applicable)
   if (!user.profileCompleted && path !== "/profile-completion") {
     return (
       <Route path={path}>
