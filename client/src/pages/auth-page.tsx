@@ -55,31 +55,12 @@ export default function AuthPage() {
       profileCompleted: user.profileCompleted
     });
     
-    // For parents, check if they need to complete profile or membership
-    if (user.userType === "parent") {
-      if (!user.membershipStatus || user.membershipStatus === 'none') {
-        // Parents without membership go to membership page
-        console.log("Auth page: Redirecting parent to membership page");
-        navigate("/membership");
-      } else if (!user.profileCompleted) {
-        // Parents with membership but incomplete profile go to profile completion
-        console.log("Auth page: Redirecting parent to profile completion");
-        navigate("/profile-completion");
-      } else {
-        // Parents with completed profiles and membership go to home
-        console.log("Auth page: Redirecting parent to home");
-        navigate("/");
-      }
-    } else {
-      // Babysitters
-      if (!user.profileCompleted) {
-        console.log("Auth page: Redirecting babysitter to profile completion");
-        navigate("/profile-completion");
-      } else {
-        console.log("Auth page: Redirecting babysitter to home");
-        navigate("/");
-      }
-    }
+    // For all users, first go to home page, we'll let the protected routes handle further redirects
+    console.log("Auth page: Redirecting to home page, which will redirect as needed");
+    navigate("/");
+    
+    // Using the direct approach was causing blank pages, so we'll use a simpler redirection flow
+    // and let the ProtectedRoute component handle specific redirections
     return null;
   }
 

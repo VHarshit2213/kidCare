@@ -19,6 +19,8 @@ export function ProtectedRoute({
     membershipStatus: user.membershipStatus,
     profileCompleted: user.profileCompleted
   } : "not authenticated");
+  
+  console.log(`ProtectedRoute (${path}): Current location is ${location}`);
 
   if (isLoading) {
     return (
@@ -49,6 +51,14 @@ export function ProtectedRoute({
       path !== "/membership" &&
       path !== "/membership-success") {
     console.log(`ProtectedRoute (${path}): Redirecting parent to membership page. Current membershipStatus: ${user.membershipStatus}`);
+    
+    // Use window.location for a full page reload to avoid state issues
+    if (location !== "/membership") {
+      console.log("Forcing hard redirect to membership page");
+      window.location.href = "/membership";
+      return <div>Redirecting...</div>;
+    }
+    
     return (
       <Route path={path}>
         <Redirect to="/membership" />
@@ -58,6 +68,7 @@ export function ProtectedRoute({
 
   // For all users, check if their profile is complete after membership (if applicable)
   if (!user.profileCompleted && path !== "/profile-completion") {
+    console.log(`ProtectedRoute (${path}): Redirecting to profile completion page`);
     return (
       <Route path={path}>
         <Redirect to="/profile-completion" />

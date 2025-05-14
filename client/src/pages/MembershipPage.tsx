@@ -14,8 +14,11 @@ import { Input } from "@/components/ui/input";
 export default function MembershipPage() {
   console.log("MembershipPage: Component rendered");
   const [_, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  
+  // Debug the component mounting
+  console.log("MembershipPage mounted");
   
   console.log("MembershipPage: User data:", user ? {
     id: user.id,
@@ -25,7 +28,6 @@ export default function MembershipPage() {
   } : "not authenticated");
   
   const [paymentType, setPaymentType] = useState<"full" | "installment">("full");
-  const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState("FAMILY24"); // Auto-set the promo code
   const [promoApplied, setPromoApplied] = useState(true); // Auto-apply
   const [discount, setDiscount] = useState(100); // 100% discount
@@ -49,8 +51,10 @@ export default function MembershipPage() {
     }
   }, [user, navigate]);
 
+  const [activating, setActivating] = useState(false);
+  
   const activateMembership = async () => {
-    setIsLoading(true);
+    setActivating(true);
     try {
       console.log("MembershipPage: Activating membership for user", user?.id);
       
@@ -83,7 +87,7 @@ export default function MembershipPage() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setActivating(false);
     }
   };
 
