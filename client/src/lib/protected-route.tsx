@@ -1,6 +1,22 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route, useLocation } from "wouter";
+import { useEffect } from "react";
+
+// Helper component to handle navigation after render
+function RedirectEffect({ to }: { to: string }) {
+  const [_, navigate] = useLocation();
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigate(to);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [to, navigate]);
+  
+  return null;
+}
 
 export function ProtectedRoute({
   path,
@@ -10,7 +26,7 @@ export function ProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   
   console.log(`ProtectedRoute (${path}): User:`, user ? {
     id: user.id,
@@ -52,16 +68,16 @@ export function ProtectedRoute({
       path !== "/membership-success") {
     console.log(`ProtectedRoute (${path}): Redirecting parent to membership page. Current membershipStatus: ${user.membershipStatus}`);
     
-    // Use window.location for a full page reload to avoid state issues
-    if (location !== "/membership") {
-      console.log("Forcing hard redirect to membership page");
-      window.location.href = "/membership";
-      return <div>Redirecting...</div>;
-    }
-    
+    // Handle the redirect in a simple way to avoid navigation issues
     return (
       <Route path={path}>
-        <Redirect to="/membership" />
+        <div className="container max-w-6xl py-10">
+          <div className="flex items-center justify-center flex-col space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
+            <p>Redirecting to membership page...</p>
+            <RedirectEffect to="/membership" />
+          </div>
+        </div>
       </Route>
     );
   }
