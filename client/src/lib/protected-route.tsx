@@ -4,16 +4,14 @@ import { Redirect, Route, useLocation } from "wouter";
 import { useEffect } from "react";
 
 // Helper component to handle navigation after render
-function RedirectEffect({ to }: { to: string }) {
-  const [_, navigate] = useLocation();
-  
+function RedirectComponent({ to }: { to: string }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate(to);
-    }, 100);
+      window.location.href = to;
+    }, 500);
     
     return () => clearTimeout(timer);
-  }, [to, navigate]);
+  }, [to]);
   
   return null;
 }
@@ -75,7 +73,7 @@ export function ProtectedRoute({
           <div className="flex items-center justify-center flex-col space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
             <p>Redirecting to membership page...</p>
-            {setTimeout(() => window.location.href = "/membership", 500)}
+            <RedirectComponent to="/membership" />
           </div>
         </div>
       </Route>
