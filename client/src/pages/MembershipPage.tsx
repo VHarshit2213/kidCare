@@ -169,10 +169,13 @@ export default function MembershipPage() {
               
               {/* Promo code section */}
               <div className="border rounded-lg p-4">
-                <h3 className="text-md font-medium flex items-center gap-2 mb-2">
+                <h3 className="text-md font-medium flex items-center gap-2 mb-1">
                   <Tag className="h-4 w-4" />
                   Promo Code
                 </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Have a special promotional code? Enter it here for a discount.
+                </p>
                 
                 {promoApplied ? (
                   <div className="bg-green-50 text-green-800 rounded-md px-3 py-2 flex justify-between items-center">
@@ -198,7 +201,7 @@ export default function MembershipPage() {
                 ) : (
                   <div className="flex gap-2">
                     <Input 
-                      placeholder="Enter promo code (try FAMILY24)" 
+                      placeholder="Enter your promo code" 
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
                       className="flex-1"
