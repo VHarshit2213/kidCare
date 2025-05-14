@@ -38,7 +38,10 @@ function App() {
           <ProtectedRoute path="/profile" component={Profile} />
           <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
           <ProtectedRoute path="/admin" component={AdminPage} />
-          <ProtectedRoute path="/membership" component={MembershipPage} />
+          <ProtectedRoute path="/membership" component={() => {
+            console.log("Rendering membership page");
+            return <MembershipPage />;
+          }} />
           <ProtectedRoute path="/membership-success" component={() => <EnsureRender Component={MembershipSuccess} />} />
           <Route component={NotFound} />
         </Switch>
