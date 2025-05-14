@@ -38,12 +38,7 @@ function App() {
           <ProtectedRoute path="/profile" component={Profile} />
           <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
           <ProtectedRoute path="/admin" component={AdminPage} />
-          <Route path="/membership">
-            {() => {
-              console.log("Rendering membership page directly");
-              return <MembershipPage />;
-            }}
-          </Route>
+          <Route path="/membership" component={MembershipPage} />
           <ProtectedRoute path="/membership-success" component={() => <EnsureRender Component={MembershipSuccess} />} />
           <Route component={NotFound} />
         </Switch>

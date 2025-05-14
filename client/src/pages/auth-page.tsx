@@ -55,12 +55,19 @@ export default function AuthPage() {
       profileCompleted: user.profileCompleted
     });
     
-    // For all users, first go to home page, we'll let the protected routes handle further redirects
-    console.log("Auth page: Redirecting to home page, which will redirect as needed");
-    navigate("/");
-    
-    // Using the direct approach was causing blank pages, so we'll use a simpler redirection flow
-    // and let the ProtectedRoute component handle specific redirections
+    // For parent users who need to complete their membership, redirect directly to membership page
+    if (user.userType === "parent" && (!user.membershipStatus || user.membershipStatus === "none")) {
+      console.log("Auth page: Redirecting parent directly to membership page");
+      navigate("/membership");
+    } else if (!user.profileCompleted) {
+      // Users without completed profiles go to profile completion
+      console.log("Auth page: Redirecting to profile completion page");
+      navigate("/profile-completion");
+    } else {
+      // Users with completed profiles go to home
+      console.log("Auth page: Redirecting to home page");
+      navigate("/");
+    }
     return null;
   }
 

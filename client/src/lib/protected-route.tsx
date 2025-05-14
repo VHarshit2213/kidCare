@@ -75,7 +75,7 @@ export function ProtectedRoute({
           <div className="flex items-center justify-center flex-col space-y-4">
             <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
             <p>Redirecting to membership page...</p>
-            <RedirectEffect to="/membership" />
+            {setTimeout(() => window.location.href = "/membership", 500)}
           </div>
         </div>
       </Route>
