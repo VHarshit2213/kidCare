@@ -11,6 +11,14 @@ export function ProtectedRoute({
 }) {
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
+  
+  console.log(`ProtectedRoute (${path}): User:`, user ? {
+    id: user.id,
+    username: user.username,
+    userType: user.userType,
+    membershipStatus: user.membershipStatus,
+    profileCompleted: user.profileCompleted
+  } : "not authenticated");
 
   if (isLoading) {
     return (
@@ -40,6 +48,7 @@ export function ProtectedRoute({
       (user.membershipStatus === "none" || !user.membershipStatus) && 
       path !== "/membership" &&
       path !== "/membership-success") {
+    console.log(`ProtectedRoute (${path}): Redirecting parent to membership page. Current membershipStatus: ${user.membershipStatus}`);
     return (
       <Route path={path}>
         <Redirect to="/membership" />

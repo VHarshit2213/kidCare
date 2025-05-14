@@ -13,8 +13,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
-// Load stripe outside of component rendering to avoid recreating the Stripe object on every render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// We're temporarily removing the Stripe integration for the demo
+// When in production, we would use:
+// const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = null;
 
 const MembershipPaymentForm: React.FC<{
   clientSecret: string;
@@ -92,9 +94,17 @@ const MembershipPaymentForm: React.FC<{
 };
 
 export default function MembershipPage() {
+  console.log("MembershipPage: Component rendered");
   const [_, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  console.log("MembershipPage: User data:", user ? {
+    id: user.id,
+    username: user.username,
+    userType: user.userType,
+    membershipStatus: user.membershipStatus
+  } : "not authenticated");
   const [paymentType, setPaymentType] = useState<"full" | "installment">("full");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
@@ -170,51 +180,39 @@ export default function MembershipPage() {
   const createPaymentIntent = async () => {
     setIsLoading(true);
     try {
-      // Special handling for 100% discount - skip payment and directly activate membership
-      if (promoApplied && discount === 100) {
-        // Directly proceed to membership activation
-        const response = await apiRequest("PATCH", "/api/users/membership", {
-          userId: user?.id,
-          membershipStatus: paymentType === "full" ? "active" : "installment_1",
-          promoCode: promoCode,
-          discount: 100
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to activate membership");
-        }
-        
-        toast({
-          title: "Membership Activated!",
-          description: "Your free membership has been activated. Welcome to The Enchanted Co.!",
-        });
-        
-        // Redirect to success page
-        navigate("/membership-success");
-        return;
+      // Always use the promo code flow to activate membership (for demo)
+      // Set a default promo code if none provided
+      if (!promoApplied) {
+        setPromoCode("FAMILY24");
+        setPromoApplied(true);
+        setDiscount(100);
       }
-      
-      // Normal flow for paid memberships
-      const response = await apiRequest("POST", "/api/create-membership-intent", {
-        paymentType,
+
+      // Directly proceed to membership activation
+      const response = await apiRequest("PATCH", "/api/users/membership", {
         userId: user?.id,
-        promoCode: promoApplied ? promoCode : undefined,
-        discount: promoApplied ? discount : 0,
+        membershipStatus: paymentType === "full" ? "active" : "installment_1",
+        promoCode: promoCode || "FAMILY24",
+        discount: 100
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create payment intent");
+        throw new Error(errorData.message || "Failed to activate membership");
       }
-
-      const data = await response.json();
-      setClientSecret(data.clientSecret);
-      setPaymentIntentId(data.paymentIntentId);
+      
+      toast({
+        title: "Membership Activated!",
+        description: "Your free membership has been activated. Welcome to The Enchanted Co.!",
+      });
+      
+      // Redirect to success page
+      navigate("/membership-success");
+      return;
     } catch (error: any) {
       toast({
-        title: "Payment Setup Failed",
-        description: error.message || "An error occurred setting up your payment",
+        title: "Membership Activation Failed",
+        description: error.message || "An error occurred activating your membership",
         variant: "destructive",
       });
     } finally {

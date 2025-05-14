@@ -47,23 +47,36 @@ export default function AuthPage() {
 
   // Redirect based on user status
   if (user) {
+    console.log("Auth page: User detected", {
+      id: user.id,
+      username: user.username,
+      userType: user.userType,
+      membershipStatus: user.membershipStatus,
+      profileCompleted: user.profileCompleted
+    });
+    
     // For parents, check if they need to complete profile or membership
     if (user.userType === "parent") {
-      if (!user.membershipStatus) {
+      if (!user.membershipStatus || user.membershipStatus === 'none') {
         // Parents without membership go to membership page
+        console.log("Auth page: Redirecting parent to membership page");
         navigate("/membership");
       } else if (!user.profileCompleted) {
         // Parents with membership but incomplete profile go to profile completion
+        console.log("Auth page: Redirecting parent to profile completion");
         navigate("/profile-completion");
       } else {
         // Parents with completed profiles and membership go to home
+        console.log("Auth page: Redirecting parent to home");
         navigate("/");
       }
     } else {
       // Babysitters
       if (!user.profileCompleted) {
+        console.log("Auth page: Redirecting babysitter to profile completion");
         navigate("/profile-completion");
       } else {
+        console.log("Auth page: Redirecting babysitter to home");
         navigate("/");
       }
     }
