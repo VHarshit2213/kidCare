@@ -224,13 +224,13 @@ export default function Header() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-[#7e57c2] hover:text-[#7e57c2]/90 hover:bg-purple-50 font-medium tracking-wide"
+                  className="text-[#3c5679] hover:text-[#3c5679]/90 hover:bg-blue-50 font-medium tracking-wide"
                   onClick={() => navigate("/auth")}
                 >
                   Login
                 </Button>
                 <Button 
-                  className="bg-[#7e57c2] hover:bg-[#6a46b0] text-white font-medium tracking-wide rounded-[4px]"
+                  className="bg-[#3c5679] hover:bg-[#2c4059] text-white font-medium tracking-wide rounded-[4px]"
                   onClick={() => navigate("/auth")}
                 >
                   Sign Up
