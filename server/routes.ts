@@ -437,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const smsSent = await sendBookingConfirmationSMS(booking, parent, babysitter);
           notifications.sms.sent = smsSent;
-        } catch (error) {
+        } catch (error: any) {
           notifications.sms.error = error.message || "Failed to send SMS";
         }
       }
@@ -454,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const sitterCallSent = await makeBookingConfirmationCall(booking, babysitter, false);
             notifications.call.sent = sitterCallSent && notifications.call.sent;
           }
-        } catch (error) {
+        } catch (error: any) {
           notifications.call.error = error.message || "Failed to make call";
         }
       }
