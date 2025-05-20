@@ -1,36 +1,21 @@
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-neutral-100 mt-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="space-y-4">
-            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">The Enchanted Co.</h3>
-            <p className="text-neutral-600 text-sm leading-relaxed">
-              Bringing peace of mind to parents with reliable, background-checked babysitters available when you need them.
-            </p>
+    <footer className="bg-white border-t border-neutral-100 mt-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-wrap justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <span className="text-[#3c5679] font-medium">The Enchanted Co.</span>
+            <span className="text-neutral-400">|</span>
+            <a href="mailto:hello@lovetheenchantedco.com" className="text-[#3c5679] text-sm hover:underline">hello@lovetheenchantedco.com</a>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><a href="/" className="text-neutral-600 hover:text-[#3c5679] text-sm">Home</a></li>
-              <li><a href="/bookings" className="text-neutral-600 hover:text-[#3c5679] text-sm">My Bookings</a></li>
-              <li><a href="/messages" className="text-neutral-600 hover:text-[#3c5679] text-sm">Messages</a></li>
-              <li><a href="/profile" className="text-neutral-600 hover:text-[#3c5679] text-sm">Profile</a></li>
-            </ul>
+          <div className="flex space-x-4 mt-3 md:mt-0">
+            <a href="/" className="text-neutral-600 hover:text-[#3c5679] text-sm">Home</a>
+            <a href="/bookings" className="text-neutral-600 hover:text-[#3c5679] text-sm">Bookings</a>
+            <a href="/messages" className="text-neutral-600 hover:text-[#3c5679] text-sm">Messages</a>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">Contact</h3>
-            <p className="text-neutral-600 text-sm leading-relaxed">
-              Questions? Need support?<br />
-              Email us at <a href="mailto:hello@lovetheenchantedco.com" className="text-[#3c5679]">hello@lovetheenchantedco.com</a>
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex justify-center items-center mt-10 pt-6 border-t border-neutral-100">
-          <p className="text-sm text-neutral-500 tracking-wide">© {new Date().getFullYear()} The Enchanted Co. All rights reserved.</p>
+          <p className="w-full md:w-auto text-sm text-neutral-500 mt-3 md:mt-0">© {new Date().getFullYear()} The Enchanted Co. All rights reserved.</p>
         </div>
       </div>
     </footer>
