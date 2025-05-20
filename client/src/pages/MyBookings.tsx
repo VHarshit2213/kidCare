@@ -3,15 +3,37 @@ import Layout from "@/components/Layout";
 import BookingCard from "@/components/BookingCard";
 import { Booking } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { CalendarClock, Clock, ChevronDown } from "lucide-react";
+import InstantCareModal from "@/components/InstantCareModal";
+import ScheduledCareModal from "@/components/ScheduledCareModal";
 
 export default function MyBookings() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
+  const [instantCareOpen, setInstantCareOpen] = useState(false);
+  const [scheduledCareOpen, setScheduledCareOpen] = useState(false);
 
   const { data: bookings, isLoading } = useQuery<Booking[]>({
     queryKey: ["/api/bookings/parent"],
     enabled: isAuthenticated && user?.userType === "parent",
   });
+  
+  // Function handlers for care options
+  const openInstantCare = () => {
+    setInstantCareOpen(true);
+  };
+  
+  const openScheduledCare = () => {
+    setScheduledCareOpen(true);
+  };
 
   return (
     <Layout>
@@ -39,16 +61,37 @@ export default function MyBookings() {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
-            <p className="text-neutral-600">You don't have any bookings yet.</p>
-            <button 
-              className="mt-4 px-4 py-2 text-white rounded-md font-medium" 
-              style={{ backgroundColor: "#3c5679" }}
-            >
-              Create your first booking
-            </button>
+            <p className="text-neutral-600 mb-6">You don't have any bookings yet.</p>
+            
+            <div className="flex flex-col items-center">
+              <h3 className="text-lg font-medium mb-3">Create your first booking</h3>
+              
+              <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
+                <Button 
+                  className="bg-brand-blue hover:bg-brand-blue/90 flex items-center" 
+                  onClick={openInstantCare}
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  Request a Sitter Now
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  className="flex items-center border-brand-blue text-brand-blue hover:bg-brand-blue/10" 
+                  onClick={openScheduledCare}
+                >
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  Schedule Care
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
+      
+      {/* Modals for booking care */}
+      <InstantCareModal isOpen={instantCareOpen} onClose={() => setInstantCareOpen(false)} />
+      <ScheduledCareModal isOpen={scheduledCareOpen} onClose={() => setScheduledCareOpen(false)} />
     </Layout>
   );
 }
