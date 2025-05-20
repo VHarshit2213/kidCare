@@ -46,7 +46,7 @@ export default function Hero() {
         {/* Content overlay */}
         <div className="relative flex flex-col justify-center min-h-screen max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
           {/* Main content card - midcentury modern style with cleaner lines */}
-          <div className="bg-white/67 backdrop-blur-sm rounded-[4px] p-10 md:p-14 shadow-lg max-w-2xl mx-auto border border-[#3c5679]/10">
+          <div className="bg-white/70 backdrop-blur-sm rounded-[4px] p-10 md:p-14 shadow-lg max-w-2xl mx-auto border border-[#3c5679]/10">
             <div className="mb-10 text-center">
               <h1 className="text-3xl font-bold text-[#3c5679] sm:text-4xl lg:text-5xl tracking-tight leading-tight">
                 Find trusted childcare in minutes
