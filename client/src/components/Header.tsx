@@ -55,8 +55,8 @@ export default function Header() {
                 href="/"
                 className={`${
                   isActive("/")
-                    ? "text-[#7e57c2] font-medium"
-                    : "text-neutral-700 hover:text-[#7e57c2]"
+                    ? "text-[#3c5679] font-medium"
+                    : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide`}
               >
                 Home
@@ -64,7 +64,7 @@ export default function Header() {
               <Popover>
                 <PopoverTrigger asChild>
                   <button 
-                    className="flex items-center bg-[#7e57c2] hover:bg-[#6a46b0] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm"
+                    className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -154,8 +154,8 @@ export default function Header() {
                 href="/bookings"
                 className={`${
                   isActive("/bookings")
-                    ? "text-[#7e57c2] font-medium"
-                    : "text-neutral-700 hover:text-[#7e57c2]"
+                    ? "text-[#3c5679] font-medium"
+                    : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide`}
               >
                 My Bookings
@@ -164,8 +164,8 @@ export default function Header() {
                 href="/messages"
                 className={`${
                   isActive("/messages")
-                    ? "text-[#7e57c2] font-medium"
-                    : "text-neutral-700 hover:text-[#7e57c2]"
+                    ? "text-[#3c5679] font-medium"
+                    : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide`}
               >
                 Messages
