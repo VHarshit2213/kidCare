@@ -11,20 +11,20 @@ export default function Footer() {
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-[#7e57c2] font-medium text-lg tracking-wide">Quick Links</h3>
+            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="/" className="text-neutral-600 hover:text-[#7e57c2] text-sm">Home</a></li>
-              <li><a href="/bookings" className="text-neutral-600 hover:text-[#7e57c2] text-sm">My Bookings</a></li>
-              <li><a href="/messages" className="text-neutral-600 hover:text-[#7e57c2] text-sm">Messages</a></li>
-              <li><a href="/profile" className="text-neutral-600 hover:text-[#7e57c2] text-sm">Profile</a></li>
+              <li><a href="/" className="text-neutral-600 hover:text-[#3c5679] text-sm">Home</a></li>
+              <li><a href="/bookings" className="text-neutral-600 hover:text-[#3c5679] text-sm">My Bookings</a></li>
+              <li><a href="/messages" className="text-neutral-600 hover:text-[#3c5679] text-sm">Messages</a></li>
+              <li><a href="/profile" className="text-neutral-600 hover:text-[#3c5679] text-sm">Profile</a></li>
             </ul>
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-[#7e57c2] font-medium text-lg tracking-wide">Contact</h3>
+            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">Contact</h3>
             <p className="text-neutral-600 text-sm leading-relaxed">
               Questions? Need support?<br />
-              Email us at <a href="mailto:support@enchantedco.com" className="text-[#7e57c2]">support@enchantedco.com</a>
+              Email us at <a href="mailto:support@enchantedco.com" className="text-[#3c5679]">support@enchantedco.com</a>
             </p>
           </div>
         </div>
