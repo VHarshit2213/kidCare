@@ -114,8 +114,8 @@ export default function MembershipPage() {
           : "Your membership has been activated. Welcome to The Enchanted Co.!",
       });
       
-      // Redirect to success page
-      navigate("/membership-success");
+      // Redirect to home page after successful activation
+      navigate("/");
       return;
     } catch (error: any) {
       console.error("MembershipPage: Error activating membership", error);
