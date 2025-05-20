@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
-            <h3 className="text-[#7e57c2] font-medium text-lg tracking-wide">The Enchanted Co.</h3>
+            <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">The Enchanted Co.</h3>
             <p className="text-neutral-600 text-sm leading-relaxed">
               Bringing peace of mind to parents with reliable, background-checked babysitters available when you need them.
             </p>

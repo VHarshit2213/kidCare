@@ -1,12 +1,12 @@
 export default function HowItWorks() {
   return (
-    <div className="py-16 border-t border-neutral-100 bg-[#f8f5ff]">
+    <div className="py-16 border-t border-neutral-100 bg-[#f5f8fc]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-center text-[#7e57c2] tracking-tight">How The Enchanted Co. Works</h2>
+        <h2 className="text-3xl font-bold text-center text-[#3c5679] tracking-tight">How The Enchanted Co. Works</h2>
         <div className="mt-14 grid gap-10 grid-cols-1 md:grid-cols-3">
           {/* First step - midcentury modern style card */}
-          <div className="text-center p-8 bg-white border border-[#7e57c2]/10 hover:border-[#7e57c2]/30 rounded-[4px] transition-all hover:shadow-lg group">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#7e57c2]/10 text-[#7e57c2] group-hover:bg-[#7e57c2]/20 transition-colors">
+          <div className="text-center p-8 bg-white border border-[#3c5679]/10 hover:border-[#3c5679]/30 rounded-[4px] transition-all hover:shadow-lg group">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#3c5679]/10 text-[#3c5679] group-hover:bg-[#3c5679]/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
@@ -22,15 +22,15 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-xl font-medium text-[#7e57c2] tracking-wide">1. Find Babysitters</h3>
+            <h3 className="mt-6 text-xl font-medium text-[#3c5679] tracking-wide">1. Find Babysitters</h3>
             <p className="mt-4 text-base text-neutral-700 leading-relaxed">
               Browse profiles of verified babysitters in your area, complete with reviews, skills, and availability.
             </p>
           </div>
           
           {/* Second step - midcentury modern style card */}
-          <div className="text-center p-8 bg-white border border-[#7e57c2]/10 hover:border-[#7e57c2]/30 rounded-[4px] transition-all hover:shadow-lg group">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#7e57c2]/10 text-[#7e57c2] group-hover:bg-[#7e57c2]/20 transition-colors">
+          <div className="text-center p-8 bg-white border border-[#3c5679]/10 hover:border-[#3c5679]/30 rounded-[4px] transition-all hover:shadow-lg group">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#3c5679]/10 text-[#3c5679] group-hover:bg-[#3c5679]/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
@@ -46,15 +46,15 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-xl font-medium text-[#7e57c2] tracking-wide">2. Book Care</h3>
+            <h3 className="mt-6 text-xl font-medium text-[#3c5679] tracking-wide">2. Book Care</h3>
             <p className="mt-4 text-base text-neutral-700 leading-relaxed">
               Request instant care or schedule in advance. Add details about your children and any special requirements.
             </p>
           </div>
           
           {/* Third step - midcentury modern style card */}
-          <div className="text-center p-8 bg-white border border-[#7e57c2]/10 hover:border-[#7e57c2]/30 rounded-[4px] transition-all hover:shadow-lg group">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#7e57c2]/10 text-[#7e57c2] group-hover:bg-[#7e57c2]/20 transition-colors">
+          <div className="text-center p-8 bg-white border border-[#3c5679]/10 hover:border-[#3c5679]/30 rounded-[4px] transition-all hover:shadow-lg group">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-[4px] bg-[#3c5679]/10 text-[#3c5679] group-hover:bg-[#3c5679]/20 transition-colors">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8"
@@ -70,7 +70,7 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-xl font-medium text-[#7e57c2] tracking-wide">3. Enjoy Peace of Mind</h3>
+            <h3 className="mt-6 text-xl font-medium text-[#3c5679] tracking-wide">3. Enjoy Peace of Mind</h3>
             <p className="mt-4 text-base text-neutral-700 leading-relaxed">
               After the booking, rate and review your sitter. Build a reliable care network for your family.
             </p>
