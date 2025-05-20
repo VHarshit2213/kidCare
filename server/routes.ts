@@ -289,6 +289,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedBooking = await storage.updateBookingStatus(bookingId, status);
+      
+      // Send notifications when booking is confirmed/accepted
+      if (status === "accepted" && updatedBooking && updatedBooking.babysitterId) {
+        try {
+          // Get both the parent and babysitter details for the notification
+          const parent = await storage.getUser(updatedBooking.parentId);
+          const babysitter = await storage.getUser(updatedBooking.babysitterId);
+          
+          if (parent && babysitter) {
+            console.log(`Sending booking confirmation notifications for booking #${bookingId}`);
+            
+            // Send SMS notifications
+            await sendBookingConfirmationSMS(updatedBooking, parent, babysitter);
+            
+            // Make confirmation calls if phone numbers are available
+            if (parent.phoneNumber) {
+              await makeBookingConfirmationCall(updatedBooking, parent, true);
+            }
+            
+            if (babysitter.phoneNumber) {
+              await makeBookingConfirmationCall(updatedBooking, babysitter, false);
+            }
+          }
+        } catch (notificationError: any) {
+          console.error("Error sending booking notifications:", notificationError.message || notificationError);
+          // We continue even if notifications fail - don't block the booking update
+        }
+      }
+      
       res.status(200).json(updatedBooking);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to update booking status" });
@@ -323,9 +352,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedBooking = await storage.assignBabysitterToBooking(bookingId, Number(babysitterId));
+      
+      // Send notifications when a babysitter is assigned to a booking
+      if (updatedBooking) {
+        try {
+          // Get both the parent and babysitter details for the notification
+          const parent = await storage.getUser(updatedBooking.parentId);
+          const babysitter = updatedBooking.babysitterId ? await storage.getUser(updatedBooking.babysitterId) : null;
+          
+          if (parent && babysitter) {
+            console.log(`Sending babysitter assignment notifications for booking #${bookingId}`);
+            
+            // Send SMS notifications
+            await sendBookingConfirmationSMS(updatedBooking, parent, babysitter);
+            
+            // Make confirmation calls if phone numbers are available
+            if (parent.phoneNumber) {
+              await makeBookingConfirmationCall(updatedBooking, parent, true);
+            }
+            
+            if (babysitter.phoneNumber) {
+              await makeBookingConfirmationCall(updatedBooking, babysitter, false);
+            }
+          }
+        } catch (notificationError) {
+          console.error("Error sending babysitter assignment notifications:", notificationError);
+          // We continue even if notifications fail - don't block the booking update
+        }
+      }
+      
       res.status(200).json(updatedBooking);
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Failed to assign babysitter to booking" });
+    }
+  });
+
+  // Dedicated endpoint for sending Twilio notifications for a booking
+  app.post("/api/bookings/:id/notify", authenticate, async (req: Request, res: Response) => {
+    try {
+      const bookingId = Number(req.params.id);
+      const { notificationType } = req.body;
+      
+      if (!notificationType || !["sms", "call", "both"].includes(notificationType)) {
+        return res.status(400).json({ message: "Invalid notification type. Must be 'sms', 'call', or 'both'." });
+      }
+      
+      // Get the booking details
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      // Verify user has permission to send notifications for this booking
+      const user = (req as any).user;
+      if (user.userType === "parent" && user.id !== booking.parentId) {
+        return res.status(403).json({ message: "You can only send notifications for your own bookings" });
+      }
+      
+      if (user.userType === "babysitter" && booking.babysitterId !== user.id) {
+        return res.status(403).json({ message: "You can only send notifications for bookings assigned to you" });
+      }
+      
+      // Make sure we have both a parent and babysitter
+      if (!booking.babysitterId) {
+        return res.status(400).json({ message: "Cannot send notifications for bookings without an assigned babysitter" });
+      }
+      
+      // Get parent and babysitter details for notifications
+      const parent = await storage.getUser(booking.parentId);
+      const babysitter = await storage.getUser(booking.babysitterId);
+      
+      if (!parent || !babysitter) {
+        return res.status(500).json({ message: "Could not retrieve user details for notifications" });
+      }
+      
+      // Track notification status for response
+      const notifications = {
+        sms: { sent: false, error: null },
+        call: { sent: false, error: null }
+      };
+      
+      // Send SMS if requested
+      if (notificationType === "sms" || notificationType === "both") {
+        try {
+          const smsSent = await sendBookingConfirmationSMS(booking, parent, babysitter);
+          notifications.sms.sent = smsSent;
+        } catch (error) {
+          notifications.sms.error = error.message || "Failed to send SMS";
+        }
+      }
+      
+      // Make calls if requested
+      if (notificationType === "call" || notificationType === "both") {
+        try {
+          if (parent.phoneNumber) {
+            const parentCallSent = await makeBookingConfirmationCall(booking, parent, true);
+            notifications.call.sent = parentCallSent;
+          }
+          
+          if (babysitter.phoneNumber) {
+            const sitterCallSent = await makeBookingConfirmationCall(booking, babysitter, false);
+            notifications.call.sent = sitterCallSent && notifications.call.sent;
+          }
+        } catch (error) {
+          notifications.call.error = error.message || "Failed to make call";
+        }
+      }
+      
+      // Return results
+      res.status(200).json({
+        message: "Notifications processed",
+        booking: booking.id,
+        notifications
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to send notifications" });
     }
   });
 

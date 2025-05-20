@@ -52,17 +52,20 @@ export async function sendBookingConfirmationSMS(
       minute: '2-digit' 
     });
 
+    // Determine if there are multiple children by checking for commas
+    const hasMultipleChildren = booking.childName.includes(',');
+    
     // Parent message
     const parentMessage = `
 The Enchanted Co.: Your booking has been confirmed! 
-${babysitter.fullName} will be taking care of your child${booking.childName.includes(',') ? 'ren' : ''} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
+${babysitter.fullName} will be taking care of ${hasMultipleChildren ? 'your children' : booking.childName} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
 You can contact your sitter at: ${babysitter.phoneNumber || 'Not available'}
 `;
 
     // Babysitter message
     const babysitterMessage = `
 The Enchanted Co.: You have a new booking! 
-You are scheduled to take care of ${parent.fullName}'s child${booking.childName.includes(',') ? 'ren' : ''} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
+You are scheduled to take care of ${hasMultipleChildren ? parent.fullName + '\'s children' : booking.childName} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
 Care instructions: ${booking.careInstructions || 'None provided'}
 Parent contact: ${parent.phoneNumber}
 `;
