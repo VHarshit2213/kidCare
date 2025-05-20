@@ -50,8 +50,8 @@ export default function MembershipSuccess() {
           <CardContent className="text-center pb-6 px-8">
             <p className="text-lg mb-6">
               {isInstallment 
-                ? "Thank you for your first installment payment of $250. Your membership is now active!" 
-                : "Thank you for your payment of $500. Your membership is now active!"}
+                ? "Thank you for your first installment payment of $200. Your membership is now active!" 
+                : "Thank you for your payment of $400. Your membership is now active!"}
             </p>
             
             <div className="bg-gray-50 p-6 rounded-lg mb-6">
@@ -81,7 +81,7 @@ export default function MembershipSuccess() {
             {isInstallment && (
               <div className="border border-amber-200 bg-amber-50 p-4 rounded-lg text-amber-800 mb-6">
                 <h4 className="font-semibold">Reminder about your installment plan:</h4>
-                <p>Your second payment of $250 will be automatically processed in 30 days. Please ensure your payment method remains valid.</p>
+                <p>Your second payment of $200 will be automatically processed in 30 days. Please ensure your payment method remains valid.</p>
               </div>
             )}
           </CardContent>

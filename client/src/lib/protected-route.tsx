@@ -81,7 +81,9 @@ export function ProtectedRoute({
   }
 
   // For all users, check if their profile is complete after membership (if applicable)
-  if (!user.profileCompleted && path !== "/profile-completion") {
+  // Only redirect to profile-completion for certain essential pages, not for all pages
+  const requiresProfileCompletion = ["/", "/bookings"].includes(path);
+  if (!user.profileCompleted && requiresProfileCompletion && path !== "/profile-completion") {
     console.log(`ProtectedRoute (${path}): Redirecting to profile completion page`);
     return (
       <Route path={path}>
