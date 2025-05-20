@@ -15,6 +15,7 @@ import express from "express";
 import { setupAuth } from "./auth";
 import Stripe from "stripe";
 import { sendBookingConfirmationSMS, makeBookingConfirmationCall } from "./twilio";
+import { sendMaskedSMS, makeMaskedCall, getSMSWebhookHandler } from "./masked-communication";
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -471,6 +472,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message Routes
+  // Twilio SMS webhook for handling replies
+  app.post("/api/twilio/sms-webhook", express.urlencoded({ extended: false }), getSMSWebhookHandler());
+
+  // API endpoint to send a masked message between users
+  app.post("/api/bookings/:id/masked-message", authenticate, async (req: Request, res: Response) => {
+    const { message } = req.body;
+    
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ message: "Message content is required" });
+    }
+    
+    try {
+      const bookingId = Number(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      // Get the authenticated user
+      const currentUser = (req as any).user;
+      
+      // Determine if current user is the parent or babysitter
+      let fromUser: User | undefined;
+      let toUser: User | undefined;
+      
+      if (currentUser.id === booking.parentId) {
+        // Parent sending message to babysitter
+        fromUser = currentUser;
+        if (booking.babysitterId) {
+          toUser = await storage.getUser(booking.babysitterId);
+        }
+      } else if (currentUser.id === booking.babysitterId) {
+        // Babysitter sending message to parent
+        fromUser = currentUser;
+        toUser = await storage.getUser(booking.parentId);
+      } else {
+        return res.status(403).json({ message: "You are not associated with this booking" });
+      }
+      
+      if (!toUser) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      // Send the masked message
+      const result = await sendMaskedSMS(fromUser, toUser, bookingId, message);
+      
+      if (result.success) {
+        // Create a regular message in our system too (for chat history)
+        await storage.createMessage({
+          senderId: fromUser.id,
+          receiverId: toUser.id,
+          bookingId,
+          content: message,
+          timestamp: new Date(),
+          isRead: false
+        });
+        
+        res.status(200).json({ message: "Message sent successfully" });
+      } else {
+        res.status(500).json({ message: result.error || "Failed to send message" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to send masked message" });
+    }
+  });
+  
+  // API endpoint to initiate a masked call between users
+  app.post("/api/bookings/:id/masked-call", authenticate, async (req: Request, res: Response) => {
+    try {
+      const bookingId = Number(req.params.id);
+      const booking = await storage.getBooking(bookingId);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      // Get the authenticated user
+      const currentUser = (req as any).user;
+      
+      // Determine if current user is the parent or babysitter
+      let fromUser: User | undefined;
+      let toUser: User | undefined;
+      
+      if (currentUser.id === booking.parentId) {
+        // Parent calling babysitter
+        fromUser = currentUser;
+        if (booking.babysitterId) {
+          toUser = await storage.getUser(booking.babysitterId);
+        }
+      } else if (currentUser.id === booking.babysitterId) {
+        // Babysitter calling parent
+        fromUser = currentUser;
+        toUser = await storage.getUser(booking.parentId);
+      } else {
+        return res.status(403).json({ message: "You are not associated with this booking" });
+      }
+      
+      if (!toUser) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+      
+      // Make the masked call
+      const result = await makeMaskedCall(fromUser, toUser, bookingId);
+      
+      if (result.success) {
+        res.status(200).json({ 
+          message: "Call initiated successfully",
+          callSid: result.callSid
+        });
+      } else {
+        res.status(500).json({ message: result.error || "Failed to initiate call" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to make masked call" });
+    }
+  });
+
+  // Regular messages endpoint (for in-app messaging)
   app.post("/api/messages", authenticate, async (req: Request, res: Response) => {
     const { data, error } = validateRequest(insertMessageSchema, req.body);
     
