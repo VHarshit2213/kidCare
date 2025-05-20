@@ -24,7 +24,7 @@ export default function Footer() {
             <h3 className="text-[#3c5679] font-medium text-lg tracking-wide">Contact</h3>
             <p className="text-neutral-600 text-sm leading-relaxed">
               Questions? Need support?<br />
-              Email us at <a href="mailto:support@enchantedco.com" className="text-[#3c5679]">support@enchantedco.com</a>
+              Email us at <a href="mailto:hello@lovetheenchantedco.com" className="text-[#3c5679]">hello@lovetheenchantedco.com</a>
             </p>
           </div>
         </div>
