@@ -14,6 +14,7 @@ import { fromZodError } from "zod-validation-error";
 import express from "express";
 import { setupAuth } from "./auth";
 import Stripe from "stripe";
+import { sendBookingConfirmationSMS, makeBookingConfirmationCall } from "./twilio";
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
