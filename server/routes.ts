@@ -516,6 +516,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Recipient not found" });
       }
       
+      // Make sure both users are defined
+      if (!fromUser || !toUser) {
+        return res.status(404).json({ message: "Sender or recipient not found" });
+      }
+      
       // Send the masked message
       const result = await sendMaskedSMS(fromUser, toUser, bookingId, message);
       
@@ -526,7 +531,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           receiverId: toUser.id,
           bookingId,
           content: message,
-          timestamp: new Date(),
           isRead: false
         });
         

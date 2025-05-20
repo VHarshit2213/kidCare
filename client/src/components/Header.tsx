@@ -39,9 +39,9 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-10">
+    <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-18">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 flex items-center">
               <img 
@@ -50,25 +50,25 @@ export default function Header() {
                 className="h-12 w-auto"
               />
             </Link>
-            <nav className="hidden sm:ml-10 sm:flex sm:space-x-8">
+            <nav className="hidden sm:ml-12 sm:flex sm:space-x-10">
               <Link
                 href="/"
                 className={`${
                   isActive("/")
-                    ? "border-brand-blue text-brand-blue border-b-2"
-                    : "border-transparent text-neutral-600 hover:text-brand-blue hover:border-brand-blue border-b-2"
-                } px-1 pt-1 font-medium text-sm`}
+                    ? "text-[#7e57c2] font-medium"
+                    : "text-neutral-700 hover:text-[#7e57c2]"
+                } px-1 pt-1 text-sm tracking-wide`}
               >
                 Home
               </Link>
               <Popover>
                 <PopoverTrigger asChild>
                   <button 
-                    className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md px-3 py-1.5 font-medium text-sm shadow-sm"
+                    className="flex items-center bg-[#7e57c2] hover:bg-[#6a46b0] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
+                      className="h-4 w-4 mr-2"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -80,14 +80,14 @@ export default function Header() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    Request a Sitter Now
-                    <svg className="h-4 w-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    Request a Sitter
+                    <svg className="h-4 w-4 ml-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-48 p-2">
-                  <div className="grid gap-2">
+                <PopoverContent className="w-52 p-4 shadow-lg border-neutral-200">
+                  <div className="grid gap-3">
                     <Button 
                       onClick={() => {
                         if (!isAuthenticated) {
@@ -98,7 +98,7 @@ export default function Header() {
                           window.dispatchEvent(new CustomEvent('open-sitter-request'));
                         }
                       }}
-                      className="justify-start bg-[#3c5679] hover:bg-[#2c4059] text-white" 
+                      className="justify-start bg-[#7e57c2] hover:bg-[#6a46b0] text-white font-medium tracking-wide rounded-[4px]" 
                       size="sm"
                     >
                       <svg
@@ -128,12 +128,12 @@ export default function Header() {
                         }
                       }}
                       variant="outline" 
-                      className="justify-start border-brand-pink text-brand-blue"
+                      className="justify-start border-[#7e57c2] text-[#7e57c2] hover:bg-purple-50 font-medium tracking-wide rounded-[4px]"
                       size="sm"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2 text-brand-pink"
+                        className="h-4 w-4 mr-2 text-[#7e57c2]"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -154,9 +154,9 @@ export default function Header() {
                 href="/bookings"
                 className={`${
                   isActive("/bookings")
-                    ? "border-brand-blue text-brand-blue border-b-2"
-                    : "border-transparent text-neutral-600 hover:text-brand-blue hover:border-brand-blue border-b-2"
-                } px-1 pt-1 font-medium text-sm`}
+                    ? "text-[#7e57c2] font-medium"
+                    : "text-neutral-700 hover:text-[#7e57c2]"
+                } px-1 pt-1 text-sm tracking-wide`}
               >
                 My Bookings
               </Link>
@@ -164,9 +164,9 @@ export default function Header() {
                 href="/messages"
                 className={`${
                   isActive("/messages")
-                    ? "border-brand-blue text-brand-blue border-b-2"
-                    : "border-transparent text-neutral-600 hover:text-brand-blue hover:border-brand-blue border-b-2"
-                } px-1 pt-1 font-medium text-sm`}
+                    ? "text-[#7e57c2] font-medium"
+                    : "text-neutral-700 hover:text-[#7e57c2]"
+                } px-1 pt-1 text-sm tracking-wide`}
               >
                 Messages
               </Link>
@@ -177,33 +177,42 @@ export default function Header() {
               <div className="ml-4 flex items-center">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="flex items-center max-w-xs rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue">
-                      <Avatar className="h-8 w-8">
+                    <button className="flex items-center max-w-xs rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#7e57c2] focus:ring-offset-1 px-2 py-1 hover:bg-purple-50 transition-colors">
+                      <Avatar className="h-8 w-8 rounded-md">
                         {user?.profileImageUrl ? (
-                          <AvatarImage src={user.profileImageUrl} alt={user.fullName} />
+                          <AvatarImage src={user.profileImageUrl} alt={user.fullName} className="rounded-md" />
                         ) : (
-                          <AvatarFallback>{getInitials(user?.fullName || "User")}</AvatarFallback>
+                          <AvatarFallback className="rounded-md bg-[#7e57c2]/10 text-[#7e57c2]">{getInitials(user?.fullName || "User")}</AvatarFallback>
                         )}
                       </Avatar>
                       <div className="flex items-center">
-                        <span className="ml-2 text-neutral-600 font-medium">{user?.fullName?.split(" ")[0]}</span>
+                        <span className="ml-2 text-neutral-700 font-medium tracking-wide">{user?.fullName?.split(" ")[0]}</span>
                         {user?.username === "admin" && (
-                          <span className="ml-2 text-xs bg-red-100 text-red-800 rounded-full px-2 py-0.5">Admin</span>
+                          <span className="ml-2 text-xs bg-red-100 text-red-800 rounded-sm px-2 py-0.5">Admin</span>
                         )}
                       </div>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56">
-                    <div className="grid gap-2">
-                      <Link href="/profile" className="text-sm font-medium">
+                  <PopoverContent className="w-56 p-4 shadow-lg border-neutral-200">
+                    <div className="grid gap-3">
+                      <Link href="/profile" className="text-sm font-medium text-neutral-700 hover:text-[#7e57c2] flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                         Profile
                       </Link>
                       {user?.username === "admin" && (
-                        <Link href="/admin" className="text-sm font-medium text-red-600">
+                        <Link href="/admin" className="text-sm font-medium text-red-600 hover:text-red-700 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
                           Admin Dashboard
                         </Link>
                       )}
-                      <Button variant="ghost" size="sm" className="justify-start" onClick={handleLogout}>
+                      <Button variant="ghost" size="sm" className="justify-start text-neutral-700 hover:text-[#7e57c2] hover:bg-purple-50" onClick={handleLogout}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
                         Logout
                       </Button>
                     </div>
@@ -211,18 +220,17 @@ export default function Header() {
                 </Popover>
               </div>
             ) : (
-              <div className="ml-4 flex items-center space-x-2">
+              <div className="ml-4 flex items-center space-x-3">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-brand-blue hover:text-brand-blue/90"
+                  className="text-[#7e57c2] hover:text-[#7e57c2]/90 hover:bg-purple-50 font-medium tracking-wide"
                   onClick={() => navigate("/auth")}
                 >
                   Login
                 </Button>
                 <Button 
-                  style={{ backgroundColor: "#3c5679" }} 
-                  className="text-white font-medium"
+                  className="bg-[#7e57c2] hover:bg-[#6a46b0] text-white font-medium tracking-wide rounded-[4px]"
                   onClick={() => navigate("/auth")}
                 >
                   Sign Up
@@ -230,7 +238,7 @@ export default function Header() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  className="text-red-600 border-red-600 hover:bg-red-50 rounded-[4px]"
                   onClick={() => navigate("/admin")}
                 >
                   Admin
@@ -240,10 +248,10 @@ export default function Header() {
           </div>
 
           {/* Mobile buttons */}
-          <div className="flex items-center sm:hidden space-x-2">
+          <div className="flex items-center sm:hidden space-x-3">
             <button 
               onClick={handleCareButtonClick}
-              className="inline-flex items-center justify-center p-2 bg-[#3c5679] text-white rounded-md"
+              className="inline-flex items-center justify-center p-2 bg-[#7e57c2] text-white rounded-[4px] shadow-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -262,7 +270,7 @@ export default function Header() {
             </button>
             <button 
               onClick={() => navigate("/admin")}
-              className="inline-flex items-center justify-center p-2 border border-red-600 text-red-600 rounded-md"
+              className="inline-flex items-center justify-center p-2 border border-red-600 text-red-600 rounded-[4px]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -279,7 +287,7 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <button className="inline-flex items-center justify-center p-2 rounded-md text-neutral-600 hover:text-brand-blue hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-blue">
+            <button className="inline-flex items-center justify-center p-2 rounded-[4px] text-neutral-700 hover:text-[#7e57c2] hover:bg-purple-50 focus:outline-none">
               <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>

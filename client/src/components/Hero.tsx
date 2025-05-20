@@ -30,38 +30,37 @@ export default function Hero() {
 
   return (
     <>
-      <div className="relative min-h-screen bg-[#f6e6df]">
-        {/* Background image */}
+      <div className="relative min-h-screen bg-[#f8f5ff]">
+        {/* Background image with midcentury modern overlay */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-pink/20 to-brand-blue/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#7e57c2]/10 to-[#7e57c2]/20"></div>
           <img
             className="w-full h-full object-cover object-center"
             src={brandBackgroundImage}
             alt="The Enchanted Co. background"
-            style={{ opacity: 0.95 }}
+            style={{ opacity: 0.8 }}
           />
-          <div className="absolute inset-0 bg-[#3c5679]/10"></div>
+          <div className="absolute inset-0 bg-[#7e57c2]/10"></div>
         </div>
         
         {/* Content overlay */}
         <div className="relative flex flex-col justify-center min-h-screen max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
-          {/* Main content card */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 md:p-10 shadow-xl max-w-2xl mx-auto">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-[#3c5679] sm:text-4xl lg:text-5xl">
+          {/* Main content card - midcentury modern style with cleaner lines */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-[4px] p-10 md:p-14 shadow-lg max-w-2xl mx-auto border border-[#7e57c2]/10">
+            <div className="mb-10 text-center">
+              <h1 className="text-3xl font-bold text-[#7e57c2] sm:text-4xl lg:text-5xl tracking-tight leading-tight">
                 Find trusted childcare in minutes
               </h1>
-              <p className="mt-4 text-lg text-[#3c5679]/80">
+              <p className="mt-6 text-lg text-neutral-700 leading-relaxed">
                 The Enchanted Co. provides reliable, background-checked babysitters for your peace of mind. Connect with local babysitters for immediate help or schedule care in advance – all from your phone.
               </p>
             </div>
             
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap gap-4 justify-center">
               <Button 
                 onClick={handleInstantCareRequest}
                 size="lg"
-                style={{ backgroundColor: "#3c5679" }}
-                className="px-6 py-3 text-white text-lg shadow-lg"
+                className="px-6 py-3 text-white text-lg bg-[#7e57c2] hover:bg-[#6a46b0] shadow-md rounded-[4px] font-medium tracking-wide"
               >
                 Request a Sitter Now
               </Button>
@@ -70,9 +69,9 @@ export default function Hero() {
                 onClick={handleScheduledCareRequest}
                 variant="outline" 
                 size="lg"
-                className="px-6 py-3 bg-white text-brand-blue hover:bg-gray-50 border-brand-pink text-lg shadow-lg"
+                className="px-6 py-3 bg-white text-[#7e57c2] hover:bg-purple-50 border-[#7e57c2] text-lg shadow-md rounded-[4px] font-medium tracking-wide"
               >
-                <CalendarIcon className="mr-2 h-5 w-5 text-brand-pink" />
+                <CalendarIcon className="mr-2 h-5 w-5 text-[#7e57c2]" />
                 Schedule Care
               </Button>
             </div>
