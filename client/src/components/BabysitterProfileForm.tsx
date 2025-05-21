@@ -11,9 +11,7 @@ import { Save, Loader2, Upload, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -101,7 +99,6 @@ const AGE_RANGES = [
 export default function BabysitterProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('basic-info');
   const [isUploading, setIsUploading] = useState(false);
 
   // Form for babysitter profile
@@ -114,16 +111,16 @@ export default function BabysitterProfileForm() {
       email: user?.email || '',
       bio: user?.bio || '',
       experienceYears: user?.yearsExperience ? String(user.yearsExperience) : '',
-      ageRangeExperience: [],
-      enjoymentReason: '',
-      caregiverStyle: '',
-      hasVideo: false,
-      videoUrl: '',
+      ageRangeExperience: user?.ageRangeExperience || [],
+      enjoymentReason: user?.enjoymentReason || '',
+      caregiverStyle: user?.caregiverStyle || '',
+      hasVideo: user?.hasVideo || false,
+      videoUrl: user?.videoUrl || '',
       hourlyRate: user?.hourlyRate ? String(user.hourlyRate) : '35',
       firstAidCertified: user?.firstAidCertified ? 'yes' : 'no',
-      firstAidCertificationDoc: '',
+      firstAidCertificationDoc: user?.firstAidCertificationDoc || '',
       hasTransportation: user?.hasTransportation ? 'yes' : 'no',
-      driversLicenseDoc: '',
+      driversLicenseDoc: user?.driversLicenseDoc || '',
       skills: user?.skills || [],
     },
   });
@@ -135,36 +132,20 @@ export default function BabysitterProfileForm() {
       const profileData = {
         ...data,
         yearsExperience: data.experienceYears,
-        profileCompleted: activeTab === 'additional-info' ? true : undefined,
-        // Add review status if profile is being completed
-        reviewStatus: activeTab === 'additional-info' ? 'pending' : undefined,
+        profileCompleted: true, // Profile is completed when form is submitted
+        reviewStatus: 'pending', // Set review status to pending
       };
       
       const res = await apiRequest('PATCH', '/api/users/profile', profileData);
       return await res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       
-      // Different messages based on which tab was completed
-      if (activeTab === 'additional-info') {
-        toast({
-          title: 'Profile completed!',
-          description: 'Your profile has been sent to admin for review and will be available soon.',
-        });
-      } else {
-        toast({
-          title: 'Section saved',
-          description: 'Your profile has been updated successfully.',
-        });
-      }
-      
-      // Move to the next tab after successful update
-      if (activeTab === 'basic-info') {
-        setActiveTab('experience');
-      } else if (activeTab === 'experience') {
-        setActiveTab('additional-info');
-      }
+      toast({
+        title: 'Profile completed!',
+        description: 'Your profile has been sent to admin for review and will be available soon.',
+      });
     },
     onError: (error) => {
       toast({
@@ -267,73 +248,70 @@ export default function BabysitterProfileForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="experience">Experience</TabsTrigger>
-            <TabsTrigger value="additional-info">Additional Info</TabsTrigger>
-          </TabsList>
-          
-          {/* Basic Information Tab */}
-          <TabsContent value="basic-info">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your first name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your last name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your phone number" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your email address" type="email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Basic Information Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your first name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your last name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your phone number" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your email address" type="email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="mt-4">
                 <FormField
                   control={form.control}
                   name="bio"
@@ -354,112 +332,143 @@ export default function BabysitterProfileForm() {
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
-                  className="mt-4"
-                  disabled={profileMutation.isPending}
-                >
-                  {profileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save & Continue
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          {/* Experience Tab */}
-          <TabsContent value="experience">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="experienceYears"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How long have you been a babysitter?</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select years of experience" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {EXPERIENCE_YEARS.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="ageRangeExperience"
-                  render={() => (
-                    <FormItem>
-                      <div className="mb-4">
-                        <FormLabel>What age ranges do you have the most experience with?</FormLabel>
-                        <FormDescription>
-                          Select all that apply
-                        </FormDescription>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {AGE_RANGES.map((age) => (
-                          <FormField
-                            key={age.value}
-                            control={form.control}
-                            name="ageRangeExperience"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={age.value}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(age.value)}
-                                      onCheckedChange={(checked) => {
-                                        let updatedValue = [...field.value || []];
-                                        if (checked) {
-                                          updatedValue.push(age.value);
-                                        } else {
-                                          updatedValue = updatedValue.filter(
-                                            (value) => value !== age.value
-                                          );
-                                        }
-                                        field.onChange(updatedValue);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal cursor-pointer">
-                                    {age.label}
-                                  </FormLabel>
-                                </FormItem>
-                              );
-                            }}
-                          />
+              </div>
+            </div>
+            
+            {/* Experience Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Experience & Skills</h3>
+              <FormField
+                control={form.control}
+                name="experienceYears"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>How long have you been a babysitter?</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select years of experience" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {EXPERIENCE_YEARS.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
                         ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="ageRangeExperience"
+                render={() => (
+                  <FormItem className="mt-4">
+                    <div className="mb-4">
+                      <FormLabel>What age ranges do you have the most experience with?</FormLabel>
+                      <FormDescription>
+                        Select all that apply
+                      </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {AGE_RANGES.map((range) => (
+                        <FormField
+                          key={range.value}
+                          control={form.control}
+                          name="ageRangeExperience"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={range.value}
+                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(range.value)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, range.value])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== range.value
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer">
+                                  {range.label}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="skills"
+                render={() => (
+                  <FormItem className="mt-4">
+                    <div className="mb-4">
+                      <FormLabel>What skills do you have that parents might value?</FormLabel>
+                      <FormDescription>
+                        Select all that apply
+                      </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {AVAILABLE_SKILLS.map((skill) => (
+                        <FormField
+                          key={skill}
+                          control={form.control}
+                          name="skills"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={skill}
+                                className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(skill)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, skill])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== skill
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer">
+                                  {skill}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 gap-4 mt-4">
                 <FormField
                   control={form.control}
                   name="enjoymentReason"
@@ -469,7 +478,7 @@ export default function BabysitterProfileForm() {
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder="Share your passion for working with children..."
+                          placeholder="Share what you find most rewarding about being a caregiver..."
                           rows={3}
                         />
                       </FormControl>
@@ -478,386 +487,304 @@ export default function BabysitterProfileForm() {
                   )}
                 />
                 
-                <Button 
-                  type="submit" 
-                  className="mt-4"
-                  disabled={profileMutation.isPending}
-                >
-                  {profileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save & Continue
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          {/* Additional Information Tab */}
-          <TabsContent value="additional-info">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="caregiverStyle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Share anything you would like parents to know about your caregiver style or experience</FormLabel>
+                      <FormLabel>How would you describe your caregiving style?</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder="Describe your approach to childcare..."
-                          rows={4}
+                          placeholder="Tell parents about your approach to childcare..."
+                          rows={3}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+              </div>
+            </div>
+            
+            {/* Additional Information Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Additional Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="hourlyRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>What is your hourly rate? ($35-$50)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5">$</span>
+                        <Input className="pl-7" {...field} type="number" min="35" max="50" />
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Our platform requires rates between $35-$50 per hour.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="mt-4">
                 <FormField
                   control={form.control}
-                  name="hourlyRate"
+                  name="firstAidCertified"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Are you certified in First Aid/CPR?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="yes" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Yes, I am certified
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="no" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              No, I am not certified
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch('firstAidCertified') === 'yes' && (
+                  <div className="mt-3 pl-7">
+                    <FormField
+                      control={form.control}
+                      name="firstAidCertificationDoc"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Upload your certification</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="certification-upload"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                onChange={handleCertificationUpload}
+                                disabled={isUploading}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => document.getElementById('certification-upload')?.click()}
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload Document
+                                  </>
+                                )}
+                              </Button>
+                              {field.value && (
+                                <span className="text-sm text-green-600">Document uploaded</span>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Please upload a copy of your certification (PDF, JPG, or PNG).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4">
+                <FormField
+                  control={form.control}
+                  name="hasTransportation"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Do you have your own transportation?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="yes" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Yes, I have my own transportation
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="no" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              No, I rely on public transportation
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch('hasTransportation') === 'yes' && (
+                  <div className="mt-3 pl-7">
+                    <FormField
+                      control={form.control}
+                      name="driversLicenseDoc"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Upload your driver's license</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="license-upload"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                onChange={handleLicenseUpload}
+                                disabled={isUploading}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => document.getElementById('license-upload')?.click()}
+                                disabled={isUploading}
+                              >
+                                {isUploading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Uploading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload Document
+                                  </>
+                                )}
+                              </Button>
+                              {field.value && (
+                                <span className="text-sm text-green-600">Document uploaded</span>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Please upload a copy of your driver's license (PDF, JPG, or PNG).
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-6">
+                <FormField
+                  control={form.control}
+                  name="hasVideo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hourly Rate ($)</FormLabel>
+                      <div className="flex flex-col gap-1.5">
+                        <FormLabel>Introduction Video (Optional)</FormLabel>
+                        <FormDescription>
+                          Upload a short video introducing yourself to parents. This can help you stand out!
+                        </FormDescription>
+                      </div>
                       <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          min="35"
-                          max="50"
-                          placeholder="35"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Hourly rates must be between $35 and $50
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstAidCertified"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          Are you First Aid / CPR certified?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Yes
-                              </FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                No
-                              </FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormDescription>
-                          First Aid and CPR certification is required to work as a babysitter with The Enchanted Co.
-                        </FormDescription>
-                        
-                        {field.value === 'no' && (
-                          <Alert className="bg-amber-50 text-amber-800 border-amber-200">
-                            <AlertCircle className="h-4 w-4 text-amber-800" />
-                            <AlertDescription>
-                              First Aid / CPR certification is required. Please obtain certification before you can start babysitting.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        {field.value === 'yes' && (
-                          <div className="space-y-3 mt-3">
-                            <FormField
-                              control={form.control}
-                              name="firstAidCertificationDoc"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Upload Certification Document</FormLabel>
-                                  <FormControl>
-                                    <div className="flex flex-col space-y-2">
-                                      <Input
-                                        type="file"
-                                        id="certification-upload"
-                                        onChange={handleCertificationUpload}
-                                        disabled={isUploading}
-                                        className="hidden"
-                                        accept=".pdf,.jpg,.jpeg,.png"
-                                      />
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={() => document.getElementById('certification-upload')?.click()}
-                                          disabled={isUploading}
-                                        >
-                                          {isUploading ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Upload className="mr-2 h-4 w-4" />
-                                          )}
-                                          {field.value ? 'Change Document' : 'Upload Document'}
-                                        </Button>
-                                        {field.value && (
-                                          <span className="text-sm text-green-600">Document uploaded</span>
-                                        )}
-                                      </div>
-                                      {!field.value && (
-                                        <p className="text-sm text-gray-500">
-                                          Upload a copy of your certification (PDF, JPG, or PNG)
-                                        </p>
-                                      )}
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-                        
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="hasTransportation"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>
-                          Do you have your own transportation?
-                        </FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="yes" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Yes
-                              </FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value="no" />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                No
-                              </FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormDescription>
-                          Having your own transportation is preferred for babysitting positions that require travel.
-                        </FormDescription>
-                        
-                        {field.value === 'no' && (
-                          <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              Without your own transportation, you may be limited to certain babysitting opportunities in your immediate area.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        {field.value === 'yes' && (
-                          <div className="space-y-3 mt-3">
-                            <FormField
-                              control={form.control}
-                              name="driversLicenseDoc"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Upload Driver's License</FormLabel>
-                                  <FormControl>
-                                    <div className="flex flex-col space-y-2">
-                                      <Input
-                                        type="file"
-                                        id="license-upload"
-                                        onChange={handleLicenseUpload}
-                                        disabled={isUploading}
-                                        className="hidden"
-                                        accept=".pdf,.jpg,.jpeg,.png"
-                                      />
-                                      <div className="flex items-center gap-2">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={() => document.getElementById('license-upload')?.click()}
-                                          disabled={isUploading}
-                                        >
-                                          {isUploading ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Upload className="mr-2 h-4 w-4" />
-                                          )}
-                                          {field.value ? 'Change Document' : 'Upload License'}
-                                        </Button>
-                                        {field.value && (
-                                          <span className="text-sm text-green-600">License uploaded</span>
-                                        )}
-                                      </div>
-                                      {!field.value && (
-                                        <p className="text-sm text-gray-500">
-                                          Upload a copy of your driver's license (PDF, JPG, or PNG)
-                                        </p>
-                                      )}
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-                        
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="skills"
-                  render={() => (
-                    <FormItem>
-                      <div className="mb-4">
-                        <FormLabel>Skills</FormLabel>
-                        <FormDescription>
-                          Select all skills that apply to you
-                        </FormDescription>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {AVAILABLE_SKILLS.map((skill) => (
-                          <FormField
-                            key={skill}
-                            control={form.control}
-                            name="skills"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={skill}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(skill)}
-                                      onCheckedChange={(checked) => {
-                                        let updatedValue = [...field.value || []];
-                                        if (checked) {
-                                          updatedValue.push(skill);
-                                        } else {
-                                          updatedValue = updatedValue.filter(
-                                            (value) => value !== skill
-                                          );
-                                        }
-                                        field.onChange(updatedValue);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal cursor-pointer">
-                                    {skill}
-                                  </FormLabel>
-                                </FormItem>
-                              );
-                            }}
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="video-upload"
+                            type="file"
+                            accept="video/*"
+                            className="hidden"
+                            onChange={handleVideoUpload}
+                            disabled={isUploading}
                           />
-                        ))}
-                      </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => document.getElementById('video-upload')?.click()}
+                            disabled={isUploading}
+                          >
+                            {isUploading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Video
+                              </>
+                            )}
+                          </Button>
+                          {field.value && form.watch('videoUrl') && (
+                            <span className="text-sm text-green-600">Video uploaded</span>
+                          )}
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                <div className="border rounded-lg p-4 space-y-4">
-                  <FormLabel>Upload a video introducing yourself</FormLabel>
-                  <FormDescription>
-                    Record a short (30-60 second) video introducing yourself to parents
-                  </FormDescription>
-                  
-                  {form.watch('videoUrl') ? (
-                    <div className="mt-2">
-                      <p className="text-sm text-green-600 mb-2">Video uploaded successfully!</p>
-                      <video 
-                        controls 
-                        className="w-full max-h-48 object-cover rounded-md"
-                        src={form.watch('videoUrl')}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center border-2 border-dashed rounded-md p-6">
-                      <Label
-                        htmlFor="video-upload" 
-                        className="cursor-pointer flex flex-col items-center"
-                      >
-                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                        <span className="text-sm text-muted-foreground">
-                          {isUploading ? 'Uploading...' : 'Click to upload your introduction video'}
-                        </span>
-                        <Input 
-                          id="video-upload" 
-                          type="file" 
-                          accept="video/*"
-                          className="hidden"
-                          onChange={handleVideoUpload}
-                          disabled={isUploading}
-                        />
-                      </Label>
-                    </div>
-                  )}
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="mt-4"
-                  disabled={profileMutation.isPending}
-                >
-                  {profileMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Complete Profile
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </TabsContent>
-        </Tabs>
+              </div>
+            </div>
+            
+            <Alert className="bg-blue-50 border-blue-200 text-blue-800">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Your profile will be reviewed by our team before it becomes visible to parents. This usually takes 1-2 business days.
+              </AlertDescription>
+            </Alert>
+            
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={profileMutation.isPending}
+            >
+              {profileMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting Profile...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Complete My Profile
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
