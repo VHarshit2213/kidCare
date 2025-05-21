@@ -30,7 +30,7 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: "enchanted-co-secret-key",
+    secret: process.env.SESSION_SECRET || "enchanted-co-session-key-" + Date.now(),
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
