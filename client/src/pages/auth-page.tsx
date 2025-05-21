@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
-import { WelcomeModal } from "@/components/WelcomeModal";
 
 // Define form schemas
 const loginSchema = z.object({
@@ -45,8 +44,6 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [newUserName, setNewUserName] = useState("");
 
   // Redirect based on user status
   if (user) {
@@ -102,20 +99,7 @@ export default function AuthPage() {
 
   // Handle registration submission
   function onRegisterSubmit(values: RegisterValues) {
-    // Store the user name if it's a parent
-    if (values.userType === "parent") {
-      setNewUserName(values.fullName);
-    }
-    
-    // Register the user
-    registerMutation.mutate(values, {
-      onSuccess: (data) => {
-        // If parent, show welcome modal
-        if (data.userType === "parent") {
-          setShowWelcomeModal(true);
-        }
-      }
-    });
+    registerMutation.mutate(values);
   }
   
   // Forgot password form
