@@ -30,34 +30,36 @@ const profileFormSchema = z.object({
   enjoymentReason: z.string().min(10, 'Please share what you enjoy about working with children'),
   caregiverStyle: z.string().min(10, 'Please share your caregiving style'),
   hasVideo: z.boolean().default(false),
-  videoUrl: z.string().optional(),
+  videoUrl: z.string().optional(), // The only optional field
   hourlyRate: z.string()
     .min(1, 'Please specify your hourly rate')
     .refine(val => {
       const rate = Number(val);
       return !isNaN(rate) && rate >= 35 && rate <= 50;
     }, 'Hourly rate must be between $35 and $50'),
-  firstAidCertified: z.enum(['yes', 'no']).default('no'),
-  firstAidCertificationDoc: z.string().optional(),
-  hasTransportation: z.enum(['yes', 'no']).default('no'),
-  driversLicenseDoc: z.string().optional(),
+  firstAidCertified: z.enum(['yes', 'no']),
+  firstAidCertificationDoc: z.string().min(1, 'First aid certification document is required when certified'),
+  hasTransportation: z.enum(['yes', 'no']),
+  driversLicenseDoc: z.string().min(1, 'Driver\'s license document is required when you have transportation'),
   skills: z.array(z.string()).min(1, 'Please select at least one skill'),
 }).superRefine((data, ctx) => {
-  // Check certification document is provided when firstAidCertified is 'yes'
-  if (data.firstAidCertified === 'yes' && !data.firstAidCertificationDoc) {
+  // We're keeping these refinements for better conditional validation messages
+  
+  // Skip document validation if firstAidCertified is 'no'
+  if (data.firstAidCertified === 'no') {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['firstAidCertificationDoc'],
-      message: 'Certification document is required',
+      message: '', // Empty message to avoid showing validation error
     });
   }
   
-  // Check driver's license document is provided when hasTransportation is 'yes'
-  if (data.hasTransportation === 'yes' && !data.driversLicenseDoc) {
+  // Skip document validation if hasTransportation is 'no'
+  if (data.hasTransportation === 'no') {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['driversLicenseDoc'],
-      message: 'Driver\'s license document is required',
+      message: '', // Empty message to avoid showing validation error
     });
   }
 });
