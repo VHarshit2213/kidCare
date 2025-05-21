@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Tag, Check } from "lucide-react";
@@ -108,29 +108,44 @@ export default function MembershipPage() {
         return;
       }
       
-      // Proceed to membership activation
-      const response = await apiRequest("PATCH", "/api/users/membership", {
-        userId: user.id,
-        membershipStatus: paymentType === "full" ? "active" : "installment_1",
-        promoCode: promoApplied ? promoCode : undefined,
-        discount: promoApplied ? discount : 0
+      // Show immediate feedback to user first
+      toast({
+        title: "Activating membership...",
+        description: "Please wait a moment while we process your request",
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to activate membership");
+      // Proceed to membership activation using a more efficient approach
+      try {
+        const response = await apiRequest("PATCH", "/api/users/membership", {
+          userId: user.id,
+          membershipStatus: paymentType === "full" ? "active" : "installment_1",
+          promoCode: promoApplied ? promoCode : undefined,
+          discount: promoApplied ? discount : 0
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to activate membership");
+        }
+        
+        // Update the client-side user data immediately to reflect changes
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+        
+        // Success message
+        toast({
+          title: "Membership Activated!",
+          description: promoApplied 
+            ? "Your membership has been activated for FREE. Welcome to The Enchanted Co.!"
+            : "Your membership has been activated. Welcome to The Enchanted Co.!",
+        });
+        
+        // Redirect to home page right away without waiting
+        window.location.href = "/";
+        return;
+      } catch (error) {
+        // Error already handled in catch block below, this just prevents proceeding on error
+        throw error;
       }
-      
-      toast({
-        title: "Membership Activated!",
-        description: promoApplied 
-          ? "Your membership has been activated for FREE. Welcome to The Enchanted Co.!"
-          : "Your membership has been activated. Welcome to The Enchanted Co.!",
-      });
-      
-      // Redirect to home page after successful activation
-      navigate("/");
-      return;
     } catch (error: any) {
       console.error("MembershipPage: Error activating membership", error);
       toast({
