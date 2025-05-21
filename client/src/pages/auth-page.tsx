@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 // Define form schemas
 const loginSchema = z.object({
@@ -44,6 +45,8 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
 
   // Redirect based on user status
   if (user) {
@@ -99,7 +102,20 @@ export default function AuthPage() {
 
   // Handle registration submission
   function onRegisterSubmit(values: RegisterValues) {
-    registerMutation.mutate(values);
+    // Store the user name if it's a parent
+    if (values.userType === "parent") {
+      setNewUserName(values.fullName);
+    }
+    
+    // Register the user
+    registerMutation.mutate(values, {
+      onSuccess: (data) => {
+        // If parent, show welcome modal
+        if (data.userType === "parent") {
+          setShowWelcomeModal(true);
+        }
+      }
+    });
   }
   
   // Forgot password form
@@ -138,6 +154,12 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-gradient-to-br from-blue-50 via-white to-pink-50">
+      {/* Welcome Modal for new parent users */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={() => setShowWelcomeModal(false)}
+        userName={newUserName}
+      />
       {/* Left side: Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
