@@ -101,7 +101,7 @@ export default function BabysitterProfileForm() {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
-  // Form for babysitter profile
+  // Initialize form with default values
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -114,13 +114,13 @@ export default function BabysitterProfileForm() {
       ageRangeExperience: user?.ageRangeExperience || [],
       enjoymentReason: user?.enjoymentReason || '',
       caregiverStyle: user?.caregiverStyle || '',
-      hasVideo: user?.hasVideo || false,
-      videoUrl: user?.videoUrl || '',
+      hasVideo: false,
+      videoUrl: '',
       hourlyRate: user?.hourlyRate ? String(user.hourlyRate) : '35',
-      firstAidCertified: user?.firstAidCertified ? 'yes' : 'no',
-      firstAidCertificationDoc: user?.firstAidCertificationDoc || '',
-      hasTransportation: user?.hasTransportation ? 'yes' : 'no',
-      driversLicenseDoc: user?.driversLicenseDoc || '',
+      firstAidCertified: 'no',
+      firstAidCertificationDoc: '',
+      hasTransportation: 'no',
+      driversLicenseDoc: '',
       skills: user?.skills || [],
     },
   });
@@ -231,6 +231,7 @@ export default function BabysitterProfileForm() {
     }
   };
 
+  // Show login message if user is not authenticated
   if (!user) {
     return (
       <div className="flex items-center justify-center h-96">
