@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { sendWelcomeEmail } from "./email";
 
 declare global {
   namespace Express {
@@ -88,6 +89,17 @@ export function setupAuth(app: Express) {
       ...req.body,
       password: await hashPassword(req.body.password),
     });
+
+    // Send welcome email if the user is a parent
+    if (user.userType === 'parent') {
+      try {
+        await sendWelcomeEmail(user);
+        console.log(`Welcome email sent to parent: ${user.email}`);
+      } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        // Continue with login even if email fails
+      }
+    }
 
     req.login(user, (err) => {
       if (err) return next(err);
