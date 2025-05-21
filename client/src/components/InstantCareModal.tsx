@@ -107,12 +107,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     }
   };
   
-  // Get children data for parents
-  const { data: childOptions = [] } = useQuery<Child[]>({
-    queryKey: ['/api/children'],
-    queryFn: getQueryFn(),
-    enabled: !!user && user.userType === "parent",
-  });
+  // We'll use a simpler approach just to demonstrate the profile completion check
+  const [childOptions, setChildOptions] = useState<Child[]>([]);
 
   // Initialize with current time and current time + hours needed
   const now = new Date();
