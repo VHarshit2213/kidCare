@@ -468,7 +468,7 @@ export default function ParentProfileForm() {
                           <div className="flex justify-between items-start">
                             <div>
                               <h4 className="font-semibold">{child.firstName} {child.lastName}</h4>
-                              <p className="text-sm text-muted-foreground">Born: {child.dateOfBirth}</p>
+                              <p className="text-sm text-muted-foreground">Born: {child.dateOfBirth instanceof Date ? child.dateOfBirth.toLocaleDateString() : String(child.dateOfBirth)}</p>
                               <p className="mt-2"><span className="font-medium">Personality:</span> {child.personality}</p>
                               {child.specialCare && (
                                 <p className="mt-1"><span className="font-medium">Special Care Needs:</span> {child.specialCare}</p>

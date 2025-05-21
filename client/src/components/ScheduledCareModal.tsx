@@ -58,8 +58,12 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
   
   const hasMembership = !!user && (
     user.membershipStatus === "active" || 
-    user.membershipStatus === "installment_2"
+    user.membershipStatus === "installment_2" ||
+    user.membershipStatus === "installment_1"
   );
+  
+  // Check if profile is completed
+  const hasCompletedProfile = !!user && user.profileCompleted === true;
   
   // Reset form when modal is opened
   useEffect(() => {
@@ -175,6 +179,31 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                     }}
                   >
                     Get Membership
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {hasMembership && !hasCompletedProfile && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800">Profile Completion Required</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Please complete your parent profile before scheduling childcare services.
+                  </p>
+                  <Button 
+                    className="mt-2" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      navigate("/profile-completion");
+                    }}
+                  >
+                    Complete Profile
                   </Button>
                 </div>
               </div>
@@ -461,9 +490,13 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                 type="submit"
                 style={{ backgroundColor: "#3c5679" }}
                 className="w-full text-white font-medium"
-                disabled={!hasMembership}
+                disabled={!hasMembership || !hasCompletedProfile}
               >
-                {hasMembership ? "Schedule Sitter" : "Membership Required"}
+                {!hasMembership 
+                  ? "Membership Required" 
+                  : !hasCompletedProfile 
+                    ? "Complete Profile First" 
+                    : "Schedule Sitter"}
               </Button>
             </form>
           </Form>

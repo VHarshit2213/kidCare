@@ -107,14 +107,12 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     }
   };
   
-  // Mock children for demonstration purposes
-  const [childOptions] = useState<Child[]>([
-    { id: "1", name: "Emma" },
-    { id: "2", name: "Noah" },
-    { id: "3", name: "Olivia" },
-    { id: "4", name: "Liam" },
-    { id: "5", name: "Ava" }
-  ]);
+  // Fetch children for the parent user
+  const { data: childOptions = [] } = useQuery({
+    queryKey: ['/api/children'],
+    queryFn: getQueryFn(),
+    enabled: !!user && user.userType === "parent",
+  });
 
   // Initialize with current time and current time + hours needed
   const now = new Date();
@@ -626,9 +624,13 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                 type="submit"
                 style={{ backgroundColor: "#3c5679" }}
                 className="w-full text-white font-medium"
-                disabled={!hasMembership}
+                disabled={!hasMembership || !hasCompletedProfile}
               >
-                {hasMembership ? "Find Available Sitters" : "Membership Required"}
+                {!hasMembership 
+                  ? "Membership Required" 
+                  : !hasCompletedProfile 
+                    ? "Complete Profile First" 
+                    : "Find Available Sitters"}
               </Button>
             </form>
           </Form>
