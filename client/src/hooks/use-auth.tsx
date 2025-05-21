@@ -100,12 +100,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.href = "/membership";
       }
       
-      toast({
-        title: "Registration successful",
-        description: data.userType === "parent" 
-          ? `Welcome to The Enchanted Co., ${data.fullName}! Please complete your membership registration.`
-          : `Welcome to The Enchanted Co., ${data.fullName}!`,
-      });
+      // Show welcome message with all the requested content for parents
+      if (data.userType === "parent") {
+        toast({
+          title: "Welcome to the Enchanted Co! 🧸",
+          description: `We're excited to have you on board, ${data.fullName}! Please complete your membership registration.`,
+          duration: 6000,
+        });
+        
+        // Show a second toast with the additional welcome information
+        setTimeout(() => {
+          toast({
+            title: "Next Steps:",
+            description: `• Complete your profile\n• Explore the dashboard\n• Start booking with confidence\n\nReach out anytime at hello@lovetheenchantedco.com\n\nWelcome to the Enchanted Co Family! 🎉`,
+            duration: 8000,
+          });
+        }, 1500);
+      } else {
+        toast({
+          title: "Registration successful",
+          description: `Welcome to The Enchanted Co., ${data.fullName}!`,
+        });
+      }
     },
     onError: (error) => {
       toast({

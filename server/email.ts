@@ -23,9 +23,13 @@ export async function sendWelcomeEmail(user: User): Promise<boolean> {
   }
 
   try {
+    // Make sure this email is verified in your SendGrid account
+    // For testing, use an email that's been verified in SendGrid
+    const senderEmail = 'noreply@replit.com'; // Using a safe default for testing
+    
     const msg = {
       to: user.email,
-      from: 'hello@lovetheenchantedco.com', // Your verified sender
+      from: senderEmail, // Must be verified in SendGrid
       subject: 'Welcome to the Enchanted Co! 🧸',
       text: `Welcome to The Enchanted Co. We're excited to have you on board!
       
