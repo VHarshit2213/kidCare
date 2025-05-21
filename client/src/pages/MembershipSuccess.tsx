@@ -9,7 +9,7 @@ import { CheckCircle2 } from "lucide-react";
 export default function MembershipSuccess() {
   const [_, navigate] = useLocation();
   const { user } = useAuth();
-
+  
   useEffect(() => {
     // If user is not logged in, redirect to login
     if (!user) {
@@ -29,6 +29,18 @@ export default function MembershipSuccess() {
         status !== "installment_1" && 
         status !== "installment_2") {
       navigate("/membership");
+      return;
+    }
+    
+    // Automatically redirect to profile completion after a short delay
+    // This ensures the user sees the success message before being redirected
+    if (!user.profileCompleted) {
+      // Make the delay longer so user can read the success message
+      const timer = setTimeout(() => {
+        navigate("/profile-completion");
+      }, 5000); // Increased to 5 seconds
+      
+      return () => clearTimeout(timer);
     }
   }, [user, navigate]);
 
@@ -53,6 +65,16 @@ export default function MembershipSuccess() {
                 ? "Thank you for your first installment payment of $200. Your membership is now active!" 
                 : "Thank you for your payment of $400. Your membership is now active!"}
             </p>
+            
+            {!user.profileCompleted && (
+              <div className="bg-blue-50 border border-blue-100 p-5 rounded-lg mb-6">
+                <h3 className="text-xl font-semibold text-blue-800 mb-2">Next Step: Complete Your Profile</h3>
+                <p className="mb-2">We'll automatically redirect you to complete your parent profile in a few seconds.</p>
+                <div className="w-full bg-blue-100 rounded-full h-2.5 my-3">
+                  <div className="bg-blue-500 h-2.5 rounded-full animate-[progress_5s_ease-in-out]"></div>
+                </div>
+              </div>
+            )}
             
             <div className="bg-gray-50 p-6 rounded-lg mb-6">
               <h3 className="text-xl font-semibold mb-4">What's Next?</h3>
