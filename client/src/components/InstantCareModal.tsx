@@ -3,8 +3,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { InstantCareFormData, Child } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
@@ -107,8 +107,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     }
   };
   
-  // Fetch children for the parent user
-  const { data: childOptions = [] } = useQuery({
+  // Get children data for parents
+  const { data: childOptions = [] } = useQuery<Child[]>({
     queryKey: ['/api/children'],
     queryFn: getQueryFn(),
     enabled: !!user && user.userType === "parent",
@@ -138,7 +138,10 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const createBookingMutation = useMutation({
     mutationFn: async (data: InstantCareFormData) => {
       // Transform the data to match what the backend expects
-      const childNames = data.children.map(child => child.name).join(", ");
+      const childNames = data.children.map(childId => {
+        const child = childOptions.find(c => c.id === childId);
+        return child ? `${child.firstName} ${child.lastName}` : '';
+      }).filter(Boolean).join(", ");
       
       const response = await apiRequest("POST", "/api/bookings", {
         parentId: 1, // Using a default parent ID since we're not requiring login
