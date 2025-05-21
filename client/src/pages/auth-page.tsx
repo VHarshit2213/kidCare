@@ -138,12 +138,6 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row bg-gradient-to-br from-blue-50 via-white to-pink-50">
-      {/* Welcome Modal for new parent users */}
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        onClose={() => setShowWelcomeModal(false)}
-        userName={newUserName}
-      />
       {/* Left side: Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
