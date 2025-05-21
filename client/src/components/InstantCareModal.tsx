@@ -78,8 +78,12 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   
   const hasMembership = !!user && (
     user.membershipStatus === "active" || 
-    user.membershipStatus === "installment_2"
+    user.membershipStatus === "installment_2" ||
+    user.membershipStatus === "installment_1"
   );
+  
+  // Check if profile is completed
+  const hasCompletedProfile = !!user && user.profileCompleted === true;
   
   // Set time constraints for the current day only
   useEffect(() => {
@@ -221,6 +225,31 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                     }}
                   >
                     Get Membership
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {hasMembership && !hasCompletedProfile && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800">Profile Completion Required</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Please complete your parent profile before requesting childcare services.
+                  </p>
+                  <Button 
+                    className="mt-2" 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      navigate("/profile-completion");
+                    }}
+                  >
+                    Complete Profile
                   </Button>
                 </div>
               </div>
