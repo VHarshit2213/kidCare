@@ -281,11 +281,12 @@ export default function ParentProfileForm() {
 
   // Function to edit a child
   const handleEditChild = (child: Child) => {
+    // Convert any null or undefined values to empty strings
     setChildFormValues({
-      firstName: child.firstName,
-      lastName: child.lastName,
-      dateOfBirth: child.dateOfBirth,
-      personality: child.personality,
+      firstName: child.firstName || '',
+      lastName: child.lastName || '',
+      dateOfBirth: typeof child.dateOfBirth === 'string' ? child.dateOfBirth : '',
+      personality: child.personality || '',
       specialCare: child.specialCare || '',
     });
     setCurrentChildId(child.id);

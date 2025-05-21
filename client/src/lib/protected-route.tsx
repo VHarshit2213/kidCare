@@ -81,15 +81,26 @@ export function ProtectedRoute({
   }
 
   // For all users, check if their profile is complete after membership (if applicable)
-  // Only redirect to profile-completion for the home page, but not for other pages
-  const requiresProfileCompletion = ["/"].includes(path);
-  // Skip this redirect for membership-success as we handle it there
-  if (!user.profileCompleted && requiresProfileCompletion && 
-      path !== "/profile-completion" && path !== "/membership-success") {
-    console.log(`ProtectedRoute (${path}): Redirecting to profile completion page`);
+  // Direct users to profile completion more broadly - not just from home page
+  // For parent users with active membership, ensure they complete their profile
+  if (!user.profileCompleted && 
+      path !== "/profile-completion" && path !== "/membership-success" && 
+      (user.userType === "babysitter" || 
+       (user.userType === "parent" && 
+        (user.membershipStatus === "active" || 
+         user.membershipStatus === "installment_1" || 
+         user.membershipStatus === "installment_2")))) {
+    console.log(`ProtectedRoute (${path}): Redirecting to profile completion page from ${path}`);
+    console.log(`User info - Type: ${user.userType}, Membership: ${user.membershipStatus}, Profile completed: ${user.profileCompleted}`);
     return (
       <Route path={path}>
-        <Redirect to="/profile-completion" />
+        <div className="container max-w-6xl py-10">
+          <div className="flex items-center justify-center flex-col space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
+            <p>Redirecting to profile completion page...</p>
+            <RedirectComponent to="/profile-completion" />
+          </div>
+        </div>
       </Route>
     );
   }
