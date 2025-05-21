@@ -40,34 +40,28 @@ const profileFormSchema = z.object({
       return !isNaN(rate) && rate >= 35 && rate <= 50;
     }, 'Hourly rate must be between $35 and $50'),
   firstAidCertified: z.enum(['yes', 'no']).default('no'),
-  firstAidCertificationDoc: z.string().optional()
-    .refine(
-      (val: string | undefined, ctx: z.RefinementCtx) => {
-        // If firstAidCertified is 'yes', certification doc is required
-        if (ctx.path[0] === 'firstAidCertificationDoc' && 
-            ctx.parent && 
-            (ctx.parent as any).firstAidCertified === 'yes') {
-          return !!val;
-        }
-        return true;
-      }, 
-      { message: 'Certification document is required' }
-    ),
+  firstAidCertificationDoc: z.string().optional(),
   hasTransportation: z.enum(['yes', 'no']).default('no'),
-  driversLicenseDoc: z.string().optional()
-    .refine(
-      (val: string | undefined, ctx: z.RefinementCtx) => {
-        // If hasTransportation is 'yes', driver's license doc is required
-        if (ctx.path[0] === 'driversLicenseDoc' && 
-            ctx.parent && 
-            (ctx.parent as any).hasTransportation === 'yes') {
-          return !!val;
-        }
-        return true;
-      }, 
-      { message: 'Driver\'s license document is required' }
-    ),
+  driversLicenseDoc: z.string().optional(),
   skills: z.array(z.string()).min(1, 'Please select at least one skill'),
+}).superRefine((data, ctx) => {
+  // Check certification document is provided when firstAidCertified is 'yes'
+  if (data.firstAidCertified === 'yes' && !data.firstAidCertificationDoc) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['firstAidCertificationDoc'],
+      message: 'Certification document is required',
+    });
+  }
+  
+  // Check driver's license document is provided when hasTransportation is 'yes'
+  if (data.hasTransportation === 'yes' && !data.driversLicenseDoc) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['driversLicenseDoc'],
+      message: 'Driver\'s license document is required',
+    });
+  }
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
