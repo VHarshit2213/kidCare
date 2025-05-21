@@ -100,6 +100,12 @@ export default function BabysitterProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Get firstAidCertified value safely
+  const firstAidValue = user?.firstAidCertified ? 'yes' : 'no';
+  
+  // Get hasTransportation value safely
+  const transportationValue = user?.hasTransportation ? 'yes' : 'no';
 
   // Initialize form with default values
   const form = useForm<ProfileFormValues>({
@@ -117,9 +123,9 @@ export default function BabysitterProfileForm() {
       hasVideo: false,
       videoUrl: '',
       hourlyRate: user?.hourlyRate ? String(user.hourlyRate) : '35',
-      firstAidCertified: 'no',
+      firstAidCertified: firstAidValue as 'yes' | 'no',
       firstAidCertificationDoc: '',
-      hasTransportation: 'no',
+      hasTransportation: transportationValue as 'yes' | 'no',
       driversLicenseDoc: '',
       skills: user?.skills || [],
     },
