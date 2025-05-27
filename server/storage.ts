@@ -34,6 +34,13 @@ export interface IStorage {
   getBookingsByBabysitterId(babysitterId: number): Promise<Booking[]>;
   updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
   assignBabysitterToBooking(bookingId: number, babysitterId: number): Promise<Booking | undefined>;
+  updateBookingPayment(id: number, paymentData: {
+    totalAmount: number;
+    platformFee: number;
+    babysitterAmount: number;
+    stripePaymentIntentId: string;
+  }): Promise<Booking | undefined>;
+  updateBookingPaidAt(id: number, paidAt: Date): Promise<Booking | undefined>;
   
   // Message methods
   createMessage(message: InsertMessage): Promise<Message>;

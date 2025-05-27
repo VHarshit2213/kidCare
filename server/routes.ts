@@ -893,6 +893,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Booking Payment Routes - 15% platform commission
+  if (process.env.STRIPE_SECRET_KEY) {
+    // Create payment intent for completed booking
+    app.post("/api/bookings/:id/create-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const bookingId = parseInt(req.params.id);
+        const { totalAmount } = req.body; // in dollars
+        
+        const booking = await storage.getBooking(bookingId);
+        if (!booking) {
+          return res.status(404).json({ message: "Booking not found" });
+        }
+        
+        if (booking.status !== "completed") {
+          return res.status(400).json({ message: "Booking must be completed before payment" });
+        }
+        
+        // Calculate amounts: 15% platform fee, 85% to babysitter
+        const totalAmountCents = Math.round(totalAmount * 100);
+        const platformFeeCents = Math.round(totalAmountCents * 0.15);
+        const babysitterAmountCents = totalAmountCents - platformFeeCents;
+        
+        // Create payment intent
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: totalAmountCents,
+          currency: "usd",
+          payment_method_types: ['card', 'apple_pay', 'google_pay'],
+          metadata: {
+            bookingId: bookingId.toString(),
+            platformFee: platformFeeCents.toString(),
+            babysitterAmount: babysitterAmountCents.toString(),
+          },
+        });
+        
+        // Update booking with payment details
+        await storage.updateBookingPayment(bookingId, {
+          totalAmount: totalAmountCents,
+          platformFee: platformFeeCents,
+          babysitterAmount: babysitterAmountCents,
+          stripePaymentIntentId: paymentIntent.id,
+        });
+        
+        res.status(200).json({
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+          platformFee: platformFeeCents / 100,
+          babysitterAmount: babysitterAmountCents / 100,
+        });
+      } catch (error: any) {
+        console.error("Error creating booking payment:", error);
+        res.status(500).json({ message: error.message || "Failed to create payment" });
+      }
+    });
+    
+    // Confirm payment and transfer to babysitter
+    app.post("/api/bookings/:id/confirm-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const bookingId = parseInt(req.params.id);
+        const { paymentIntentId } = req.body;
+        
+        const booking = await storage.getBooking(bookingId);
+        if (!booking) {
+          return res.status(404).json({ message: "Booking not found" });
+        }
+        
+        // Verify payment succeeded
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (paymentIntent.status !== "succeeded") {
+          return res.status(400).json({ message: "Payment has not succeeded" });
+        }
+        
+        // Get babysitter details
+        const babysitter = await storage.getUser(booking.babysitterId!);
+        if (!babysitter) {
+          return res.status(404).json({ message: "Babysitter not found" });
+        }
+        
+        // Transfer money to babysitter (if they have Stripe Connect setup)
+        if (babysitter.stripeAccountId) {
+          await stripe.transfers.create({
+            amount: booking.babysitterAmount!,
+            currency: "usd",
+            destination: babysitter.stripeAccountId,
+            metadata: {
+              bookingId: bookingId.toString(),
+            },
+          });
+        }
+        
+        // Update booking status to paid
+        await storage.updateBookingStatus(bookingId, "paid");
+        await storage.updateBookingPaidAt(bookingId, new Date());
+        
+        res.status(200).json({
+          success: true,
+          message: "Payment processed and transferred to babysitter",
+        });
+      } catch (error: any) {
+        console.error("Error confirming payment:", error);
+        res.status(500).json({ message: error.message || "Failed to confirm payment" });
+      }
+    });
+  }
+
   // Membership Payment Routes
   if (process.env.STRIPE_SECRET_KEY) {
     // Create payment intent for membership payment

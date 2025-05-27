@@ -34,6 +34,10 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   
+  // Stripe Connect fields for babysitters
+  stripeAccountId: text("stripe_account_id"), // for receiving payments
+  stripeAccountStatus: text("stripe_account_status").default("none"), // none, pending, active
+  
   // Parent profile fields
   parentingStyle: text("parenting_style"),
   familyDescription: text("family_description"),
@@ -51,10 +55,15 @@ export const bookings = pgTable("bookings", {
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   careInstructions: text("care_instructions"),
-  status: text("status").notNull().default("pending"), // pending, accepted, completed, cancelled
+  status: text("status").notNull().default("pending"), // pending, accepted, completed, cancelled, paid
   requiresFirstAid: boolean("requires_first_aid").default(false),
   requiresTransportation: boolean("requires_transportation").default(false),
   requiresExperience: boolean("requires_experience").default(false),
+  totalAmount: integer("total_amount"), // total cost in cents
+  platformFee: integer("platform_fee"), // 15% commission in cents
+  babysitterAmount: integer("babysitter_amount"), // amount babysitter receives in cents
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
