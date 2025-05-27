@@ -62,8 +62,8 @@ export default function MembershipSuccess() {
           <CardContent className="text-center pb-6 px-8">
             <p className="text-lg mb-6">
               {isInstallment 
-                ? "Thank you for your first installment payment of $200. Your membership is now active!" 
-                : "Thank you for your payment of $400. Your membership is now active!"}
+                ? "Thank you for your first installment payment of $250. Your membership is now active!" 
+                : "Thank you for your payment of $500. Your membership is now active!"}
             </p>
             
             {!user.profileCompleted && (
