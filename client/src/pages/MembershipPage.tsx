@@ -392,6 +392,25 @@ export default function MembershipPage() {
           </Card>
         </div>
       </div>
+
+      {/* Payment Dialog */}
+      <PaymentDialog
+        isOpen={paymentDialog.isOpen}
+        onClose={() => setPaymentDialog({ ...paymentDialog, isOpen: false })}
+        clientSecret={paymentDialog.clientSecret}
+        amount={paymentDialog.amount}
+        paymentType={paymentType}
+        userId={user?.id || 0}
+        promoCode={promoApplied ? promoCode : undefined}
+        discount={promoApplied ? discount : undefined}
+        onSuccess={() => {
+          toast({
+            title: "Payment Successful!",
+            description: "Your membership has been activated",
+          });
+          navigate("/membership-success");
+        }}
+      />
     </Layout>
   );
 }
