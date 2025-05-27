@@ -919,7 +919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentIntent = await stripe.paymentIntents.create({
           amount: totalAmountCents,
           currency: "usd",
-          payment_method_types: ['card', 'apple_pay', 'google_pay'],
+          payment_method_types: ['card'],
           metadata: {
             bookingId: bookingId.toString(),
             platformFee: platformFeeCents.toString(),
@@ -1032,7 +1032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const paymentIntent = await stripe.paymentIntents.create({
           amount,
           currency: "usd",
-          payment_method_types: ['card', 'apple_pay', 'google_pay'],
+          payment_method_types: ['card'],
           metadata: {
             userId: userId.toString(),
             paymentType,
