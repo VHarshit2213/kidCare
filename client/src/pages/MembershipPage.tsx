@@ -97,11 +97,11 @@ export default function MembershipPage() {
       const baseAmount = paymentType === "full" ? 500 : 250;
       const finalAmount = promoApplied ? baseAmount * (100 - discount) / 100 : baseAmount;
                          
-      // If not free, we would normally redirect to payment
-      if (finalAmount > 0 && !promoApplied) {
+      // If not free, require payment regardless of promo code
+      if (finalAmount > 0) {
         toast({
           title: "Payment Required",
-          description: "Please enter a valid promo code or complete payment to activate your membership",
+          description: `Please complete payment of $${finalAmount.toFixed(2)} to activate your membership`,
           variant: "destructive",
         });
         setActivating(false);
@@ -300,21 +300,39 @@ export default function MembershipPage() {
               </div>
               
               {/* Action button */}
-              <Button 
-                onClick={activateMembership} 
-                className="w-full" 
-                size="lg"
-                disabled={activating}
-              >
-                {activating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Activating...
-                  </>
-                ) : (
-                  promoApplied ? "Activate Free Membership" : "Complete Membership Registration"
-                )}
-              </Button>
+              {promoApplied && discount === 100 ? (
+                <Button 
+                  onClick={activateMembership} 
+                  className="w-full" 
+                  size="lg"
+                  disabled={activating}
+                >
+                  {activating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Activating...
+                    </>
+                  ) : (
+                    "Activate Free Membership"
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => {
+                    const baseAmount = paymentType === "full" ? 500 : 250;
+                    const finalAmount = promoApplied ? baseAmount * (100 - discount) / 100 : baseAmount;
+                    toast({
+                      title: "Payment Required",
+                      description: `Please complete payment of $${finalAmount.toFixed(2)} to activate your membership`,
+                      variant: "destructive",
+                    });
+                  }}
+                  className="w-full" 
+                  size="lg"
+                >
+                  Pay ${promoApplied ? ((paymentType === "full" ? 500 : 250) * (100 - discount) / 100).toFixed(2) : (paymentType === "full" ? 500 : 250)} Now
+                </Button>
+              )}
               
               <p className="text-xs text-center text-muted-foreground">
                 By activating, you agree to our Terms of Service and Privacy Policy
