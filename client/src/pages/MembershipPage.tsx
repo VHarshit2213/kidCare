@@ -50,11 +50,11 @@ export default function MembershipPage() {
           description: "You received a 100% discount - Your membership is FREE!",
         });
       } else if (code === "ECO125") {
-        setDiscount(99.75); // $399 off from $400 is 99.75% discount
+        setDiscount(99);
         setPromoApplied(true);
         toast({
           title: "Promo Code Applied!",
-          description: "You received $399 off - Your membership is just $1!",
+          description: "You received 99% off your membership!",
         });
       } else if (code === "LACO1") {
         setDiscount(25);
