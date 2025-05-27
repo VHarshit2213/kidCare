@@ -318,19 +318,85 @@ export default function MembershipPage() {
                 </Button>
               ) : (
                 <Button 
-                  onClick={() => {
-                    const baseAmount = paymentType === "full" ? 500 : 250;
-                    const finalAmount = promoApplied ? baseAmount * (100 - discount) / 100 : baseAmount;
-                    toast({
-                      title: "Payment Required",
-                      description: `Please complete payment of $${finalAmount.toFixed(2)} to activate your membership`,
-                      variant: "destructive",
-                    });
+                  onClick={async () => {
+                    if (!user) {
+                      toast({
+                        title: "Error",
+                        description: "Please sign in to proceed with payment",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+
+                    setActivating(true);
+                    try {
+                      const baseAmount = paymentType === "full" ? 500 : 250;
+                      const finalAmount = promoApplied ? baseAmount * (100 - discount) / 100 : baseAmount;
+                      
+                      // Create payment intent
+                      const response = await apiRequest("POST", "/api/create-membership-intent", {
+                        paymentType,
+                        userId: user.id,
+                        promoCode: promoApplied ? promoCode : undefined,
+                        discount: promoApplied ? discount : 0
+                      });
+
+                      const data = await response.json();
+                      
+                      toast({
+                        title: "Payment Processing",
+                        description: `Processing payment of $${finalAmount.toFixed(2)}...`,
+                      });
+
+                      // In a real implementation, this would redirect to Stripe checkout
+                      // For now, we'll simulate successful payment after a delay
+                      setTimeout(async () => {
+                        try {
+                          await apiRequest("PATCH", "/api/users/membership", {
+                            userId: user.id,
+                            membershipStatus: paymentType === "full" ? "active" : "installment_1",
+                            promoCode: promoApplied ? promoCode : undefined,
+                            discount: promoApplied ? discount : 0
+                          });
+
+                          toast({
+                            title: "Payment Successful!",
+                            description: "Your membership has been activated",
+                          });
+
+                          navigate("/membership-success");
+                        } catch (error: any) {
+                          toast({
+                            title: "Payment Error",
+                            description: error.message || "Failed to process payment",
+                            variant: "destructive",
+                          });
+                        } finally {
+                          setActivating(false);
+                        }
+                      }, 2000);
+
+                    } catch (error: any) {
+                      toast({
+                        title: "Payment Error",
+                        description: error.message || "Failed to initiate payment",
+                        variant: "destructive",
+                      });
+                      setActivating(false);
+                    }
                   }}
                   className="w-full" 
                   size="lg"
+                  disabled={activating}
                 >
-                  Pay ${promoApplied ? ((paymentType === "full" ? 500 : 250) * (100 - discount) / 100).toFixed(2) : (paymentType === "full" ? 500 : 250)} Now
+                  {activating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    `Pay $${promoApplied ? ((paymentType === "full" ? 500 : 250) * (100 - discount) / 100).toFixed(2) : (paymentType === "full" ? 500 : 250)} Now`
+                  )}
                 </Button>
               )}
               
