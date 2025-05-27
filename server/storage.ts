@@ -290,6 +290,35 @@ export class MemStorage implements IStorage {
     return updatedBooking;
   }
 
+  async updateBookingPayment(id: number, paymentData: {
+    totalAmount: number;
+    platformFee: number;
+    babysitterAmount: number;
+    stripePaymentIntentId: string;
+  }): Promise<Booking | undefined> {
+    const booking = this.bookings.get(id);
+    if (!booking) return undefined;
+    
+    const updatedBooking = { 
+      ...booking, 
+      totalAmount: paymentData.totalAmount,
+      platformFee: paymentData.platformFee,
+      babysitterAmount: paymentData.babysitterAmount,
+      stripePaymentIntentId: paymentData.stripePaymentIntentId
+    };
+    this.bookings.set(id, updatedBooking);
+    return updatedBooking;
+  }
+
+  async updateBookingPaidAt(id: number, paidAt: Date): Promise<Booking | undefined> {
+    const booking = this.bookings.get(id);
+    if (!booking) return undefined;
+    
+    const updatedBooking = { ...booking, paidAt };
+    this.bookings.set(id, updatedBooking);
+    return updatedBooking;
+  }
+
   // Message methods
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = this.messageIdCounter++;
