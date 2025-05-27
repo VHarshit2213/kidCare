@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import PaymentDialog from "@/components/PaymentDialog";
 
 export default function MembershipPage() {
   console.log("MembershipPage: Component rendered");
@@ -22,6 +23,15 @@ export default function MembershipPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [paymentDialog, setPaymentDialog] = useState<{
+    isOpen: boolean;
+    clientSecret: string;
+    amount: number;
+  }>({
+    isOpen: false,
+    clientSecret: "",
+    amount: 0,
+  });
   
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
@@ -343,38 +353,12 @@ export default function MembershipPage() {
 
                       const data = await response.json();
                       
-                      toast({
-                        title: "Payment Processing",
-                        description: `Processing payment of $${finalAmount.toFixed(2)}...`,
+                      // Open the real Stripe payment dialog
+                      setPaymentDialog({
+                        isOpen: true,
+                        clientSecret: data.clientSecret,
+                        amount: finalAmount,
                       });
-
-                      // In a real implementation, this would redirect to Stripe checkout
-                      // For now, we'll simulate successful payment after a delay
-                      setTimeout(async () => {
-                        try {
-                          await apiRequest("PATCH", "/api/users/membership", {
-                            userId: user.id,
-                            membershipStatus: paymentType === "full" ? "active" : "installment_1",
-                            promoCode: promoApplied ? promoCode : undefined,
-                            discount: promoApplied ? discount : 0
-                          });
-
-                          toast({
-                            title: "Payment Successful!",
-                            description: "Your membership has been activated",
-                          });
-
-                          navigate("/membership-success");
-                        } catch (error: any) {
-                          toast({
-                            title: "Payment Error",
-                            description: error.message || "Failed to process payment",
-                            variant: "destructive",
-                          });
-                        } finally {
-                          setActivating(false);
-                        }
-                      }, 2000);
 
                     } catch (error: any) {
                       toast({
@@ -382,6 +366,7 @@ export default function MembershipPage() {
                         description: error.message || "Failed to initiate payment",
                         variant: "destructive",
                       });
+                    } finally {
                       setActivating(false);
                     }
                   }}
@@ -392,7 +377,7 @@ export default function MembershipPage() {
                   {activating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
+                      Loading Payment...
                     </>
                   ) : (
                     `Pay $${promoApplied ? ((paymentType === "full" ? 500 : 250) * (100 - discount) / 100).toFixed(2) : (paymentType === "full" ? 500 : 250)} Now`
