@@ -94,8 +94,8 @@ export default function MembershipPage() {
     setActivating(true);
     try {
       // Calculate the final amount based on discounts
-      const finalAmount = promoApplied && discount === 100 ? 0 : 
-                         paymentType === "full" ? 500 : 250;
+      const baseAmount = paymentType === "full" ? 500 : 250;
+      const finalAmount = promoApplied ? baseAmount * (100 - discount) / 100 : baseAmount;
                          
       // If not free, we would normally redirect to payment
       if (finalAmount > 0 && !promoApplied) {
@@ -259,11 +259,11 @@ export default function MembershipPage() {
                     </div>
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({discount}%):</span>
-                      <span>-${paymentType === "full" ? 500 : 250}</span>
+                      <span>-${((paymentType === "full" ? 500 : 250) * discount / 100).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t pt-2 mt-2">
                       <span>Total Due Now:</span>
-                      <span>$0</span>
+                      <span>${((paymentType === "full" ? 500 : 250) * (100 - discount) / 100).toFixed(2)}</span>
                     </div>
                   </div>
                 ) : (
