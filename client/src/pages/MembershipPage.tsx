@@ -95,7 +95,7 @@ export default function MembershipPage() {
     try {
       // Calculate the final amount based on discounts
       const finalAmount = promoApplied && discount === 100 ? 0 : 
-                         paymentType === "full" ? 400 : 200;
+                         paymentType === "full" ? 500 : 250;
                          
       // If not free, we would normally redirect to payment
       if (finalAmount > 0 && !promoApplied) {
@@ -179,7 +179,7 @@ export default function MembershipPage() {
                     <div>
                       <Label htmlFor="full-payment" className="text-base font-medium">One-time Payment</Label>
                       <p className="text-sm text-gray-500">
-                        Pay the full membership fee of $400 at once and get immediate access to all our services.
+                        Pay the full membership fee of $500 at once and get immediate access to all our services.
                       </p>
                     </div>
                   </div>
@@ -189,7 +189,7 @@ export default function MembershipPage() {
                     <div>
                       <Label htmlFor="installment-payment" className="text-base font-medium">Installment Plan</Label>
                       <p className="text-sm text-gray-500">
-                        Pay $200 now and $200 in 30 days. You'll get immediate access to our services.
+                        Pay $250 now and $250 in 30 days. You'll get immediate access to our services.
                       </p>
                     </div>
                   </div>
@@ -254,12 +254,12 @@ export default function MembershipPage() {
                     <div className="flex justify-between">
                       <span>Membership Fee:</span>
                       <span className="line-through text-muted-foreground">
-                        ${paymentType === "full" ? 400 : 200}
+                        ${paymentType === "full" ? 500 : 250}
                       </span>
                     </div>
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({discount}%):</span>
-                      <span>-${paymentType === "full" ? 400 : 200}</span>
+                      <span>-${paymentType === "full" ? 500 : 250}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t pt-2 mt-2">
                       <span>Total Due Now:</span>
@@ -270,11 +270,11 @@ export default function MembershipPage() {
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between">
                       <span>Membership Fee:</span>
-                      <span>${paymentType === "full" ? 400 : 200}</span>
+                      <span>${paymentType === "full" ? 500 : 250}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t pt-2 mt-2">
                       <span>Total Due Now:</span>
-                      <span>${paymentType === "full" ? 400 : 200}</span>
+                      <span>${paymentType === "full" ? 500 : 250}</span>
                     </div>
                   </div>
                 )}
