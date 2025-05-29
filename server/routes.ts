@@ -361,6 +361,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedBooking = await storage.assignBabysitterToBooking(bookingId, Number(babysitterId));
       
+      // Set babysitter to "busy" when assigned to a booking
+      if (updatedBooking && updatedBooking.babysitterId) {
+        await storage.updateUserAvailability(updatedBooking.babysitterId, "busy");
+      }
+      
       // Send notifications when a babysitter is assigned to a booking
       if (updatedBooking) {
         try {
