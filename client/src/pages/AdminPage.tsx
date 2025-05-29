@@ -311,6 +311,83 @@ export default function AdminPage() {
                   </h2>
                   {renderUserTable(babysitters)}
                 </TabsContent>
+
+                <TabsContent value="reviews" className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">Parent Reviews</h2>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Review ID</TableHead>
+                        <TableHead>Parent</TableHead>
+                        <TableHead>Babysitter</TableHead>
+                        <TableHead>Booking</TableHead>
+                        <TableHead>Overall Rating</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reviews.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center">
+                            No reviews found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        reviews.map((review) => (
+                          <TableRow key={review.id}>
+                            <TableCell>{review.id}</TableCell>
+                            <TableCell className="font-medium">
+                              {review.parent?.fullName || 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              {review.babysitter?.fullName || 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              {review.booking ? (
+                                <div className="text-sm">
+                                  <div>{review.booking.childName}</div>
+                                  <div className="text-gray-500">
+                                    {new Date(review.booking.startTime).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              ) : (
+                                'Unknown'
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-sm ${
+                                      i < review.overallRating
+                                        ? 'text-yellow-400'
+                                        : 'text-gray-300'
+                                    }`}
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                                <span className="ml-2 text-sm text-gray-600">
+                                  ({review.overallRating}/5)
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="outline" size="sm">
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
               </Tabs>
             )}
           </CardContent>
