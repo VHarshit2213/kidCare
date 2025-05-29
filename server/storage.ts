@@ -17,6 +17,7 @@ export interface IStorage {
   getAllBabysitters(): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
   updateUserProfile(userId: number, profileData: Partial<User>): Promise<User | undefined>;
+  updateUserAvailability(userId: number, availabilityStatus: string): Promise<User | undefined>;
   
   // Membership methods
   updateUserMembership(userId: number, membershipData: {
@@ -183,7 +184,12 @@ export class MemStorage implements IStorage {
       medicalDietaryRestrictions: null,
       emergencyContacts: null,
       // Initialize review status for babysitters
-      reviewStatus: null
+      reviewStatus: null,
+      // Initialize availability status for babysitters
+      availabilityStatus: 'offline',
+      // Initialize Stripe Connect fields
+      stripeAccountId: null,
+      stripeAccountStatus: 'none'
     };
     
     // Handle any additional fields from insertUser
@@ -200,6 +206,15 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
     
     const updatedUser = { ...user, ...profileData };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserAvailability(userId: number, availabilityStatus: string): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, availabilityStatus };
     this.users.set(userId, updatedUser);
     return updatedUser;
   }

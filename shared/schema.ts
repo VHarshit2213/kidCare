@@ -38,6 +38,9 @@ export const users = pgTable("users", {
   stripeAccountId: text("stripe_account_id"), // for receiving payments
   stripeAccountStatus: text("stripe_account_status").default("none"), // none, pending, active
   
+  // Babysitter availability status
+  availabilityStatus: text("availability_status").default("offline"), // offline, available, busy
+  
   // Parent profile fields
   parentingStyle: text("parenting_style"),
   familyDescription: text("family_description"),
