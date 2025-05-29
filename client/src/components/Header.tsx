@@ -98,7 +98,7 @@ export default function Header() {
                           window.dispatchEvent(new CustomEvent('open-sitter-request'));
                         }
                       }}
-                      className="justify-start bg-[#7e57c2] hover:bg-[#6a46b0] text-white font-medium tracking-wide rounded-[4px]" 
+                      className="justify-start bg-[#ed4aea] hover:bg-[#d63ab6] text-white font-medium tracking-wide rounded-[4px]" 
                       size="sm"
                     >
                       <svg
@@ -128,12 +128,12 @@ export default function Header() {
                         }
                       }}
                       variant="outline" 
-                      className="justify-start border-[#7e57c2] text-[#7e57c2] hover:bg-purple-50 font-medium tracking-wide rounded-[4px]"
+                      className="justify-start border-[#ed4aea] text-[#ed4aea] hover:bg-pink-50 font-medium tracking-wide rounded-[4px]"
                       size="sm"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2 text-[#7e57c2]"
+                        className="h-4 w-4 mr-2 text-[#ed4aea]"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -177,12 +177,12 @@ export default function Header() {
               <div className="ml-4 flex items-center">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="flex items-center max-w-xs rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#7e57c2] focus:ring-offset-1 px-2 py-1 hover:bg-purple-50 transition-colors">
+                    <button className="flex items-center max-w-xs rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#ed4aea] focus:ring-offset-1 px-2 py-1 hover:bg-pink-50 transition-colors">
                       <Avatar className="h-8 w-8 rounded-md">
                         {user?.profileImageUrl ? (
                           <AvatarImage src={user.profileImageUrl} alt={user.fullName} className="rounded-md" />
                         ) : (
-                          <AvatarFallback className="rounded-md bg-[#7e57c2]/10 text-[#7e57c2]">{getInitials(user?.fullName || "User")}</AvatarFallback>
+                          <AvatarFallback className="rounded-md bg-[#ed4aea]/10 text-[#ed4aea]">{getInitials(user?.fullName || "User")}</AvatarFallback>
                         )}
                       </Avatar>
                       <div className="flex items-center">
@@ -195,7 +195,7 @@ export default function Header() {
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-4 shadow-lg border-neutral-200">
                     <div className="grid gap-3">
-                      <Link href="/profile" className="text-sm font-medium text-neutral-700 hover:text-[#7e57c2] flex items-center">
+                      <Link href="/profile" className="text-sm font-medium text-neutral-700 hover:text-[#ed4aea] flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
@@ -209,7 +209,7 @@ export default function Header() {
                           Admin Dashboard
                         </Link>
                       )}
-                      <Button variant="ghost" size="sm" className="justify-start text-neutral-700 hover:text-[#7e57c2] hover:bg-purple-50" onClick={handleLogout}>
+                      <Button variant="ghost" size="sm" className="justify-start text-neutral-700 hover:text-[#ed4aea] hover:bg-pink-50" onClick={handleLogout}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
@@ -251,7 +251,7 @@ export default function Header() {
           <div className="flex items-center sm:hidden space-x-3">
             <button 
               onClick={handleCareButtonClick}
-              className="inline-flex items-center justify-center p-2 bg-[#7e57c2] text-white rounded-[4px] shadow-sm"
+              className="inline-flex items-center justify-center p-2 bg-[#ed4aea] text-white rounded-[4px] shadow-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -287,7 +287,7 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <button className="inline-flex items-center justify-center p-2 rounded-[4px] text-neutral-700 hover:text-[#7e57c2] hover:bg-purple-50 focus:outline-none">
+            <button className="inline-flex items-center justify-center p-2 rounded-[4px] text-neutral-700 hover:text-[#ed4aea] hover:bg-pink-50 focus:outline-none">
               <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
