@@ -112,6 +112,11 @@ export default function AdminPage() {
     queryKey: ["/api/admin/users"],
   });
 
+  // Fetch all reviews for admin view
+  const { data: reviews = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/reviews"],
+  });
+
   // Filter users by type
   const parents = users.filter((user) => user.userType === "parent");
   const babysitters = users.filter((user) => user.userType === "babysitter");
@@ -193,7 +198,7 @@ export default function AdminPage() {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="w-full grid grid-cols-3">
+                <TabsList className="w-full grid grid-cols-4">
                   <TabsTrigger value="pending-reviews" className="relative">
                     Pending Reviews
                     {pendingReviewBabysitters.length > 0 && (
@@ -207,6 +212,9 @@ export default function AdminPage() {
                   </TabsTrigger>
                   <TabsTrigger value="babysitters">
                     Caregivers ({babysitters.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="reviews">
+                    Reviews
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="parents" className="mt-6">

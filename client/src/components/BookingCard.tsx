@@ -27,7 +27,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
   });
   
   // Check if current user has already reviewed this booking
-  const { data: existingReviews } = useQuery({
+  const { data: existingReviews } = useQuery<any[]>({
     queryKey: [`/api/reviews/booking/${booking.id}`],
     enabled: user?.userType === "babysitter" && booking.status === "completed",
   });
@@ -105,9 +105,24 @@ export default function BookingCard({ booking }: BookingCardProps) {
         </div>
         <div className="mt-4 flex items-center justify-between sm:mt-0 sm:ml-6">
           <StatusBadge status={booking.status} />
-          <div className="ml-4 flex flex-shrink-0">
+          <div className="ml-4 flex flex-shrink-0 space-x-2">
+            {/* Review button for babysitters on completed bookings */}
+            {user?.userType === "babysitter" && 
+             booking.status === "completed" && 
+             booking.babysitterId === user.id &&
+             !existingReviews?.length && (
+              <Button
+                onClick={() => setShowReviewForm(true)}
+                size="sm"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Leave Review
+              </Button>
+            )}
+            
             {babysitter && (
-              <button className="mr-2 inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-4 w-4"
@@ -143,6 +158,16 @@ export default function BookingCard({ booking }: BookingCardProps) {
           </div>
         </div>
       </div>
+      
+      {/* Review Form Modal */}
+      {showReviewForm && parent && (
+        <ReviewForm
+          isOpen={showReviewForm}
+          onClose={() => setShowReviewForm(false)}
+          booking={booking}
+          parentName={parent.fullName}
+        />
+      )}
     </div>
   );
 }

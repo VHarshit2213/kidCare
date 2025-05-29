@@ -1234,6 +1234,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get reviews for a specific booking
+  app.get("/api/reviews/booking/:bookingId", authenticate, async (req: Request, res: Response) => {
+    try {
+      const bookingId = parseInt(req.params.bookingId);
+      const reviews = await storage.getReviewsByBookingId(bookingId);
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get reviews" });
+    }
+  });
+
   // Get reviews for a specific parent (for admin view)
   app.get("/api/reviews/parent/:parentId", authenticate, async (req: Request, res: Response) => {
     try {
