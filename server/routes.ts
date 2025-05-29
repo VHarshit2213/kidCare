@@ -104,8 +104,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const babysitters = await storage.getAllBabysitters();
       
+      // Filter out only available babysitters (not busy or offline)
+      const availableBabysitters = babysitters.filter(babysitter => 
+        babysitter.availabilityStatus === "available"
+      );
+      
       // Remove passwords from the response
-      const babysittersWithoutPasswords = babysitters.map(babysitter => {
+      const babysittersWithoutPasswords = availableBabysitters.map(babysitter => {
         const { password, ...babysitterWithoutPassword } = babysitter;
         return babysitterWithoutPassword;
       });
@@ -143,6 +148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter out babysitters based on criteria and calculate distance
       const nearbyBabysitters = allBabysitters
         .filter(sitter => {
+          // Only show available babysitters (not busy or offline)
+          if (sitter.availabilityStatus !== "available") return false;
           // Apply additional filters if specified
           if (requiresFirstAid === 'true' && !sitter.firstAidCertified) return false;
           if (requiresTransportation === 'true' && !sitter.hasTransportation) return false;

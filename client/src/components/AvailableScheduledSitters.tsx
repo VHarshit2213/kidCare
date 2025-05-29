@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { User } from "@/lib/types";
+import { User } from "@shared/schema";
 import { format } from "date-fns";
 import { Phone, MessageSquare } from "lucide-react";
 import MessageDialog from "./MessageDialog";

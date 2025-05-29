@@ -50,6 +50,8 @@ export default function AvailableSittersPopup({
   // Filter and sort sitters
   const availableSitters: (User & { distance: number })[] = allSitters
     .filter((sitter: User) => 
+      // Only show sitters who are available (not busy or offline)
+      sitter.availabilityStatus === "available" &&
       // Check if sitter is available during the requested time
       isSitterAvailableDuringTime(sitter)
     )
