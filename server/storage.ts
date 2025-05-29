@@ -1,10 +1,11 @@
 import { 
-  users, bookings, messages, children, reviews,
+  users, bookings, messages, children, reviews, parentReviews,
   type User, type InsertUser, 
   type Booking, type InsertBooking,
   type Message, type InsertMessage,
   type Child, type InsertChild,
-  type Review, type InsertReview
+  type Review, type InsertReview,
+  type ParentReview, type InsertParentReview
 } from "@shared/schema";
 
 import session from "express-session";
@@ -56,13 +57,21 @@ export interface IStorage {
   getChildrenByParentId(parentId: number): Promise<Child[]>;
   updateChild(id: number, updateData: Partial<Child>): Promise<Child | undefined>;
   
-  // Review methods
+  // Review methods (babysitter to parent)
   createReview(review: InsertReview): Promise<Review>;
   getReviewById(id: number): Promise<Review | undefined>;
   getReviewsByBookingId(bookingId: number): Promise<Review[]>;
   getReviewsByRevieweeId(revieweeId: number): Promise<Review[]>; // Reviews for a parent
   getReviewsByReviewerId(reviewerId: number): Promise<Review[]>; // Reviews by a babysitter
   getAllReviews(): Promise<Review[]>; // For admin view
+  
+  // Parent Review methods (parent to babysitter)
+  createParentReview(review: InsertParentReview): Promise<ParentReview>;
+  getParentReviewById(id: number): Promise<ParentReview | undefined>;
+  getParentReviewsByBookingId(bookingId: number): Promise<ParentReview[]>;
+  getParentReviewsByRevieweeId(revieweeId: number): Promise<ParentReview[]>; // Reviews for a babysitter
+  getParentReviewsByReviewerId(reviewerId: number): Promise<ParentReview[]>; // Reviews by a parent
+  getAllParentReviews(): Promise<ParentReview[]>; // For admin view
   
   // Session store
   sessionStore: session.Store;
@@ -74,11 +83,13 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message>;
   private children: Map<number, Child>;
   private reviews: Map<number, Review>;
+  private parentReviews: Map<number, ParentReview>;
   private userIdCounter: number;
   private bookingIdCounter: number;
   private messageIdCounter: number;
   private childIdCounter: number;
   private reviewIdCounter: number;
+  private parentReviewIdCounter: number;
   public sessionStore: session.Store;
 
   constructor() {

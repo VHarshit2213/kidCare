@@ -113,6 +113,25 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Parent Reviews schema - for parents to review babysitters
+export const parentReviews = pgTable("parent_reviews", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  reviewerId: integer("reviewer_id").notNull(), // parent who is reviewing
+  revieweeId: integer("reviewee_id").notNull(), // babysitter being reviewed
+  punctuality: integer("punctuality").notNull(), // 1-5 scale
+  communication: integer("communication").notNull(), // 1-5 scale
+  childEngagement: integer("child_engagement").notNull(), // 1-5 scale
+  safety: integer("safety").notNull(), // 1-5 scale
+  cleanlinessResponsibility: integer("cleanliness_responsibility").notNull(), // 1-5 scale
+  followsInstructions: integer("follows_instructions").notNull(), // 1-5 scale
+  childReaction: integer("child_reaction").notNull(), // 1-5 scale
+  wouldBookAgain: integer("would_book_again").notNull(), // 1-5 scale
+  notes: text("notes"),
+  overallRating: integer("overall_rating").notNull(), // calculated average
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema for inserting a user
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -146,6 +165,13 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+// Schema for inserting a parent review
+export const insertParentReviewSchema = createInsertSchema(parentReviews).omit({
+  id: true,
+  overallRating: true, // calculated field
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -161,3 +187,6 @@ export type Child = typeof children.$inferSelect;
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+export type InsertParentReview = z.infer<typeof insertParentReviewSchema>;
+export type ParentReview = typeof parentReviews.$inferSelect;
