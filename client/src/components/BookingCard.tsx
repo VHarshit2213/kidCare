@@ -190,6 +190,30 @@ export default function BookingCard({ booking }: BookingCardProps) {
           parentName={parent.fullName}
         />
       )}
+
+      {/* Parent Review Form Modal */}
+      {showParentReviewForm && babysitter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold">Review {babysitter.fullName}</h2>
+              <button
+                onClick={() => setShowParentReviewForm(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <ParentReviewForm
+                booking={booking}
+                babysitter={babysitter}
+                onSuccess={() => setShowParentReviewForm(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
