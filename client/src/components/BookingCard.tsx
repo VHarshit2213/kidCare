@@ -1,17 +1,35 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { formatBookingTimeRange } from "@/lib/utils";
-import { Booking, User } from "@/lib/types";
+import { Booking, User } from "@shared/schema";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import StatusBadge from "./common/StatusBadge";
+import ReviewForm from "./ReviewForm";
 
 interface BookingCardProps {
   booking: Booking;
 }
 
 export default function BookingCard({ booking }: BookingCardProps) {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const { user } = useAuth();
+  
   const { data: babysitter } = useQuery<User>({
     queryKey: booking.babysitterId ? [`/api/users/${booking.babysitterId}`] : [],
     enabled: !!booking.babysitterId,
+  });
+  
+  const { data: parent } = useQuery<User>({
+    queryKey: [`/api/users/${booking.parentId}`],
+  });
+  
+  // Check if current user has already reviewed this booking
+  const { data: existingReviews } = useQuery({
+    queryKey: [`/api/reviews/booking/${booking.id}`],
+    enabled: user?.userType === "babysitter" && booking.status === "completed",
   });
 
   const getInitials = (name: string) => {

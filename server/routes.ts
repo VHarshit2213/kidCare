@@ -1196,6 +1196,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  // Review endpoints
+  app.post("/api/reviews", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only babysitters can create reviews
+      if (user.userType !== "babysitter") {
+        return res.status(403).json({ message: "Only babysitters can create reviews" });
+      }
+      
+      const reviewData = {
+        ...req.body,
+        reviewerId: user.id
+      };
+      
+      // Validate that the booking exists and babysitter was assigned to it
+      const booking = await storage.getBooking(reviewData.bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      if (booking.babysitterId !== user.id) {
+        return res.status(403).json({ message: "You can only review bookings you were assigned to" });
+      }
+      
+      // Check if review already exists for this booking
+      const existingReviews = await storage.getReviewsByBookingId(reviewData.bookingId);
+      if (existingReviews.length > 0) {
+        return res.status(400).json({ message: "Review already exists for this booking" });
+      }
+      
+      const review = await storage.createReview(reviewData);
+      res.status(201).json(review);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to create review" });
+    }
+  });
+
+  // Get reviews for a specific parent (for admin view)
+  app.get("/api/reviews/parent/:parentId", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only admins can view all reviews
+      if (user.userType !== "admin") {
+        return res.status(403).json({ message: "Only admins can view reviews" });
+      }
+      
+      const parentId = parseInt(req.params.parentId);
+      const reviews = await storage.getReviewsByRevieweeId(parentId);
+      res.json(reviews);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get reviews" });
+    }
+  });
+
+  // Get all reviews (for admin dashboard)
+  app.get("/api/admin/reviews", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      // Only admins can view all reviews
+      if (user.userType !== "admin") {
+        return res.status(403).json({ message: "Only admins can view reviews" });
+      }
+      
+      const reviews = await storage.getAllReviews();
+      
+      // Include parent and babysitter info for each review
+      const reviewsWithUserInfo = await Promise.all(
+        reviews.map(async (review) => {
+          const parent = await storage.getUser(review.revieweeId);
+          const babysitter = await storage.getUser(review.reviewerId);
+          const booking = await storage.getBooking(review.bookingId);
+          
+          return {
+            ...review,
+            parent: parent ? { id: parent.id, fullName: parent.fullName, email: parent.email } : null,
+            babysitter: babysitter ? { id: babysitter.id, fullName: babysitter.fullName, email: babysitter.email } : null,
+            booking: booking ? { id: booking.id, childName: booking.childName, startTime: booking.startTime, endTime: booking.endTime } : null
+          };
+        })
+      );
+      
+      res.json(reviewsWithUserInfo);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to get reviews" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -481,6 +481,54 @@ export class MemStorage implements IStorage {
       reviewStatus: "pending"
     });
   }
+
+  // Review methods implementation
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const id = this.reviewIdCounter++;
+    
+    // Calculate overall rating as average of all ratings
+    const ratings = [
+      insertReview.clarityOfExpectations,
+      insertReview.communication,
+      insertReview.childBehavior,
+      insertReview.environment,
+      insertReview.timeliness,
+      insertReview.respect,
+      insertReview.emergencyPreparation,
+      insertReview.wouldSitAgain
+    ];
+    const overallRating = Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length);
+    
+    const review: Review = {
+      id,
+      ...insertReview,
+      overallRating,
+      createdAt: new Date(),
+    };
+    
+    this.reviews.set(id, review);
+    return review;
+  }
+
+  async getReviewById(id: number): Promise<Review | undefined> {
+    return this.reviews.get(id);
+  }
+
+  async getReviewsByBookingId(bookingId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.bookingId === bookingId);
+  }
+
+  async getReviewsByRevieweeId(revieweeId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.revieweeId === revieweeId);
+  }
+
+  async getReviewsByReviewerId(reviewerId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.reviewerId === reviewerId);
+  }
+
+  async getAllReviews(): Promise<Review[]> {
+    return Array.from(this.reviews.values());
+  }
 }
 
 export const storage = new MemStorage();
