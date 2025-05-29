@@ -1,9 +1,10 @@
 import { 
-  users, bookings, messages, children,
+  users, bookings, messages, children, reviews,
   type User, type InsertUser, 
   type Booking, type InsertBooking,
   type Message, type InsertMessage,
-  type Child, type InsertChild
+  type Child, type InsertChild,
+  type Review, type InsertReview
 } from "@shared/schema";
 
 import session from "express-session";
@@ -55,6 +56,14 @@ export interface IStorage {
   getChildrenByParentId(parentId: number): Promise<Child[]>;
   updateChild(id: number, updateData: Partial<Child>): Promise<Child | undefined>;
   
+  // Review methods
+  createReview(review: InsertReview): Promise<Review>;
+  getReviewById(id: number): Promise<Review | undefined>;
+  getReviewsByBookingId(bookingId: number): Promise<Review[]>;
+  getReviewsByRevieweeId(revieweeId: number): Promise<Review[]>; // Reviews for a parent
+  getReviewsByReviewerId(reviewerId: number): Promise<Review[]>; // Reviews by a babysitter
+  getAllReviews(): Promise<Review[]>; // For admin view
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -64,10 +73,12 @@ export class MemStorage implements IStorage {
   private bookings: Map<number, Booking>;
   private messages: Map<number, Message>;
   private children: Map<number, Child>;
+  private reviews: Map<number, Review>;
   private userIdCounter: number;
   private bookingIdCounter: number;
   private messageIdCounter: number;
   private childIdCounter: number;
+  private reviewIdCounter: number;
   public sessionStore: session.Store;
 
   constructor() {
@@ -75,10 +86,12 @@ export class MemStorage implements IStorage {
     this.bookings = new Map();
     this.messages = new Map();
     this.children = new Map();
+    this.reviews = new Map();
     this.userIdCounter = 1;
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
     this.childIdCounter = 1;
+    this.reviewIdCounter = 1;
     
     // Initialize the session store
     const MemoryStore = createMemoryStore(session);

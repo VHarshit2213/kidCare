@@ -94,6 +94,25 @@ export const children = pgTable("children", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Reviews schema - for babysitters to review parents
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  reviewerId: integer("reviewer_id").notNull(), // babysitter who is reviewing
+  revieweeId: integer("reviewee_id").notNull(), // parent being reviewed
+  clarityOfExpectations: integer("clarity_of_expectations").notNull(), // 1-5 scale
+  communication: integer("communication").notNull(), // 1-5 scale
+  childBehavior: integer("child_behavior").notNull(), // 1-5 scale
+  environment: integer("environment").notNull(), // 1-5 scale
+  timeliness: integer("timeliness").notNull(), // 1-5 scale
+  respect: integer("respect").notNull(), // 1-5 scale
+  emergencyPreparation: integer("emergency_preparation").notNull(), // 1-5 scale
+  wouldSitAgain: integer("would_sit_again").notNull(), // 1-5 scale
+  notes: text("notes"),
+  overallRating: integer("overall_rating").notNull(), // calculated average
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema for inserting a user
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -120,6 +139,13 @@ export const insertChildSchema = createInsertSchema(children).omit({
   createdAt: true,
 });
 
+// Schema for inserting a review
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  overallRating: true, // calculated field
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -132,3 +158,6 @@ export type Message = typeof messages.$inferSelect;
 
 export type InsertChild = z.infer<typeof insertChildSchema>;
 export type Child = typeof children.$inferSelect;
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
