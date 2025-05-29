@@ -722,6 +722,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update babysitter availability status
+  app.patch("/api/users/availability", authenticate, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const { availabilityStatus } = req.body;
+      
+      // Only babysitters can update their availability
+      if (user.userType !== "babysitter") {
+        return res.status(403).json({ message: "Only babysitters can update their availability" });
+      }
+      
+      if (!availabilityStatus || !['available', 'offline', 'busy'].includes(availabilityStatus)) {
+        return res.status(400).json({ message: "Invalid availability status. Must be 'available', 'offline', or 'busy'" });
+      }
+      
+      const updatedUser = await storage.updateUserAvailability(user.id, availabilityStatus);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || "Failed to update availability" });
+    }
+  });
+
   // Admin Routes
   // Get all users (for admin purposes)
   app.get("/api/admin/users", authenticate, async (req: Request, res: Response) => {

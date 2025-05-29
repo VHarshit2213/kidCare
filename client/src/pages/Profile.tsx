@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Skill from "@/components/common/Skill";
 import { useAuth } from "@/hooks/use-auth";
+import AvailabilityToggle from "@/components/AvailabilityToggle";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -57,6 +58,10 @@ export default function Profile() {
             {user?.userType === "babysitter" && (
               <div className="mt-8">
                 <div className="border-t border-neutral-200 pt-8">
+                  <AvailabilityToggle />
+                </div>
+                
+                <div className="border-t border-neutral-200 pt-8 mt-8">
                   <h2 className="text-lg font-medium text-neutral-800">About Me</h2>
                   <p className="mt-2 text-neutral-600">{user.bio || "No bio provided."}</p>
                   
