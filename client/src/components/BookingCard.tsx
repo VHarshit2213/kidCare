@@ -8,6 +8,7 @@ import { Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import StatusBadge from "./common/StatusBadge";
 import ReviewForm from "./ReviewForm";
+import ParentReviewForm from "./ParentReviewForm";
 
 interface BookingCardProps {
   booking: Booking;
@@ -15,6 +16,7 @@ interface BookingCardProps {
 
 export default function BookingCard({ booking }: BookingCardProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showParentReviewForm, setShowParentReviewForm] = useState(false);
   const { user } = useAuth();
   
   const { data: babysitter } = useQuery<User>({
@@ -26,10 +28,16 @@ export default function BookingCard({ booking }: BookingCardProps) {
     queryKey: [`/api/users/${booking.parentId}`],
   });
   
-  // Check if current user has already reviewed this booking
+  // Check if current user has already reviewed this booking (babysitter reviews)
   const { data: existingReviews } = useQuery<any[]>({
     queryKey: [`/api/reviews/booking/${booking.id}`],
     enabled: user?.userType === "babysitter" && booking.status === "completed",
+  });
+
+  // Check if current user has already reviewed this booking (parent reviews)
+  const { data: existingParentReviews } = useQuery<any[]>({
+    queryKey: [`/api/parent-reviews/booking/${booking.id}`],
+    enabled: user?.userType === "parent" && booking.status === "completed",
   });
 
   const getInitials = (name: string) => {
@@ -118,6 +126,20 @@ export default function BookingCard({ booking }: BookingCardProps) {
               >
                 <Star className="h-4 w-4 mr-1" />
                 Leave Review
+              </Button>
+            )}
+
+            {user?.userType === "parent" && 
+             booking.status === "completed" && 
+             booking.parentId === user.id &&
+             !existingParentReviews?.length && (
+              <Button
+                onClick={() => setShowParentReviewForm(true)}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Review Babysitter
               </Button>
             )}
             

@@ -98,11 +98,13 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.children = new Map();
     this.reviews = new Map();
+    this.parentReviews = new Map();
     this.userIdCounter = 1;
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
     this.childIdCounter = 1;
     this.reviewIdCounter = 1;
+    this.parentReviewIdCounter = 1;
     
     // Initialize the session store
     const MemoryStore = createMemoryStore(session);
@@ -539,6 +541,56 @@ export class MemStorage implements IStorage {
 
   async getAllReviews(): Promise<Review[]> {
     return Array.from(this.reviews.values());
+  }
+
+  // Parent Review methods implementation
+  async createParentReview(insertParentReview: InsertParentReview): Promise<ParentReview> {
+    const id = this.parentReviewIdCounter++;
+    
+    // Calculate overall rating
+    const ratings = [
+      insertParentReview.punctuality,
+      insertParentReview.communication,
+      insertParentReview.childEngagement,
+      insertParentReview.safety,
+      insertParentReview.cleanlinessResponsibility,
+      insertParentReview.followsInstructions,
+      insertParentReview.childReaction,
+      insertParentReview.wouldBookAgain,
+    ];
+    
+    const overallRating = Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length);
+    
+    const parentReview: ParentReview = {
+      id,
+      ...insertParentReview,
+      overallRating,
+      notes: insertParentReview.notes || null,
+      createdAt: new Date(),
+    };
+    
+    this.parentReviews.set(id, parentReview);
+    return parentReview;
+  }
+
+  async getParentReviewById(id: number): Promise<ParentReview | undefined> {
+    return this.parentReviews.get(id);
+  }
+
+  async getParentReviewsByBookingId(bookingId: number): Promise<ParentReview[]> {
+    return Array.from(this.parentReviews.values()).filter(review => review.bookingId === bookingId);
+  }
+
+  async getParentReviewsByRevieweeId(revieweeId: number): Promise<ParentReview[]> {
+    return Array.from(this.parentReviews.values()).filter(review => review.revieweeId === revieweeId);
+  }
+
+  async getParentReviewsByReviewerId(reviewerId: number): Promise<ParentReview[]> {
+    return Array.from(this.parentReviews.values()).filter(review => review.reviewerId === reviewerId);
+  }
+
+  async getAllParentReviews(): Promise<ParentReview[]> {
+    return Array.from(this.parentReviews.values());
   }
 }
 
