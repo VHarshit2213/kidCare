@@ -96,7 +96,7 @@ export default function AdminPage() {
     return <Redirect to="/auth" />;
   }
 
-  if (user.username !== "admin") {
+  if (user.username !== "ecadmin") {
     return (
       <Layout>
         <div className="container mx-auto py-10 text-center">

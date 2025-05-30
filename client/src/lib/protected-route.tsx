@@ -55,7 +55,7 @@ export function ProtectedRoute({
   }
 
   // Admin is exempt from profile completion check for all pages
-  if (user.username === "admin") {
+  if (user.username === "ecadmin") {
     return <Route path={path}>{() => <Component />}</Route>;
   }
 
