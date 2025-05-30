@@ -844,7 +844,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only parents can add children" });
       }
 
-      const { data, error } = validateRequest(insertChildSchema, req.body);
+      // Convert dateOfBirth string to Date object if provided
+      const requestBody = { ...req.body };
+      if (requestBody.dateOfBirth && typeof requestBody.dateOfBirth === 'string') {
+        requestBody.dateOfBirth = new Date(requestBody.dateOfBirth);
+      }
+
+      const { data, error } = validateRequest(insertChildSchema, requestBody);
       
       if (error) {
         return res.status(400).json({ message: error.message });
