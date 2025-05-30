@@ -157,7 +157,12 @@ export default function ParentProfileForm() {
       } 
       // Create new child
       else {
-        const res = await apiRequest('POST', '/api/children', childData);
+        const childDataWithParent = {
+          ...childData,
+          parentId: user?.id,
+          name: `${childData.firstName} ${childData.lastName}`, // Add combined name field
+        };
+        const res = await apiRequest('POST', '/api/children', childDataWithParent);
         return await res.json();
       }
     },
