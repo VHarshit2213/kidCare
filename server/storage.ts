@@ -115,8 +115,8 @@ export class MemStorage implements IStorage {
     // Create admin user with a complete profile
     const adminUser = {
       id: this.userIdCounter++,
-      username: "admin",
-      password: "admin123", // Plain password - we'll skip hashing for the admin account
+      username: "ecadmin",
+      password: "ecc0524", // Plain password - we'll skip hashing for the admin account
       email: "hello@lovetheenchantedco.com",
       fullName: "System Administrator",
       userType: "parent", // using parent type for simplicity

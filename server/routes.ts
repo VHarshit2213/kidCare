@@ -771,7 +771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).user;
       
       // Check if the user is an admin (for simplicity, we'll check by username)
-      if (user.username !== "admin") {
+      if (user.username !== "ecadmin") {
         return res.status(403).json({ message: "Unauthorized: Admin access required" });
       }
       
@@ -796,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).user;
       
       // Check if the user is an admin
-      if (user.username !== "admin") {
+      if (user.username !== "ecadmin") {
         return res.status(403).json({ message: "Unauthorized: Admin access required" });
       }
       
@@ -1257,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).user;
       
       // Only admins can view all reviews
-      if (user.userType !== "admin") {
+      if (user.username !== "ecadmin") {
         return res.status(403).json({ message: "Only admins can view reviews" });
       }
       
@@ -1275,7 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).user;
       
       // Only admins can view all reviews
-      if (user.userType !== "admin") {
+      if (user.username !== "ecadmin") {
         return res.status(403).json({ message: "Only admins can view reviews" });
       }
       
