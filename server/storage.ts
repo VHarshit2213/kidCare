@@ -116,7 +116,7 @@ export class MemStorage implements IStorage {
     const adminUser = {
       id: this.userIdCounter++,
       username: "ecadmin",
-      password: "ecc0524", // Plain password - we'll skip hashing for the admin account
+      password: "d61eb01afc0a371c39232a66fd4ec114322c22d4cf3009ecea75106e6f0a09fa887bef0589fced96ebdc8f21a7b8bfa38ca454e427614bc8be4f4198a1c3aaa7.ba1ac14e4d6740761620278958a51531", // Pre-hashed password for "ecc0524"
       email: "hello@lovetheenchantedco.com",
       fullName: "System Administrator",
       userType: "parent", // using parent type for simplicity
