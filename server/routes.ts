@@ -1358,7 +1358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = (req as any).user;
       
       // Only admins can view all reviews
-      if (user.userType !== "admin") {
+      if (user.username !== "ecadmin") {
         return res.status(403).json({ message: "Only admins can view reviews" });
       }
       
