@@ -4,11 +4,12 @@ import { formatBookingTimeRange } from "@/lib/utils";
 import { Booking, User } from "@shared/schema";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { Star, Navigation } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import StatusBadge from "./common/StatusBadge";
 import ReviewForm from "./ReviewForm";
 import ParentReviewForm from "./ParentReviewForm";
+import NavigationMap from "./NavigationMap";
 
 interface BookingCardProps {
   booking: Booking;
@@ -17,6 +18,7 @@ interface BookingCardProps {
 export default function BookingCard({ booking }: BookingCardProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showParentReviewForm, setShowParentReviewForm] = useState(false);
+  const [showNavigation, setShowNavigation] = useState(false);
   const { user } = useAuth();
   
   const { data: babysitter } = useQuery<User>({
