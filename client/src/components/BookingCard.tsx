@@ -237,7 +237,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold">Navigate to {parent.fullName}</h2>
+              <h2 className="text-xl font-semibold">Navigate to {parent.fullName}'s Home</h2>
               <button
                 onClick={() => setShowNavigation(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -250,8 +250,6 @@ export default function BookingCard({ booking }: BookingCardProps) {
             <div className="p-6">
               <NavigationMap
                 destinationAddress={parent.address}
-                destinationLat={parent.latitude || undefined}
-                destinationLng={parent.longitude || undefined}
                 onNavigationStart={() => setShowNavigation(false)}
               />
             </div>

@@ -11,24 +11,22 @@ mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || '';
 
 interface NavigationMapProps {
   destinationAddress: string;
-  destinationLat?: number;
-  destinationLng?: number;
   onNavigationStart?: () => void;
 }
 
 export default function NavigationMap({ 
-  destinationAddress, 
-  destinationLat, 
-  destinationLng,
+  destinationAddress,
   onNavigationStart 
 }: NavigationMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [destinationLocation, setDestinationLocation] = useState<{lat: number, lng: number} | null>(null);
   const [route, setRoute] = useState<any>(null);
   const [distance, setDistance] = useState<string>('');
   const [duration, setDuration] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
 
   // Get user's current location
   useEffect(() => {
@@ -51,6 +49,35 @@ export default function NavigationMap({
     }
   }, []);
 
+  // Geocode destination address
+  useEffect(() => {
+    if (!destinationAddress) return;
+    
+    const geocodeAddress = async () => {
+      setIsGeocoding(true);
+      try {
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(destinationAddress)}.json?access_token=${mapboxgl.accessToken}&limit=1`
+        );
+        const data = await response.json();
+        
+        if (data.features && data.features.length > 0) {
+          const [lng, lat] = data.features[0].center;
+          setDestinationLocation({ lat, lng });
+        } else {
+          setError('Unable to find the destination address.');
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        setError('Unable to geocode the destination address.');
+      } finally {
+        setIsGeocoding(false);
+      }
+    };
+
+    geocodeAddress();
+  }, [destinationAddress]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || !userLocation || map.current) return;
@@ -68,15 +95,15 @@ export default function NavigationMap({
       .setPopup(new mapboxgl.Popup().setHTML('<div>Your Location</div>'))
       .addTo(map.current);
 
-    // Add destination marker if coordinates are provided
-    if (destinationLat && destinationLng) {
+    // Add destination marker if coordinates are available
+    if (destinationLocation) {
       new mapboxgl.Marker({ color: '#ef4444' })
-        .setLngLat([destinationLng, destinationLat])
-        .setPopup(new mapboxgl.Popup().setHTML(`<div>Destination<br/>${destinationAddress}</div>`))
+        .setLngLat([destinationLocation.lng, destinationLocation.lat])
+        .setPopup(new mapboxgl.Popup().setHTML('<div>Parent\'s Home</div>'))
         .addTo(map.current);
 
       // Get route
-      getRoute([userLocation.lng, userLocation.lat], [destinationLng, destinationLat]);
+      getRoute([userLocation.lng, userLocation.lat], [destinationLocation.lng, destinationLocation.lat]);
     }
 
     return () => {
@@ -85,7 +112,7 @@ export default function NavigationMap({
         map.current = null;
       }
     };
-  }, [userLocation, destinationLat, destinationLng, destinationAddress]);
+  }, [userLocation, destinationLocation]);
 
   const getRoute = async (start: [number, number], end: [number, number]) => {
     try {
@@ -153,8 +180,8 @@ export default function NavigationMap({
     }
 
     // Create the destination string for various map apps
-    const destination = destinationLat && destinationLng 
-      ? `${destinationLat},${destinationLng}` 
+    const destination = destinationLocation 
+      ? `${destinationLocation.lat},${destinationLocation.lng}` 
       : encodeURIComponent(destinationAddress);
 
     // Detect device and open appropriate map app
@@ -216,7 +243,7 @@ export default function NavigationMap({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-gray-600">
-          <strong>Destination:</strong> {destinationAddress}
+          <strong>Destination:</strong> Parent's Home
         </div>
         
         <div ref={mapContainer} className="w-full h-64 rounded-lg border" />
