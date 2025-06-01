@@ -116,6 +116,21 @@ export default function BookingCard({ booking }: BookingCardProps) {
         <div className="mt-4 flex items-center justify-between sm:mt-0 sm:ml-6">
           <StatusBadge status={booking.status} />
           <div className="ml-4 flex flex-shrink-0 space-x-2">
+            {/* Navigation button for babysitters on confirmed or in-progress bookings */}
+            {user?.userType === "babysitter" && 
+             booking.babysitterId === user.id &&
+             (booking.status === "confirmed" || booking.status === "in-progress") && 
+             parent?.address && (
+              <Button
+                onClick={() => setShowNavigation(true)}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Navigation className="h-4 w-4 mr-1" />
+                Navigate
+              </Button>
+            )}
+
             {/* Review button for babysitters on completed bookings */}
             {user?.userType === "babysitter" && 
              booking.status === "completed" && 
@@ -211,6 +226,33 @@ export default function BookingCard({ booking }: BookingCardProps) {
                 booking={booking}
                 babysitter={babysitter}
                 onSuccess={() => setShowParentReviewForm(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Modal */}
+      {showNavigation && parent?.address && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold">Navigate to {parent.fullName}</h2>
+              <button
+                onClick={() => setShowNavigation(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <NavigationMap
+                destinationAddress={parent.address}
+                destinationLat={parent.latitude || undefined}
+                destinationLng={parent.longitude || undefined}
+                onNavigationStart={() => setShowNavigation(false)}
               />
             </div>
           </div>
