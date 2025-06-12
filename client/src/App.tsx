@@ -17,6 +17,7 @@ import ProfileCompletion from "@/pages/ProfileCompletion";
 import AdminPage from "@/pages/AdminPage";
 import MembershipPage from "@/pages/MembershipPage";
 import MembershipSuccess from "@/pages/MembershipSuccess";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 // Wrapper to ensure components never return null
 const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
@@ -32,6 +33,7 @@ function App() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/auth" component={AuthPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
           <ProtectedRoute path="/profile-completion" component={ProfileCompletion} />
           <ProtectedRoute path="/bookings" component={MyBookings} />
           <ProtectedRoute path="/messages" component={Messages} />
