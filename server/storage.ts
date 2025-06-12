@@ -108,12 +108,14 @@ export class MemStorage implements IStorage {
     this.children = new Map();
     this.reviews = new Map();
     this.parentReviews = new Map();
+    this.passwordResetTokens = new Map();
     this.userIdCounter = 1;
     this.bookingIdCounter = 1;
     this.messageIdCounter = 1;
     this.childIdCounter = 1;
     this.reviewIdCounter = 1;
     this.parentReviewIdCounter = 1;
+    this.tokenIdCounter = 1;
     
     // Initialize the session store
     const MemoryStore = createMemoryStore(session);
@@ -600,6 +602,44 @@ export class MemStorage implements IStorage {
 
   async getAllParentReviews(): Promise<ParentReview[]> {
     return Array.from(this.parentReviews.values());
+  }
+
+  // Password Reset Token methods
+  async createPasswordResetToken(insertToken: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const token: PasswordResetToken = {
+      id: this.tokenIdCounter++,
+      ...insertToken,
+      createdAt: new Date(),
+    };
+    this.passwordResetTokens.set(token.id, token);
+    return token;
+  }
+
+  async getPasswordResetToken(tokenString: string): Promise<PasswordResetToken | undefined> {
+    for (const token of this.passwordResetTokens.values()) {
+      if (token.token === tokenString && !token.used && token.expiresAt > new Date()) {
+        return token;
+      }
+    }
+    return undefined;
+  }
+
+  async markTokenAsUsed(tokenString: string): Promise<void> {
+    for (const token of this.passwordResetTokens.values()) {
+      if (token.token === tokenString) {
+        token.used = true;
+        break;
+      }
+    }
+  }
+
+  async cleanupExpiredTokens(): Promise<void> {
+    const now = new Date();
+    for (const [id, token] of this.passwordResetTokens.entries()) {
+      if (token.expiresAt < now || token.used) {
+        this.passwordResetTokens.delete(id);
+      }
+    }
   }
 }
 

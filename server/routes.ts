@@ -16,6 +16,8 @@ import { setupAuth } from "./auth";
 import Stripe from "stripe";
 import { sendBookingConfirmationSMS, makeBookingConfirmationCall } from "./twilio";
 import { sendMaskedSMS, makeMaskedCall, getSMSWebhookHandler } from "./masked-communication";
+import { sendPasswordResetEmail } from "./email-service";
+import { randomBytes } from "crypto";
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -32,29 +34,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Password reset request endpoint
   app.post("/api/forgot-password", async (req: Request, res: Response) => {
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      console.log(`Password reset requested for email: ${email}`);
+      
+      // Check if user exists
+      const user = await storage.getUserByUsername(email);
+      
+      if (user) {
+        // Generate secure reset token
+        const resetToken = randomBytes(32).toString('hex');
+        
+        // Token expires in 1 hour
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 1);
+        
+        // Store token in database
+        await storage.createPasswordResetToken({
+          userId: user.id,
+          token: resetToken,
+          expiresAt,
+          used: false
+        });
+        
+        // Send email with reset link
+        const emailSent = await sendPasswordResetEmail(user, resetToken);
+        
+        if (!emailSent) {
+          console.error(`Failed to send password reset email to ${email}`);
+          return res.status(500).json({ 
+            message: "Failed to send password reset email. Please try again later." 
+          });
+        }
+        
+        console.log(`Password reset email sent successfully to ${email}`);
+      } else {
+        console.log(`Password reset requested for non-existent email: ${email}`);
+        // Still add a small delay for security (timing attack prevention)
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Always return the same message for security (don't reveal if email exists)
+      return res.status(200).json({ 
+        message: "If an account exists with that email, password reset instructions will be sent." 
+      });
+      
+    } catch (error) {
+      console.error("Password reset error:", error);
+      return res.status(500).json({ 
+        message: "An error occurred while processing your request. Please try again later." 
+      });
     }
-    
-    // Check if user exists with that email
-    // In a real application, we would:
-    // 1. Find the user by email
-    // 2. Generate a secure token
-    // 3. Store the token with an expiration time
-    // 4. Send an email with a reset link
-    
-    // For now, just return a success message regardless of whether the email exists
-    // This is a security best practice to prevent email enumeration
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return res.status(200).json({ 
-      message: "If an account exists with that email, password reset instructions will be sent." 
-    });
   });
+
+  // Password reset confirmation endpoint
+  app.post("/api/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Find and validate the token
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Get the user
+      const user = await storage.getUser(resetToken.userId);
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+
+      // Hash the new password (using the same method as registration)
+      const { scrypt, randomBytes } = await import("crypto");
+      const { promisify } = await import("util");
+      const scryptAsync = promisify(scrypt);
+      
+      const salt = randomBytes(16).toString("hex");
+      const buf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
+      const hashedPassword = `${buf.toString("hex")}.${salt}`;
+
+      // Update user password
+      await storage.updateUserProfile(user.id, { password: hashedPassword });
+
+      // Mark token as used
+      await storage.markTokenAsUsed(token);
+
+      console.log(`Password successfully reset for user: ${user.email}`);
+
+      return res.status(200).json({ 
+        message: "Password has been successfully reset. You can now log in with your new password." 
+      });
+      
+    } catch (error) {
+      console.error("Password reset confirmation error:", error);
+      return res.status(500).json({ 
+        message: "An error occurred while resetting your password. Please try again." 
+      });
+    }
+  });
+  
   // Utility function to handle validation errors
   const validateRequest = (schema: any, data: any) => {
     try {
