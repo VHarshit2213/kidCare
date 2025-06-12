@@ -1,11 +1,12 @@
 import { 
-  users, bookings, messages, children, reviews, parentReviews,
+  users, bookings, messages, children, reviews, parentReviews, passwordResetTokens,
   type User, type InsertUser, 
   type Booking, type InsertBooking,
   type Message, type InsertMessage,
   type Child, type InsertChild,
   type Review, type InsertReview,
-  type ParentReview, type InsertParentReview
+  type ParentReview, type InsertParentReview,
+  type PasswordResetToken, type InsertPasswordResetToken
 } from "@shared/schema";
 
 import session from "express-session";
@@ -73,6 +74,12 @@ export interface IStorage {
   getParentReviewsByReviewerId(reviewerId: number): Promise<ParentReview[]>; // Reviews by a parent
   getAllParentReviews(): Promise<ParentReview[]>; // For admin view
   
+  // Password Reset Token methods
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markTokenAsUsed(token: string): Promise<void>;
+  cleanupExpiredTokens(): Promise<void>;
+  
   // Session store
   sessionStore: session.Store;
 }
@@ -84,12 +91,14 @@ export class MemStorage implements IStorage {
   private children: Map<number, Child>;
   private reviews: Map<number, Review>;
   private parentReviews: Map<number, ParentReview>;
+  private passwordResetTokens: Map<number, PasswordResetToken>;
   private userIdCounter: number;
   private bookingIdCounter: number;
   private messageIdCounter: number;
   private childIdCounter: number;
   private reviewIdCounter: number;
   private parentReviewIdCounter: number;
+  private tokenIdCounter: number;
   public sessionStore: session.Store;
 
   constructor() {
