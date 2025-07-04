@@ -1,0 +1,211 @@
+import { pgTable, text, serial, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// User schema (for both parents and babysitters)
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email").notNull(),
+  fullName: text("full_name").notNull(),
+  userType: text("user_type").notNull(), // "parent" or "babysitter"
+  profileImageUrl: text("profile_image_url"),
+  bio: text("bio"),
+  hourlyRate: integer("hourly_rate"), // only for babysitters
+  skills: text("skills").array(), // array of skills, only for babysitters
+  firstAidCertified: boolean("first_aid_certified").default(false), // for babysitters
+  hasTransportation: boolean("has_transportation").default(false), // for babysitters
+  yearsExperience: integer("years_experience"), // for babysitters
+  location: text("location"), // General location information
+  
+  // Shared profile fields
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  address: text("address"),
+  phoneNumber: text("phone_number"),
+  profileCompleted: boolean("profile_completed").default(false),
+  reviewStatus: text("review_status").default("none"), // "none", "pending", "approved", "rejected"
+  
+  // Payment and membership fields
+  membershipStatus: text("membership_status").default("none"), // "none", "pending", "active"
+  membershipType: text("membership_type"), // "one-time" or "installment"
+  membershipPaymentDate: timestamp("membership_payment_date"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  
+  // Stripe Connect fields for babysitters
+  stripeAccountId: text("stripe_account_id"), // for receiving payments
+  stripeAccountStatus: text("stripe_account_status").default("none"), // none, pending, active
+  
+  // Babysitter availability status
+  availabilityStatus: text("availability_status").default("offline"), // offline, available, busy
+  
+  // Parent profile fields
+  parentingStyle: text("parenting_style"),
+  familyDescription: text("family_description"),
+  familyActivities: text("family_activities"),
+  medicalDietaryRestrictions: text("medical_dietary_restrictions"),
+  emergencyContacts: jsonb("emergency_contacts"),
+});
+
+// Booking requests schema
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").notNull(),
+  babysitterId: integer("babysitter_id"), // nullable until a babysitter accepts
+  childName: text("child_name").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  careInstructions: text("care_instructions"),
+  status: text("status").notNull().default("pending"), // pending, accepted, completed, cancelled, paid
+  requiresFirstAid: boolean("requires_first_aid").default(false),
+  requiresTransportation: boolean("requires_transportation").default(false),
+  requiresExperience: boolean("requires_experience").default(false),
+  totalAmount: integer("total_amount"), // total cost in cents
+  platformFee: integer("platform_fee"), // 15% commission in cents
+  babysitterAmount: integer("babysitter_amount"), // amount babysitter receives in cents
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Messages schema
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull(),
+  receiverId: integer("receiver_id").notNull(),
+  bookingId: integer("booking_id"), // optional reference to a booking
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow(),
+  isRead: boolean("is_read").default(false),
+});
+
+// Children schema
+export const children = pgTable("children", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  name: text("name").notNull(), // Added for convenience, combines firstName and lastName
+  dateOfBirth: timestamp("date_of_birth"),
+  personality: text("personality"), // interests, special qualities
+  specialCare: text("special_care"), // any special care requirements
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Reviews schema - for babysitters to review parents
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  reviewerId: integer("reviewer_id").notNull(), // babysitter who is reviewing
+  revieweeId: integer("reviewee_id").notNull(), // parent being reviewed
+  clarityOfExpectations: integer("clarity_of_expectations").notNull(), // 1-5 scale
+  communication: integer("communication").notNull(), // 1-5 scale
+  childBehavior: integer("child_behavior").notNull(), // 1-5 scale
+  environment: integer("environment").notNull(), // 1-5 scale
+  timeliness: integer("timeliness").notNull(), // 1-5 scale
+  respect: integer("respect").notNull(), // 1-5 scale
+  emergencyPreparation: integer("emergency_preparation").notNull(), // 1-5 scale
+  wouldSitAgain: integer("would_sit_again").notNull(), // 1-5 scale
+  notes: text("notes"),
+  overallRating: integer("overall_rating").notNull(), // calculated average
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Parent Reviews schema - for parents to review babysitters
+export const parentReviews = pgTable("parent_reviews", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  reviewerId: integer("reviewer_id").notNull(), // parent who is reviewing
+  revieweeId: integer("reviewee_id").notNull(), // babysitter being reviewed
+  punctuality: integer("punctuality").notNull(), // 1-5 scale
+  communication: integer("communication").notNull(), // 1-5 scale
+  childEngagement: integer("child_engagement").notNull(), // 1-5 scale
+  safety: integer("safety").notNull(), // 1-5 scale
+  cleanlinessResponsibility: integer("cleanliness_responsibility").notNull(), // 1-5 scale
+  followsInstructions: integer("follows_instructions").notNull(), // 1-5 scale
+  childReaction: integer("child_reaction").notNull(), // 1-5 scale
+  wouldBookAgain: integer("would_book_again").notNull(), // 1-5 scale
+  notes: text("notes"),
+  overallRating: integer("overall_rating").notNull(), // calculated average
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Schema for inserting a user
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+});
+
+// Schema for inserting a booking
+export const insertBookingSchema = createInsertSchema(bookings).omit({
+  id: true,
+  babysitterId: true,
+  status: true,
+  createdAt: true,
+});
+
+// Schema for inserting a message
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  timestamp: true,
+  isRead: true,
+});
+
+// Schema for inserting a child
+export const insertChildSchema = createInsertSchema(children).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Schema for inserting a review
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  overallRating: true, // calculated field
+  createdAt: true,
+});
+
+// Schema for inserting a parent review
+export const insertParentReviewSchema = createInsertSchema(parentReviews).omit({
+  id: true,
+  overallRating: true, // calculated field
+  createdAt: true,
+});
+
+// Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type Booking = typeof bookings.$inferSelect;
+
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;
+
+export type InsertChild = z.infer<typeof insertChildSchema>;
+export type Child = typeof children.$inferSelect;
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+
+export type InsertParentReview = z.infer<typeof insertParentReviewSchema>;
+export type ParentReview = typeof parentReviews.$inferSelect;
+
+// Password reset tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  used: boolean("used").default(false),
+});
+
+// Schema for inserting a password reset token
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
