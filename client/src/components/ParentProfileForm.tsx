@@ -1,84 +1,151 @@
-import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Save, Loader2, Plus, Check, X, Edit, Trash } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Save, Loader2, Plus, Check, X, Edit, Trash } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Child } from '@shared/schema';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Child } from "@shared/schema";
+import supabase from "@/config/supabaseClient";
 
 // Schema for emergency contacts
 const emergencyContactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  relationship: z.string().min(1, 'Relationship is required'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
+  name: z.string().min(1, "Name is required"),
+  relationship: z.string().min(1, "Relationship is required"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
 });
 
 // Schema for child information
 const childSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  personality: z.string().min(1, 'Please provide some information about your child\'s personality'),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  personality: z
+    .string()
+    .min(1, "Please provide some information about your child's personality"),
   specialCare: z.string().optional(),
 });
 
 // Schema for the parent profile form with all required fields
-const profileFormSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  address: z.string().min(1, 'Address is required'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
-  hasSecondParent: z.boolean().default(false),
-  secondParentFirstName: z.string().optional(),
-  secondParentLastName: z.string().optional(),
-  secondParentPhone: z.string().optional(),
-  parentingStyle: z.string().min(10, 'Please describe your parenting style (min 10 characters)'),
-  familyDescription: z.string().min(10, 'Please provide a description of your family (min 10 characters)'),
-  familyActivities: z.string().min(10, 'Please describe activities your family enjoys (min 10 characters)'),
-  medicalDietaryRestrictions: z.string().min(1, 'Please provide information about any restrictions or indicate "None"'),
-  emergencyContacts: z.array(emergencyContactSchema).min(1, 'At least one emergency contact is required'),
-}).superRefine((data, ctx) => {
-  // If hasSecondParent is true, then the second parent fields are required
-  if (data.hasSecondParent) {
-    if (!data.secondParentFirstName) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['secondParentFirstName'],
-        message: 'Second parent first name is required',
-      });
+const profileFormSchema = z
+  .object({
+    fullName: z.string().min(1, "Full name is required"),
+    // lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Please enter a valid email address"),
+    address: z.string().min(1, "Address is required"),
+    phoneNumber: z.string().min(1, "Phone number is required"),
+    hasSecondParent: z.boolean().default(false),
+    secondParentFirstName: z.string().optional(),
+    secondParentLastName: z.string().optional(),
+    secondParentPhone: z.string().optional(),
+    parentingStyle: z
+      .string()
+      .min(10, "Please describe your parenting style (min 10 characters)"),
+    familyDescription: z
+      .string()
+      .min(
+        10,
+        "Please provide a description of your family (min 10 characters)"
+      ),
+    familyActivities: z
+      .string()
+      .min(
+        10,
+        "Please describe activities your family enjoys (min 10 characters)"
+      ),
+    medicalDietaryRestrictions: z
+      .string()
+      .min(
+        1,
+        'Please provide information about any restrictions or indicate "None"'
+      ),
+    emergencyContacts: z
+      .array(emergencyContactSchema)
+      .min(1, "At least one emergency contact is required"),
+  })
+  .superRefine((data, ctx) => {
+    // If hasSecondParent is true, then the second parent fields are required
+    if (data.hasSecondParent) {
+      if (!data.secondParentFirstName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["secondParentFirstName"],
+          message: "Second parent first name is required",
+        });
+      }
+      if (!data.secondParentLastName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["secondParentLastName"],
+          message: "Second parent last name is required",
+        });
+      }
+      if (!data.secondParentPhone) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["secondParentPhone"],
+          message: "Second parent phone number is required",
+        });
+      }
     }
-    if (!data.secondParentLastName) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['secondParentLastName'],
-        message: 'Second parent last name is required',
-      });
-    }
-    if (!data.secondParentPhone) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['secondParentPhone'],
-        message: 'Second parent phone number is required',
-      });
-    }
-  }
-});
+  });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type ChildFormValues = z.infer<typeof childSchema>;
+
+interface ParentProfile {
+  address: string;
+  phoneNumber: string;
+  secondParentGuardian?: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+  };
+  parentingStyle?: string;
+  familyDesc?: string;
+  familyActivity?: string;
+  medical?: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phoneNumber: string;
+  }[];
+  children?: any[]; 
+}
+
 
 export default function ParentProfileForm() {
   const { user } = useAuth();
@@ -87,212 +154,358 @@ export default function ParentProfileForm() {
   const [isEditingChild, setIsEditingChild] = useState(false);
   const [currentChildId, setCurrentChildId] = useState<number | null>(null);
   const [childFormValues, setChildFormValues] = useState<ChildFormValues>({
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    personality: '',
-    specialCare: '',
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    personality: "",
+    specialCare: "",
   });
-  
+  const [childrens, setChildrens] = useState<ChildFormValues[]>([]);
+  const [profiles, setProfiles] = useState<ParentProfile[]>([]);
+
+  const [isPending, setIsPending] = useState(false);
+
+  const userData = user?.user_metadata;
+
   // Form for parent profile
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      address: user?.address || '',
-      phoneNumber: user?.phoneNumber || '',
+      fullName: "",
+      email: "",
+      address: "",
+      phoneNumber: "",
       hasSecondParent: false,
-      secondParentFirstName: '',
-      secondParentLastName: '',
-      secondParentPhone: '',
-      parentingStyle: user?.parentingStyle || '',
-      familyDescription: user?.familyDescription || '',
-      familyActivities: user?.familyActivities || '',
-      medicalDietaryRestrictions: user?.medicalDietaryRestrictions || '',
-      emergencyContacts: user?.emergencyContacts || [{ name: '', relationship: '', phoneNumber: '' }],
+      secondParentFirstName: "",
+      secondParentLastName: "",
+      secondParentPhone: "",
+      parentingStyle: "",
+      familyDescription: "",
+      familyActivities: "",
+      medicalDietaryRestrictions: "",
+      emergencyContacts: [{ name: "", relationship: "", phoneNumber: "" }],
     },
   });
 
-  // Query to get children data
-  const { data: children = [], isLoading: isLoadingChildren, refetch: refetchChildren } = useQuery<Child[]>({
-    queryKey: ['/api/children'],
-    enabled: !!user,
-  });
+  useEffect(() => {
+    if (userData || (profiles && profiles?.length > 0)) {
+      const profile = profiles?.[0];
+      form.reset({
+        fullName: userData?.fullName || "",
+        email: userData?.email || "",
+        address: profile?.address || "",
+        phoneNumber: profile?.phoneNumber || "",
+        hasSecondParent: !!profile?.secondParentGuardian,
+        secondParentFirstName: profile?.secondParentGuardian?.firstName || "",
+        secondParentLastName: profile?.secondParentGuardian?.lastName || "",
+        secondParentPhone: profile?.secondParentGuardian?.phoneNumber || "",
+        parentingStyle: profile?.parentingStyle || "",
+        familyDescription: profile?.familyDesc || "",
+        familyActivities: profile?.familyActivity || "",
+        medicalDietaryRestrictions: profile?.medical || "",
+        emergencyContacts: profile?.emergencyContact || [
+          { name: "", relationship: "", phoneNumber: "" },
+        ],
+      });
+      setChildrens(profile?.children ?? []);
+    }
+  }, [profiles, userData, form]);
 
   // Mutation to update parent profile
-  const profileMutation = useMutation({
-    mutationFn: async (data: ProfileFormValues) => {
-      const formattedData = {
-        ...data,
-        profileCompleted: true, // Mark profile as completed with single form submission
-      };
-      const res = await apiRequest('PATCH', '/api/users/profile', formattedData);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-      
-      toast({
-        title: 'Profile completed!',
-        description: 'Your profile has been successfully updated.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error updating profile',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // const profileMutation = useMutation({
+  //   mutationFn: async (data: ProfileFormValues) => {
+  //     const formattedData = {
+  //       ...data,
+  //       profileCompleted: true, // Mark profile as completed with single form submission
+  //     };
+  //     const res = await apiRequest(
+  //       "PATCH",
+  //       "/api/users/profile",
+  //       formattedData
+  //     );
+  //     return await res.json();
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+
+  //     toast({
+  //       title: "Profile completed!",
+  //       description: "Your profile has been successfully updated.",
+  //     });
+  //   },
+  //   onError: (error) => {
+  //     toast({
+  //       title: "Error updating profile",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
 
   // Mutation to add/update a child
-  const childMutation = useMutation({
-    mutationFn: async (childData: ChildFormValues) => {
-      // Update existing child
-      if (isEditingChild && currentChildId) {
-        const res = await apiRequest('PATCH', `/api/children/${currentChildId}`, childData);
-        return await res.json();
-      } 
-      // Create new child
-      else {
-        const childDataWithParent = {
-          ...childData,
-          parentId: user?.id,
-          name: `${childData.firstName} ${childData.lastName}`, // Add combined name field
-        };
-        const res = await apiRequest('POST', '/api/children', childDataWithParent);
-        return await res.json();
-      }
-    },
-    onSuccess: () => {
-      refetchChildren(); // Refresh children list
-      
-      setIsAddingChild(false);
-      setIsEditingChild(false);
-      setCurrentChildId(null);
-      
-      // Reset child form values
-      setChildFormValues({
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        personality: '',
-        specialCare: '',
-      });
-      
-      toast({
-        title: isEditingChild ? 'Child Updated' : 'Child Added',
-        description: isEditingChild 
-          ? 'Child information has been updated successfully.' 
-          : 'Child has been added to your profile.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // const childMutation = useMutation({
+  //   mutationFn: async (childData: ChildFormValues) => {
+  //     // Update existing child
+  //     if (isEditingChild && currentChildId) {
+  //       const res = await apiRequest(
+  //         "PATCH",
+  //         `/api/children/${currentChildId}`,
+  //         childData
+  //       );
+  //       return await res.json();
+  //     }
+  //     // Create new child
+  //     else {
+  //       const childDataWithParent = {
+  //         ...childData,
+  //         parentId: user?.id,
+  //         name: `${childData.firstName} ${childData.lastName}`, // Add combined name field
+  //       };
+  //       const res = await apiRequest(
+  //         "POST",
+  //         "/api/children",
+  //         childDataWithParent
+  //       );
+  //       return await res.json();
+  //     }
+  //   },
+  //   onSuccess: () => {
+  //     refetchChildren(); // Refresh children list
+
+  //     setIsAddingChild(false);
+  //     setIsEditingChild(false);
+  //     setCurrentChildId(null);
+
+  //     // Reset child form values
+  //     setChildFormValues({
+  //       firstName: "",
+  //       lastName: "",
+  //       dateOfBirth: "",
+  //       personality: "",
+  //       specialCare: "",
+  //     });
+
+  //     toast({
+  //       title: isEditingChild ? "Child Updated" : "Child Added",
+  //       description: isEditingChild
+  //         ? "Child information has been updated successfully."
+  //         : "Child has been added to your profile.",
+  //     });
+  //   },
+  //   onError: (error) => {
+  //     toast({
+  //       title: "Error",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
+
+  const childMutation = async (childData: ChildFormValues) => {
+    setChildrens([...childrens, childData]);
+    setIsAddingChild(false);
+    setIsEditingChild(false);
+    setCurrentChildId(null);
+
+    //    if (isEditingChild && currentChildId !== null) {
+    //   // Update existing child
+    //   const updatedChildren = children.map((child, index) =>
+    //     index === currentChildId ? { ...child, ...childData } : child
+    //   );
+    //   setChildren(updatedChildren);
+    // } else {
+    //   // Add new child
+    //   const newChild = {
+    //     ...childData,
+    //     name: `${childData.firstName} ${childData.lastName}`,
+    //   };
+    //   setChildren([...children, newChild]);
+    // }
+
+    // // Reset form and states
+    // setIsEditingChild(false);
+    // setCurrentChildId(null);
+    // setChildFormValues({
+    //   firstName: "",
+    //   lastName: "",
+    //   dateOfBirth: "",
+    //   personality: "",
+    //   specialCare: "",
+    // });
+
+    // toast({
+    //   title: isEditingChild ? "Child Updated" : "Child Added",
+    //   description: isEditingChild
+    //     ? "Child information has been updated locally."
+    //     : "Child has been added locally.",
+    // });
+  };
 
   // Mutation to delete a child
-  const deleteChildMutation = useMutation({
-    mutationFn: async (childId: number) => {
-      const res = await apiRequest('DELETE', `/api/children/${childId}`);
-      return await res.json();
-    },
-    onSuccess: () => {
-      refetchChildren(); // Refresh children list
-      
-      toast({
-        title: 'Child Removed',
-        description: 'Child has been removed from your profile.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
+  // const deleteChildMutation = useMutation({
+  //   mutationFn: async (childId: number) => {
+  //     const res = await apiRequest("DELETE", `/api/children/${childId}`);
+  //     return await res.json();
+  //   },
+  //   onSuccess: () => {
+  //     refetchChildren(); // Refresh children list
+
+  //     toast({
+  //       title: "Child Removed",
+  //       description: "Child has been removed from your profile.",
+  //     });
+  //   },
+  //   onError: (error) => {
+  //     toast({
+  //       title: "Error",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
+
+  const fetchParentProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("parentprofile")
+      .select("*")
+      .eq("userId", userId) // filter by userId
+      .limit(1); // expects exactly one row
+
+    if (error) {
+      console.error("Fetch error:", error.message);
+      return null;
+    }
+
+    return data;
+  };
 
   // Function to handle form submission
-  const onSubmit = (values: ProfileFormValues) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     // Check if the user has added at least one child
-    if (children.length === 0) {
+    if (childrens?.length === 0) {
       toast({
-        title: 'Profile Incomplete',
-        description: 'Please add at least one child to your profile.',
-        variant: 'destructive',
+        title: "Profile Incomplete",
+        description: "Please add at least one child to your profile.",
+        variant: "destructive",
       });
       return;
     }
-    
+
+    const mappedChildren = childrens.map((child) => ({
+      firstName: child.firstName,
+      lastName: child.lastName,
+      dateOfBirth: child.dateOfBirth,
+      personality: child.personality,
+      specialCare: child.specialCare,
+    }));
+
+    const payload = {
+      userId: user?.id,
+      address: values.address,
+      phoneNumber: values.phoneNumber,
+      secondParentGuardian: {
+        firstName: values.secondParentFirstName,
+        lastName: values.secondParentLastName,
+        phoneNumber: values.secondParentPhone,
+      },
+      children: mappedChildren,
+      parentingStyle: values.parentingStyle,
+      familyDesc: values.familyDescription,
+      familyActivity: values.familyActivities,
+      medical: values.medicalDietaryRestrictions,
+      emergencyContact: values.emergencyContacts,
+    };
+
+    const { data, error } = await supabase
+      .from("parentprofile")
+      .insert(payload);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Profile saved successfully!",
+    });
+
+    setChildrens([]);
+
     // Proceed with profile update
-    profileMutation.mutate(values);
+    // profileMutation.mutate(values);
   };
 
   // Function to handle adding emergency contact
   const addEmergencyContact = () => {
-    const currentContacts = form.getValues('emergencyContacts') || [];
-    form.setValue('emergencyContacts', [
+    const currentContacts = form.getValues("emergencyContacts") || [];
+    form.setValue("emergencyContacts", [
       ...currentContacts,
-      { name: '', relationship: '', phoneNumber: '' }
+      { name: "", relationship: "", phoneNumber: "" },
     ]);
   };
 
   // Function to handle removing emergency contact
   const removeEmergencyContact = (index: number) => {
-    const currentContacts = form.getValues('emergencyContacts') || [];
-    if (currentContacts.length > 1) { // Ensure at least one emergency contact remains
+    const currentContacts = form.getValues("emergencyContacts") || [];
+    if (currentContacts.length > 1) {
+      // Ensure at least one emergency contact remains
       const updatedContacts = currentContacts.filter((_, i) => i !== index);
-      form.setValue('emergencyContacts', updatedContacts);
+      form.setValue("emergencyContacts", updatedContacts);
     } else {
       toast({
-        title: 'Cannot Remove',
-        description: 'At least one emergency contact is required.',
-        variant: 'destructive',
+        title: "Cannot Remove",
+        description: "At least one emergency contact is required.",
+        variant: "destructive",
       });
     }
   };
 
   // Function to handle child form change
-  const handleChildFormChange = (field: keyof ChildFormValues, value: string) => {
-    setChildFormValues(prev => ({
+  const handleChildFormChange = (
+    field: keyof ChildFormValues,
+    value: string
+  ) => {
+    setChildFormValues((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Function to handle child add/edit
   const handleAddEditChild = () => {
     // Simple validation
-    if (!childFormValues.firstName || !childFormValues.lastName || !childFormValues.dateOfBirth || !childFormValues.personality) {
+    if (
+      !childFormValues.firstName ||
+      !childFormValues.lastName ||
+      !childFormValues.dateOfBirth ||
+      !childFormValues.personality
+    ) {
       toast({
-        title: 'Missing Information',
-        description: 'Please fill in all required fields.',
-        variant: 'destructive',
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
       });
       return;
     }
-    
-    childMutation.mutate(childFormValues);
+
+    childMutation(childFormValues);
   };
 
   // Function to edit a child
   const handleEditChild = (child: Child) => {
     // Convert any null or undefined values to empty strings
     setChildFormValues({
-      firstName: child.firstName || '',
-      lastName: child.lastName || '',
-      dateOfBirth: typeof child.dateOfBirth === 'string' ? child.dateOfBirth : '',
-      personality: child.personality || '',
-      specialCare: child.specialCare || '',
+      firstName: child.firstName || "",
+      lastName: child.lastName || "",
+      dateOfBirth:
+        typeof child.dateOfBirth === "string" ? child.dateOfBirth : "",
+      personality: child.personality || "",
+      specialCare: child.specialCare || "",
     });
     setCurrentChildId(child.id);
     setIsEditingChild(true);
@@ -301,10 +514,23 @@ export default function ParentProfileForm() {
 
   // Function to delete a child
   const handleDeleteChild = (childId: number) => {
-    if (confirm('Are you sure you want to remove this child from your profile?')) {
+    if (
+      confirm("Are you sure you want to remove this child from your profile?")
+    ) {
       deleteChildMutation.mutate(childId);
     }
   };
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const data = await fetchParentProfile(user?.id);
+      setProfiles(data);
+    };
+
+    if (user?.id) {
+      loadProfile();
+    }
+  }, [user?.id]);
 
   if (!user) {
     return (
@@ -317,9 +543,12 @@ export default function ParentProfileForm() {
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Complete Your Parent Profile</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          Complete Your Parent Profile
+        </CardTitle>
         <CardDescription>
-          Provide information about you and your family to help babysitters better understand your childcare needs.
+          Provide information about you and your family to help babysitters
+          better understand your childcare needs.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -327,22 +556,50 @@ export default function ParentProfileForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Personal Information Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Personal Information</h3>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                Personal Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="firstName"
+                  name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>Full Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter your first name" />
+                        <Input
+                          {...field}
+                          placeholder="Enter your full name"
+                          readOnly
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Enter your Email"
+                          readOnly
+                          // onChange={(e) => {
+                          //   field.onChange(e);
+                          //   // Set email to the same value as username
+                          //   loginForm.setValue("email", e.target.value);
+                          // }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* <FormField
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
@@ -354,9 +611,9 @@ export default function ParentProfileForm() {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <FormField
                   control={form.control}
@@ -378,14 +635,17 @@ export default function ParentProfileForm() {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter your phone number" />
+                        <Input
+                          {...field}
+                          placeholder="Enter your phone number"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              
+
               <div className="space-y-4 border rounded-md p-4 mt-4">
                 <FormField
                   control={form.control}
@@ -394,12 +654,15 @@ export default function ParentProfileForm() {
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-2">
                       <FormControl>
                         <div className="flex items-center space-x-2">
-                          <Checkbox 
+                          <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
                             id="hasSecondParent"
                           />
-                          <Label htmlFor="hasSecondParent" className="font-medium">
+                          <Label
+                            htmlFor="hasSecondParent"
+                            className="font-medium"
+                          >
                             Add Second Parent/Guardian
                           </Label>
                         </div>
@@ -408,8 +671,8 @@ export default function ParentProfileForm() {
                     </FormItem>
                   )}
                 />
-                
-                {form.watch('hasSecondParent') && (
+
+                {form.watch("hasSecondParent") && (
                   <div className="space-y-4 mt-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -419,7 +682,10 @@ export default function ParentProfileForm() {
                           <FormItem>
                             <FormLabel>Second Parent First Name</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Enter first name" />
+                              <Input
+                                {...field}
+                                placeholder="Enter first name"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -446,7 +712,10 @@ export default function ParentProfileForm() {
                         <FormItem>
                           <FormLabel>Second Parent Phone Number</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Enter phone number" />
+                            <Input
+                              {...field}
+                              placeholder="Enter phone number"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -456,34 +725,57 @@ export default function ParentProfileForm() {
                 )}
               </div>
             </div>
-            
+
             {/* Children Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Children</h3>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                Children
+              </h3>
               <div className="space-y-4">
-                {isLoadingChildren ? (
-                  <div className="flex justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin" />
-                  </div>
-                ) : children.length > 0 ? (
+                {childrens?.length > 0 ? (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-3">
-                      {children.map((child) => (
-                        <div key={child.id} className="border rounded-md p-4">
+                      {childrens.map((child, index) => (
+                        <div key={index} className="border rounded-md p-4">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h4 className="font-semibold">{child.firstName} {child.lastName}</h4>
-                              <p className="text-sm text-muted-foreground">Born: {child.dateOfBirth instanceof Date ? child.dateOfBirth.toLocaleDateString() : String(child.dateOfBirth)}</p>
-                              <p className="mt-2"><span className="font-medium">Personality:</span> {child.personality}</p>
+                              <h4 className="font-semibold">
+                                {child.firstName} {child.lastName}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                Born:{" "}
+                                {child.dateOfBirth instanceof Date
+                                  ? child.dateOfBirth.toLocaleDateString()
+                                  : String(child.dateOfBirth)}
+                              </p>
+                              <p className="mt-2">
+                                <span className="font-medium">
+                                  Personality:
+                                </span>{" "}
+                                {child.personality}
+                              </p>
                               {child.specialCare && (
-                                <p className="mt-1"><span className="font-medium">Special Care Needs:</span> {child.specialCare}</p>
+                                <p className="mt-1">
+                                  <span className="font-medium">
+                                    Special Care Needs:
+                                  </span>{" "}
+                                  {child.specialCare}
+                                </p>
                               )}
                             </div>
                             <div className="flex space-x-2">
-                              <Button variant="outline" size="icon" onClick={() => handleEditChild(child)}>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleEditChild(child)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="outline" size="icon" onClick={() => handleDeleteChild(child.id)}>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleDeleteChild(child.id)}
+                              >
                                 <Trash className="h-4 w-4" />
                               </Button>
                             </div>
@@ -494,10 +786,12 @@ export default function ParentProfileForm() {
                   </div>
                 ) : (
                   <div className="border border-dashed rounded-md p-6 text-center">
-                    <p className="text-muted-foreground">No children added yet</p>
+                    <p className="text-muted-foreground">
+                      No children added yet
+                    </p>
                   </div>
                 )}
-                
+
                 <Button
                   type="button"
                   variant="outline"
@@ -507,14 +801,19 @@ export default function ParentProfileForm() {
                   <Plus className="mr-2 h-4 w-4" />
                   Add a Child
                 </Button>
-                
+
                 {/* Add/Edit Child Dialog */}
                 <Dialog open={isAddingChild} onOpenChange={setIsAddingChild}>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>{isEditingChild ? 'Edit Child Information' : 'Add a Child'}</DialogTitle>
+                      <DialogTitle>
+                        {isEditingChild
+                          ? "Edit Child Information"
+                          : "Add a Child"}
+                      </DialogTitle>
                       <DialogDescription>
-                        Provide details about your child to help babysitters prepare.
+                        Provide details about your child to help babysitters
+                        prepare.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -524,7 +823,9 @@ export default function ParentProfileForm() {
                           <Input
                             id="childFirstName"
                             value={childFormValues.firstName}
-                            onChange={(e) => handleChildFormChange('firstName', e.target.value)}
+                            onChange={(e) =>
+                              handleChildFormChange("firstName", e.target.value)
+                            }
                           />
                         </div>
                         <div className="space-y-2">
@@ -532,7 +833,9 @@ export default function ParentProfileForm() {
                           <Input
                             id="childLastName"
                             value={childFormValues.lastName}
-                            onChange={(e) => handleChildFormChange('lastName', e.target.value)}
+                            onChange={(e) =>
+                              handleChildFormChange("lastName", e.target.value)
+                            }
                           />
                         </div>
                       </div>
@@ -542,42 +845,59 @@ export default function ParentProfileForm() {
                           id="childDob"
                           type="date"
                           value={childFormValues.dateOfBirth}
-                          onChange={(e) => handleChildFormChange('dateOfBirth', e.target.value)}
+                          onChange={(e) =>
+                            handleChildFormChange("dateOfBirth", e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="childPersonality">Personality & Interests</Label>
+                        <Label htmlFor="childPersonality">
+                          Personality & Interests
+                        </Label>
                         <Textarea
                           id="childPersonality"
                           value={childFormValues.personality}
-                          onChange={(e) => handleChildFormChange('personality', e.target.value)}
+                          onChange={(e) =>
+                            handleChildFormChange("personality", e.target.value)
+                          }
                           placeholder="Describe your child's personality, what they enjoy, etc."
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="childSpecialCare">Special Care Needs (Optional)</Label>
+                        <Label htmlFor="childSpecialCare">
+                          Special Care Needs (Optional)
+                        </Label>
                         <Textarea
                           id="childSpecialCare"
                           value={childFormValues.specialCare}
-                          onChange={(e) => handleChildFormChange('specialCare', e.target.value)}
+                          onChange={(e) =>
+                            handleChildFormChange("specialCare", e.target.value)
+                          }
                           placeholder="Any allergies, medications, or special instructions..."
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsAddingChild(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddingChild(false)}
+                      >
                         Cancel
                       </Button>
-                      <Button type="button" onClick={handleAddEditChild} disabled={childMutation.isPending}>
+                      <Button
+                        type="button"
+                        onClick={handleAddEditChild}
+                        // disabled={childMutation.isPending}
+                      >
                         {childMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {isEditingChild ? 'Updating...' : 'Adding...'}
+                            {isEditingChild ? "Updating..." : "Adding..."}
                           </>
                         ) : (
                           <>
                             <Check className="mr-2 h-4 w-4" />
-                            {isEditingChild ? 'Update Child' : 'Add Child'}
+                            {isEditingChild ? "Update Child" : "Add Child"}
                           </>
                         )}
                       </Button>
@@ -586,10 +906,12 @@ export default function ParentProfileForm() {
                 </Dialog>
               </div>
             </div>
-            
+
             {/* Family Information Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Family Information</h3>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                Family Information
+              </h3>
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -608,7 +930,7 @@ export default function ParentProfileForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="familyDescription"
@@ -626,7 +948,7 @@ export default function ParentProfileForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="familyActivities"
@@ -644,7 +966,7 @@ export default function ParentProfileForm() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="medicalDietaryRestrictions"
@@ -667,15 +989,19 @@ export default function ParentProfileForm() {
                 />
               </div>
             </div>
-            
+
             {/* Emergency Contacts Section */}
             <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">Emergency Contacts</h3>
+              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                Emergency Contacts
+              </h3>
               <div className="space-y-4">
-                {form.watch('emergencyContacts')?.map((_, index) => (
+                {form.watch("emergencyContacts")?.map((_, index) => (
                   <div key={index} className="border rounded-md p-4 space-y-4">
                     <div className="flex justify-between">
-                      <h4 className="font-medium">Emergency Contact #{index + 1}</h4>
+                      <h4 className="font-medium">
+                        Emergency Contact #{index + 1}
+                      </h4>
                       {index > 0 && (
                         <Button
                           type="button"
@@ -687,7 +1013,7 @@ export default function ParentProfileForm() {
                         </Button>
                       )}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -696,7 +1022,10 @@ export default function ParentProfileForm() {
                           <FormItem>
                             <FormLabel>Name</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Enter contact name" />
+                              <Input
+                                {...field}
+                                placeholder="Enter contact name"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -709,14 +1038,17 @@ export default function ParentProfileForm() {
                           <FormItem>
                             <FormLabel>Relationship</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="e.g., Grandparent, Neighbor" />
+                              <Input
+                                {...field}
+                                placeholder="e.g., Grandparent, Neighbor"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                    
+
                     <FormField
                       control={form.control}
                       name={`emergencyContacts.${index}.phoneNumber`}
@@ -724,7 +1056,10 @@ export default function ParentProfileForm() {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Enter phone number" />
+                            <Input
+                              {...field}
+                              placeholder="Enter phone number"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -732,7 +1067,7 @@ export default function ParentProfileForm() {
                     />
                   </div>
                 ))}
-                
+
                 <Button
                   type="button"
                   variant="outline"
@@ -743,29 +1078,32 @@ export default function ParentProfileForm() {
                 </Button>
               </div>
             </div>
-            
+
             <Alert className="bg-amber-50 border-amber-200 text-amber-800">
               <AlertDescription>
-                Please make sure you've added at least one child to your profile before submitting.
+                Please make sure you've added at least one child to your profile
+                before submitting.
               </AlertDescription>
             </Alert>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full"
-              disabled={profileMutation.isPending}
+              // disabled={profileMutation.isPending}
             >
-              {profileMutation.isPending ? (
+              {/* {profileMutation.isPending
+               ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Completing Profile...
                 </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Complete My Profile
-                </>
-              )}
+              ) : ( */}
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Complete My Profile
+              </>
+              {/* )
+               } */}
             </Button>
           </form>
         </Form>

@@ -1,7 +1,14 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
 import supabase from "../config/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 type AuthContextType = {
   user: User | null;
@@ -9,12 +16,13 @@ type AuthContextType = {
   error: Error | null;
   loginMutation: (credentials: LoginData) => Promise<void>;
   registerMutation: (userData: RegisterData) => Promise<void>;
+  logoutMutation: () => Promise<void>;
   loginLoading: boolean;
   registerLoading: boolean;
 };
 
 type LoginData = {
-  userName: string;
+  email: string;
   password: string;
 };
 
@@ -30,18 +38,21 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const navigate = useNavigate();
+
   const fetchUser = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.from("users").select().single();
-      if (error) throw new Error(error.message);
-      setUser(data);
+      supabase.auth.onAuthStateChange((event, session) => {
+        localStorage.setItem("userData", JSON.stringify(session));
+        setUser(session?.user);
+      });
     } catch (err: any) {
       console.error("Fetch user error:", err);
       setError(err);
@@ -54,22 +65,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("fullName", credentials.userName)
-        .eq("password", credentials.password)
-        .single();
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-      if (error || !data) {
+      let response = data?.session?.user?.user_metadata;
+
+      if (error || !response) {
         throw new Error(error?.message || "Invalid credentials");
       }
 
-      setUser(data);
+      setUser(response);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${data.fullName}!`,
+        description: `Welcome back, ${response?.fullName}!`,
       });
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: "Login failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const logoutMutation = async () => {
+    setLoginLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw new Error(error?.message || "Invalid credentials");
+      }
+
+      setUser(null);
+      localStorage.removeItem("userData");
+      toast({
+        title: "logout successful",
+      });
+      navigate("/auth");
     } catch (err: any) {
       setError(err);
       toast({
@@ -88,25 +127,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { fullName, userName, password, userType } = userData;
 
-      const { data, error } = await supabase
-        .from("users")
-        .insert([{ email: userName, password, userType, fullName }])
-        .select();
+      const { data, error } = await supabase.auth.signUp({
+        email: userName,
+        password,
+        options: {
+          data: {
+            userType: userType,
+            fullName,
+          },
+        },
+      });
 
       if (error || !data) {
         throw new Error(error?.message || "Registration failed");
       }
 
-      const registeredUser = data[0];
-
+      let response = data?.session?.user?.user_metadata;
+      setUser(response);
       toast({
         title: "Registration successful",
-        description: `Welcome to The Enchanted Co., ${registeredUser.fullName}!`,
+        description: `Welcome to The Enchanted Co., ${response?.fullName}!`,
       });
 
-      if (registeredUser.userType === "parent") {
-        window.location.href = "/membership";
-      }
+      // if (registeredUser?.userType === "parent") {
+      //   window.location.href = "/membership";
+      // }
     } catch (err: any) {
       setError(err);
       toast({
@@ -120,19 +165,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchUser()
-  }, [registerLoading,loginLoading ])
+    fetchUser();
+  }, [registerLoading, loginLoading]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading: loginLoading || registerLoading, 
+        isLoading: loginLoading || registerLoading,
         error,
         loginMutation,
         registerMutation,
+        logoutMutation,
         loginLoading: loginLoading,
-        registerLoading : registerLoading,
+        registerLoading: registerLoading,
       }}
     >
       {children}

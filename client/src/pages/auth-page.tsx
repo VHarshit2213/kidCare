@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 
 // Define form schemas
 const loginSchema = z.object({
-  userName: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -24,7 +24,7 @@ const registerSchema = z.object({
   userName: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   // We'll treat the username as the email, but keep basic validation
-  email: z.string(),
+  email: z.string().email('Invalid email address'),
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   userType: z.enum(["parent", "babysitter"], {
     required_error: "Please select a user type",
@@ -42,9 +42,8 @@ type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, loginLoading , registerLoading, loginMutation, registerMutation} = useAuth();
-  console.log("user ===>",user)
   const [_, navigate] = useLocation();
-  const [forgotPasswordStatus, setForgotPasswordStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [forgotPasswordStatus, setForgotPasswordStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");  
 
   // Redirect based on user status
   if (user) {
@@ -58,14 +57,15 @@ export default function AuthPage() {
     
     // For parent users who need to complete their membership, redirect directly to membership page
     // if (user.userType === "parent" && (!user.membershipStatus || user.membershipStatus === "none")) {
-    if (user.userType === "parent") {
+    if (user.userType === "parent" || user.userType === "babysitter") {
       console.log("Auth page: Redirecting parent directly to membership page");
       navigate("/membership");
     } else if (!user.profileCompleted) {
       // Users without completed profiles go to profile completion
       console.log("Auth page: Redirecting to profile completion page");
       // navigate("/profile-completion");
-    } else {
+    }
+     else {
       // Users with completed profiles go to home
       console.log("Auth page: Redirecting to home page");
       navigate("/");
@@ -73,11 +73,12 @@ export default function AuthPage() {
     return null;
   }
 
+
   // Login form
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      userName: "",
+      email: "",
       password: "",
     },
   });
@@ -101,7 +102,6 @@ export default function AuthPage() {
 
   // Handle registration submission
 async function onRegisterSubmit(values: RegisterValues) {
-  console.log("values signup", values);
   await registerMutation(values);
 }
   // Forgot password form
@@ -171,14 +171,22 @@ async function onRegisterSubmit(values: RegisterValues) {
                 <CardContent>
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                      <FormField
+                       <FormField
                         control={loginForm.control}
-                        name="userName"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter your username" {...field} />
+                              <Input 
+                                placeholder="Choose a username (will also be your email)" 
+                                {...field} 
+                                // onChange={(e) => {
+                                //   field.onChange(e);
+                                //   // Set email to the same value as username
+                                //   loginForm.setValue("email", e.target.value);
+                                // }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

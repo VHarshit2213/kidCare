@@ -6,17 +6,17 @@ import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
-  const { user } = useAuth();
-  // const { user, logoutMutation } = useAuth();
+  // const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const isAuthenticated = !!user;
   const hasMembership = !!user && (
     user.membershipStatus === "active" || 
     user.membershipStatus === "installment_2"
   );
-
+  
   const handleLogout = () => {
-    // logoutMutation.mutate();
+    logoutMutation();
   };
 
   const getInitials = (name: string) => {
@@ -185,7 +185,7 @@ export default function Header() {
                         {user?.profileImageUrl ? (
                           <AvatarImage src={user.profileImageUrl} alt={user.fullName} className="rounded-md" />
                         ) : (
-                          <AvatarFallback className="rounded-md bg-[#ed4aea]/10 text-[#ed4aea]">{getInitials(user?.fullName || "User")}</AvatarFallback>
+                          <AvatarFallback className="rounded-md bg-[#ed4aea]/10 text-[#ed4aea]">{getInitials(user?.user_metadata?.fullName || "User")}</AvatarFallback>
                         )}
                       </Avatar>
                       <div className="flex items-center">

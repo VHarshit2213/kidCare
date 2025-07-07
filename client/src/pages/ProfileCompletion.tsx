@@ -1,27 +1,29 @@
-import { useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'wouter';
-import { Loader2 } from 'lucide-react';
-import ParentProfileForm from '@/components/ParentProfileForm';
-import BabysitterProfileForm from '@/components/BabysitterProfileForm';
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
+import ParentProfileForm from "@/components/ParentProfileForm";
+import BabysitterProfileForm from "@/components/BabysitterProfileForm";
 
 export default function ProfileCompletion() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
+  const userData = JSON.parse(localStorage.getItem("userData") || "");
+
   // Redirect to home if profile is already completed
   useEffect(() => {
     if (!isLoading && user && user.profileCompleted) {
-      setLocation('/');
+      setLocation("/");
     }
   }, [user, isLoading, setLocation]);
 
   // Redirect to auth page if not logged in
   useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation('/auth');
+    if (!isLoading && !userData) {
+      setLocation("/auth");
     }
-  }, [user, isLoading, setLocation]);
+  }, [isLoading, setLocation]);
 
   if (isLoading) {
     return (
@@ -40,14 +42,20 @@ export default function ProfileCompletion() {
   return (
     <div className="container py-10 px-4 md:px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">Complete Your Profile</h1>
+        <h1 className="text-3xl font-bold text-center mb-2">
+          Complete Your Profile
+        </h1>
         <p className="text-center text-muted-foreground mb-8">
-          {user.userType === 'parent'
-            ? 'Help us personalize your experience by providing more information about you and your family.'
-            : 'Share your experience and caregiving style to help parents find the perfect match for their family.'}
+          {user.userType === "parent"
+            ? "Help us personalize your experience by providing more information about you and your family."
+            : "Share your experience and caregiving style to help parents find the perfect match for their family."}
         </p>
-        
-        {user.userType === 'parent' ? <ParentProfileForm /> : <BabysitterProfileForm />}
+
+        {user?.user_metadata?.userType === "parent" ? (
+          <ParentProfileForm />
+        ) : (
+          <BabysitterProfileForm />
+        )}
       </div>
     </div>
   );

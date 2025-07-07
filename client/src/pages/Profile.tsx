@@ -45,7 +45,7 @@ export default function Profile() {
                   {user?.profileImageUrl ? (
                     <AvatarImage src={user.profileImageUrl} alt={user.fullName} />
                   ) : (
-                    <AvatarFallback className="text-xl">{getInitials(user?.fullName || "User")}</AvatarFallback>
+                    <AvatarFallback className="text-xl">{getInitials(user?.user_metadata?.fullName || "User")}</AvatarFallback>
                   )}
                 </Avatar>
                 <div className="mt-4 sm:mt-0 sm:ml-6">
