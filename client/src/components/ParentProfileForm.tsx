@@ -40,6 +40,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Child } from "@shared/schema";
 import supabase from "@/config/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 // Schema for emergency contacts
 const emergencyContactSchema = z.object({
@@ -143,9 +144,8 @@ interface ParentProfile {
     relationship: string;
     phoneNumber: string;
   }[];
-  children?: any[]; 
+  children?: any[];
 }
-
 
 export default function ParentProfileForm() {
   const { user } = useAuth();
@@ -161,9 +161,10 @@ export default function ParentProfileForm() {
     specialCare: "",
   });
   const [childrens, setChildrens] = useState<ChildFormValues[]>([]);
+  const [isChildSubmitting, setIsChildSubmitting] = useState(false);
   const [profiles, setProfiles] = useState<ParentProfile[]>([]);
-
-  const [isPending, setIsPending] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userData = user?.user_metadata;
 
@@ -364,6 +365,7 @@ export default function ParentProfileForm() {
   //   },
   // });
 
+  // fetch parent profile
   const fetchParentProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from("parentprofile")
@@ -379,8 +381,13 @@ export default function ParentProfileForm() {
     return data;
   };
 
+  const loadProfile = async () => {
+    const data = await fetchParentProfile(user?.id);
+    setProfiles(data);
+  };
+
   // Function to handle form submission
-  const onSubmit = async (values: ProfileFormValues) => {
+  const onSubmit = async (values: ProfileFormValues, e: any) => {
     // Check if the user has added at least one child
     if (childrens?.length === 0) {
       toast({
@@ -391,7 +398,10 @@ export default function ParentProfileForm() {
       return;
     }
 
+    setIsSubmitting(true);
+
     const mappedChildren = childrens.map((child) => ({
+      id: Math.floor(10000000 + Math.random() * 90000000).toString(),
       firstName: child.firstName,
       lastName: child.lastName,
       dateOfBirth: child.dateOfBirth,
@@ -416,25 +426,52 @@ export default function ParentProfileForm() {
       emergencyContact: values.emergencyContacts,
     };
 
-    const { data, error } = await supabase
-      .from("parentprofile")
-      .insert(payload);
+    try {
+      //  Check if profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from("parentprofile")
+        .select("id")
+        .eq("userId", user?.id)
+        .limit(1);
 
-    if (error) {
+      if (fetchError && fetchError.code !== "PGRST116") {
+        throw fetchError;
+      }
+
+      let response;
+      if (existingProfile) {
+        response = await supabase
+          .from("parentprofile")
+          .update(payload)
+          .eq("userId", user?.id);
+      } else {
+        response = await supabase.from("parentprofile").insert(payload);
+      }
+
+      const { error } = response;
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: existingProfile
+          ? "Profile updated successfully!"
+          : "Profile created successfully!",
+      });
+
+      setChildrens([]);
+      loadProfile();
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Something went wrong",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast({
-      title: "Success",
-      description: "Profile saved successfully!",
-    });
-
-    setChildrens([]);
 
     // Proceed with profile update
     // profileMutation.mutate(values);
@@ -493,40 +530,61 @@ export default function ParentProfileForm() {
       return;
     }
 
-    childMutation(childFormValues);
+    setIsChildSubmitting(true);
+
+    if (isEditingChild && currentChildId !== null) {
+      // Update existing child
+      const updatedChildren = [...childrens];
+      updatedChildren[currentChildId] = childFormValues;
+      setChildrens(updatedChildren);
+    } else {
+      // Add new child
+      setChildrens((prev) => [...prev, childFormValues]);
+    }
+
+    setChildFormValues({
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      personality: "",
+      specialCare: "",
+    });
+    setIsEditingChild(false);
+    setCurrentChildId(null);
+    setIsAddingChild(false);
+    setIsChildSubmitting(false);
+    // childMutation(childFormValues);
   };
 
   // Function to edit a child
-  const handleEditChild = (child: Child) => {
+  const handleEditChild = (child: ChildFormValues, index: number) => {
     // Convert any null or undefined values to empty strings
-    setChildFormValues({
-      firstName: child.firstName || "",
-      lastName: child.lastName || "",
-      dateOfBirth:
-        typeof child.dateOfBirth === "string" ? child.dateOfBirth : "",
-      personality: child.personality || "",
-      specialCare: child.specialCare || "",
-    });
-    setCurrentChildId(child.id);
+    // setChildFormValues({
+    //   firstName: child.firstName || "",
+    //   lastName: child.lastName || "",
+    //   dateOfBirth:
+    //     typeof child.dateOfBirth === "string" ? child.dateOfBirth : "",
+    //   personality: child.personality || "",
+    //   specialCare: child.specialCare || "",
+    // });
+    setChildFormValues(child);
     setIsEditingChild(true);
+    setCurrentChildId(index);
     setIsAddingChild(true);
   };
 
   // Function to delete a child
-  const handleDeleteChild = (childId: number) => {
+  const handleDeleteChild = (index: number) => {
     if (
       confirm("Are you sure you want to remove this child from your profile?")
     ) {
-      deleteChildMutation.mutate(childId);
+      const updated = childrens.filter((_, i) => i !== index);
+      setChildrens(updated);
+      // deleteChildMutation.mutate(childId);
     }
   };
 
   useEffect(() => {
-    const loadProfile = async () => {
-      const data = await fetchParentProfile(user?.id);
-      setProfiles(data);
-    };
-
     if (user?.id) {
       loadProfile();
     }
@@ -541,65 +599,66 @@ export default function ParentProfileForm() {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">
-          Complete Your Parent Profile
-        </CardTitle>
-        <CardDescription>
-          Provide information about you and your family to help babysitters
-          better understand your childcare needs.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Personal Information Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter your full name"
-                          readOnly
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter your Email"
-                          readOnly
-                          // onChange={(e) => {
-                          //   field.onChange(e);
-                          //   // Set email to the same value as username
-                          //   loginForm.setValue("email", e.target.value);
-                          // }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {/* <FormField
+    <>
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">
+            Complete Your Parent Profile
+          </CardTitle>
+          <CardDescription>
+            Provide information about you and your family to help babysitters
+            better understand your childcare needs.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Personal Information Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter your full name"
+                            readOnly
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter your Email"
+                            readOnly
+                            // onChange={(e) => {
+                            //   field.onChange(e);
+                            //   // Set email to the same value as username
+                            //   loginForm.setValue("email", e.target.value);
+                            // }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* <FormField
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
@@ -612,502 +671,545 @@ export default function ParentProfileForm() {
                     </FormItem>
                   )}
                 /> */}
-              </div>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter your address" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter your phone number"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4 border rounded-md p-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="hasSecondParent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-2">
-                      <FormControl>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            id="hasSecondParent"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your address" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter your phone number"
                           />
-                          <Label
-                            htmlFor="hasSecondParent"
-                            className="font-medium"
-                          >
-                            Add Second Parent/Guardian
-                          </Label>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                {form.watch("hasSecondParent") && (
-                  <div className="space-y-4 mt-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4 border rounded-md p-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="hasSecondParent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-2">
+                        <FormControl>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              id="hasSecondParent"
+                            />
+                            <Label
+                              htmlFor="hasSecondParent"
+                              className="font-medium"
+                            >
+                              Add Second Parent/Guardian
+                            </Label>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("hasSecondParent") && (
+                    <div className="space-y-4 mt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="secondParentFirstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Second Parent First Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Enter first name"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="secondParentLastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Second Parent Last Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Enter last name"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={form.control}
-                        name="secondParentFirstName"
+                        name="secondParentPhone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Second Parent First Name</FormLabel>
+                            <FormLabel>Second Parent Phone Number</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
-                                placeholder="Enter first name"
+                                placeholder="Enter phone number"
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="secondParentLastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Second Parent Last Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter last name" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="secondParentPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Second Parent Phone Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter phone number"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Children Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
-                Children
-              </h3>
-              <div className="space-y-4">
-                {childrens?.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      {childrens.map((child, index) => (
-                        <div key={index} className="border rounded-md p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-semibold">
-                                {child.firstName} {child.lastName}
-                              </h4>
-                              <p className="text-sm text-muted-foreground">
-                                Born:{" "}
-                                {child.dateOfBirth instanceof Date
-                                  ? child.dateOfBirth.toLocaleDateString()
-                                  : String(child.dateOfBirth)}
-                              </p>
-                              <p className="mt-2">
-                                <span className="font-medium">
-                                  Personality:
-                                </span>{" "}
-                                {child.personality}
-                              </p>
-                              {child.specialCare && (
-                                <p className="mt-1">
-                                  <span className="font-medium">
-                                    Special Care Needs:
-                                  </span>{" "}
-                                  {child.specialCare}
+              {/* Children Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                  Children
+                </h3>
+                <div className="space-y-4">
+                  {childrens?.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3">
+                        {childrens.map((child, index) => (
+                          <div key={index} className="border rounded-md p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-semibold">
+                                  {child.firstName} {child.lastName}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  Born:{" "}
+                                  {child.dateOfBirth instanceof Date
+                                    ? child.dateOfBirth.toLocaleDateString()
+                                    : String(child.dateOfBirth)}
                                 </p>
-                              )}
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleEditChild(child)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleDeleteChild(child.id)}
-                              >
-                                <Trash className="h-4 w-4" />
-                              </Button>
+                                <p className="mt-2">
+                                  <span className="font-medium">
+                                    Personality:
+                                  </span>{" "}
+                                  {child.personality}
+                                </p>
+                                {child.specialCare && (
+                                  <p className="mt-1">
+                                    <span className="font-medium">
+                                      Special Care Needs:
+                                    </span>{" "}
+                                    {child.specialCare}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  type="button"
+                                  size="icon"
+                                  onClick={() => handleEditChild(child, index)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  type="button"
+                                  onClick={() => handleDeleteChild(index)}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="border border-dashed rounded-md p-6 text-center">
-                    <p className="text-muted-foreground">
-                      No children added yet
-                    </p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="border border-dashed rounded-md p-6 text-center">
+                      <p className="text-muted-foreground">
+                        No children added yet
+                      </p>
+                    </div>
+                  )}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddingChild(true)}
-                  className="mt-2"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add a Child
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddingChild(true)}
+                    className="mt-2"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add a Child
+                  </Button>
 
-                {/* Add/Edit Child Dialog */}
-                <Dialog open={isAddingChild} onOpenChange={setIsAddingChild}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
-                        {isEditingChild
-                          ? "Edit Child Information"
-                          : "Add a Child"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Provide details about your child to help babysitters
-                        prepare.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
+                  {/* Add/Edit Child Dialog */}
+                  <Dialog open={isAddingChild} onOpenChange={setIsAddingChild}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          {isEditingChild
+                            ? "Edit Child Information"
+                            : "Add a Child"}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Provide details about your child to help babysitters
+                          prepare.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="childFirstName">First Name</Label>
+                            <Input
+                              id="childFirstName"
+                              value={childFormValues.firstName}
+                              onChange={(e) =>
+                                handleChildFormChange(
+                                  "firstName",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="childLastName">Last Name</Label>
+                            <Input
+                              id="childLastName"
+                              value={childFormValues.lastName}
+                              onChange={(e) =>
+                                handleChildFormChange(
+                                  "lastName",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
                         <div className="space-y-2">
-                          <Label htmlFor="childFirstName">First Name</Label>
+                          <Label htmlFor="childDob">Date of Birth</Label>
                           <Input
-                            id="childFirstName"
-                            value={childFormValues.firstName}
+                            id="childDob"
+                            type="date"
+                            value={childFormValues.dateOfBirth}
                             onChange={(e) =>
-                              handleChildFormChange("firstName", e.target.value)
+                              handleChildFormChange(
+                                "dateOfBirth",
+                                e.target.value
+                              )
                             }
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="childLastName">Last Name</Label>
-                          <Input
-                            id="childLastName"
-                            value={childFormValues.lastName}
+                          <Label htmlFor="childPersonality">
+                            Personality & Interests
+                          </Label>
+                          <Textarea
+                            id="childPersonality"
+                            value={childFormValues.personality}
                             onChange={(e) =>
-                              handleChildFormChange("lastName", e.target.value)
+                              handleChildFormChange(
+                                "personality",
+                                e.target.value
+                              )
                             }
+                            placeholder="Describe your child's personality, what they enjoy, etc."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="childSpecialCare">
+                            Special Care Needs (Optional)
+                          </Label>
+                          <Textarea
+                            id="childSpecialCare"
+                            value={childFormValues.specialCare}
+                            onChange={(e) =>
+                              handleChildFormChange(
+                                "specialCare",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Any allergies, medications, or special instructions..."
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="childDob">Date of Birth</Label>
-                        <Input
-                          id="childDob"
-                          type="date"
-                          value={childFormValues.dateOfBirth}
-                          onChange={(e) =>
-                            handleChildFormChange("dateOfBirth", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="childPersonality">
-                          Personality & Interests
-                        </Label>
-                        <Textarea
-                          id="childPersonality"
-                          value={childFormValues.personality}
-                          onChange={(e) =>
-                            handleChildFormChange("personality", e.target.value)
-                          }
-                          placeholder="Describe your child's personality, what they enjoy, etc."
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="childSpecialCare">
-                          Special Care Needs (Optional)
-                        </Label>
-                        <Textarea
-                          id="childSpecialCare"
-                          value={childFormValues.specialCare}
-                          onChange={(e) =>
-                            handleChildFormChange("specialCare", e.target.value)
-                          }
-                          placeholder="Any allergies, medications, or special instructions..."
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsAddingChild(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={handleAddEditChild}
-                        // disabled={childMutation.isPending}
-                      >
-                        {childMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {isEditingChild ? "Updating..." : "Adding..."}
-                          </>
-                        ) : (
-                          <>
-                            <Check className="mr-2 h-4 w-4" />
-                            {isEditingChild ? "Update Child" : "Add Child"}
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Family Information Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
-                Family Information
-              </h3>
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="parentingStyle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Parenting Style</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Describe your parenting philosophy and approach..."
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="familyDescription"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Family Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Tell us about your family..."
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="familyActivities"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Family Activities</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="What activities does your family enjoy together?"
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="medicalDietaryRestrictions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Medical/Dietary Restrictions</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Any allergies, dietary restrictions, or medical concerns?"
-                          rows={3}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        If there are none, please write "None".
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Emergency Contacts Section */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 pb-2 border-b">
-                Emergency Contacts
-              </h3>
-              <div className="space-y-4">
-                {form.watch("emergencyContacts")?.map((_, index) => (
-                  <div key={index} className="border rounded-md p-4 space-y-4">
-                    <div className="flex justify-between">
-                      <h4 className="font-medium">
-                        Emergency Contact #{index + 1}
-                      </h4>
-                      {index > 0 && (
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsAddingChild(false)}
+                        >
+                          Cancel
+                        </Button>
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeEmergencyContact(index)}
+                          onClick={handleAddEditChild}
+                          disabled={isChildSubmitting}
                         >
-                          <X className="h-4 w-4" />
+                          {isChildSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {isEditingChild ? "Updating..." : "Adding..."}
+                            </>
+                          ) : (
+                            <>
+                              <Check className="mr-2 h-4 w-4" />
+                              {isEditingChild ? "Update Child" : "Add Child"}
+                            </>
+                          )}
                         </Button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`emergencyContacts.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Enter contact name"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`emergencyContacts.${index}.relationship`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Relationship</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="e.g., Grandparent, Neighbor"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name={`emergencyContacts.${index}.phoneNumber`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter phone number"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ))}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addEmergencyContact}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Another Emergency Contact
-                </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
+
+              {/* Family Information Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                  Family Information
+                </h3>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="parentingStyle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Parenting Style</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Describe your parenting philosophy and approach..."
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="familyDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Family Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Tell us about your family..."
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="familyActivities"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Family Activities</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="What activities does your family enjoy together?"
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="medicalDietaryRestrictions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Medical/Dietary Restrictions</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Any allergies, dietary restrictions, or medical concerns?"
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          If there are none, please write "None".
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Emergency Contacts Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-4 pb-2 border-b">
+                  Emergency Contacts
+                </h3>
+                <div className="space-y-4">
+                  {form.watch("emergencyContacts")?.map((_, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-md p-4 space-y-4"
+                    >
+                      <div className="flex justify-between">
+                        <h4 className="font-medium">
+                          Emergency Contact #{index + 1}
+                        </h4>
+                        {index > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeEmergencyContact(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name={`emergencyContacts.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Enter contact name"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`emergencyContacts.${index}.relationship`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Relationship</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="e.g., Grandparent, Neighbor"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name={`emergencyContacts.${index}.phoneNumber`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="Enter phone number"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addEmergencyContact}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Another Emergency Contact
+                  </Button>
+                </div>
+              </div>
+
+              <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                <AlertDescription>
+                  Please make sure you've added at least one child to your
+                  profile before submitting.
+                </AlertDescription>
+              </Alert>
+
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Completing Profile...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Complete My Profile
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      {/* {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white rounded-xl p-6 w-[90%] max-w-md shadow-xl space-y-4">
+            <h2 className="text-lg font-semibold">Unsaved Changes</h2>
+            <p className="text-gray-600">
+              You have unsaved changes. Are you sure you want to leave?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                // onClick={onCancel}
+                className="px-4 py-2 bg-gray-100 rounded-md"
+              >
+                Stay
+              </button>
+              <button
+                // onClick={onConfirm}
+                className="px-4 py-2 bg-red-600 text-white rounded-md"
+              >
+                Leave
+              </button>
             </div>
-
-            <Alert className="bg-amber-50 border-amber-200 text-amber-800">
-              <AlertDescription>
-                Please make sure you've added at least one child to your profile
-                before submitting.
-              </AlertDescription>
-            </Alert>
-
-            <Button
-              type="submit"
-              className="w-full"
-              // disabled={profileMutation.isPending}
-            >
-              {/* {profileMutation.isPending
-               ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Completing Profile...
-                </>
-              ) : ( */}
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Complete My Profile
-              </>
-              {/* )
-               } */}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          </div>
+        </div>
+      )} */}
+    </>
   );
 }

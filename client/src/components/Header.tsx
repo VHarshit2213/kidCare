@@ -91,14 +91,13 @@ export default function Header() {
                   <div className="grid gap-3">
                     <Button 
                       onClick={() => {
-                        // if (!isAuthenticated) {
-                        //   navigate("/auth");
+                        if (!isAuthenticated) {
+                          navigate("/auth");
                         // } else if (!hasMembership) {
-                          navigate("/membership");
-                          console.log("membership ====>>>>>>----")
-                        // } else {
-                          // window.dispatchEvent(new CustomEvent('open-sitter-request'));
-                        // }
+                        //   navigate("/membership");
+                        } else {
+                          window.dispatchEvent(new CustomEvent('open-sitter-request'));
+                        }
                       }}
                       className="justify-start bg-[#ed4aea] hover:bg-[#d63ab6] text-white font-medium tracking-wide rounded-[4px]" 
                       size="sm"
@@ -121,13 +120,13 @@ export default function Header() {
                     </Button>
                     <Button 
                       onClick={() => {
-                        // if (!isAuthenticated) {
-                        //   navigate("/auth");
+                        if (!isAuthenticated) {
+                          navigate("/auth");
                         // } else if (!hasMembership) {
-                          navigate("/membership");
-                        // } else {
-                          // window.dispatchEvent(new CustomEvent('open-scheduled-care'));
-                        // }
+                        //   navigate("/membership");
+                        } else {
+                          window.dispatchEvent(new CustomEvent('open-scheduled-care'));
+                        }
                       }}
                       variant="outline" 
                       className="justify-start border-[#ed4aea] text-[#ed4aea] hover:bg-pink-50 font-medium tracking-wide rounded-[4px]"

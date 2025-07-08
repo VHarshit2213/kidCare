@@ -163,13 +163,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   }
   // };
 
-  // // Authentication middleware using Passport.js session
-  // const authenticate = async (req: Request, res: Response, next: Function) => {
-  //   if (!req.isAuthenticated()) {
-  //     return res.status(401).json({ message: "Unauthorized" });
-  //   }
-  //   next();
-  // };
+  // Authentication middleware using Passport.js session
+  const authenticate = async (req: Request, res: Response, next: Function) => {
+    console.log("req---",req);
+    
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    next();
+  };
 
   // // User Routes
   // // These routes are now handled by the auth middleware in auth.ts
@@ -1033,266 +1035,269 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //   }
   // });
 
-  // // Booking Payment Routes - 15% platform commission
-  // if (process.env.STRIPE_SECRET_KEY) {
-  //   // Create payment intent for completed booking
-  //   app.post("/api/bookings/:id/create-payment", authenticate, async (req: Request, res: Response) => {
-  //     try {
-  //       const bookingId = parseInt(req.params.id);
-  //       const { totalAmount } = req.body; // in dollars
+  // Booking Payment Routes - 15% platform commission
+  if (process.env.STRIPE_SECRET_KEY) {
+    // Create payment intent for completed booking
+    app.post("/api/bookings/:id/create-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const bookingId = parseInt(req.params.id);
+        const { totalAmount } = req.body; // in dollars
         
-  //       const booking = await storage.getBooking(bookingId);
-  //       if (!booking) {
-  //         return res.status(404).json({ message: "Booking not found" });
-  //       }
+        const booking = await storage.getBooking(bookingId);
+        if (!booking) {
+          return res.status(404).json({ message: "Booking not found" });
+        }
         
-  //       if (booking.status !== "completed") {
-  //         return res.status(400).json({ message: "Booking must be completed before payment" });
-  //       }
+        if (booking.status !== "completed") {
+          return res.status(400).json({ message: "Booking must be completed before payment" });
+        }
         
-  //       // Calculate amounts: 15% platform fee, 85% to babysitter
-  //       const totalAmountCents = Math.round(totalAmount * 100);
-  //       const platformFeeCents = Math.round(totalAmountCents * 0.15);
-  //       const babysitterAmountCents = totalAmountCents - platformFeeCents;
+        // Calculate amounts: 15% platform fee, 85% to babysitter
+        const totalAmountCents = Math.round(totalAmount * 100);
+        const platformFeeCents = Math.round(totalAmountCents * 0.15);
+        const babysitterAmountCents = totalAmountCents - platformFeeCents;
         
-  //       // Create payment intent
-  //       const paymentIntent = await stripe.paymentIntents.create({
-  //         amount: totalAmountCents,
-  //         currency: "usd",
-  //         payment_method_types: ['card'],
-  //         metadata: {
-  //           bookingId: bookingId.toString(),
-  //           platformFee: platformFeeCents.toString(),
-  //           babysitterAmount: babysitterAmountCents.toString(),
-  //         },
-  //       });
+        // Create payment intent
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: totalAmountCents,
+          currency: "usd",
+          payment_method_types: ['card'],
+          metadata: {
+            bookingId: bookingId.toString(),
+            platformFee: platformFeeCents.toString(),
+            babysitterAmount: babysitterAmountCents.toString(),
+          },
+        });
         
-  //       // Update booking with payment details
-  //       await storage.updateBookingPayment(bookingId, {
-  //         totalAmount: totalAmountCents,
-  //         platformFee: platformFeeCents,
-  //         babysitterAmount: babysitterAmountCents,
-  //         stripePaymentIntentId: paymentIntent.id,
-  //       });
+        // Update booking with payment details
+        await storage.updateBookingPayment(bookingId, {
+          totalAmount: totalAmountCents,
+          platformFee: platformFeeCents,
+          babysitterAmount: babysitterAmountCents,
+          stripePaymentIntentId: paymentIntent.id,
+        });
         
-  //       res.status(200).json({
-  //         clientSecret: paymentIntent.client_secret,
-  //         paymentIntentId: paymentIntent.id,
-  //         platformFee: platformFeeCents / 100,
-  //         babysitterAmount: babysitterAmountCents / 100,
-  //       });
-  //     } catch (error: any) {
-  //       console.error("Error creating booking payment:", error);
-  //       res.status(500).json({ message: error.message || "Failed to create payment" });
-  //     }
-  //   });
+        res.status(200).json({
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+          platformFee: platformFeeCents / 100,
+          babysitterAmount: babysitterAmountCents / 100,
+        });
+      } catch (error: any) {
+        console.error("Error creating booking payment:", error);
+        res.status(500).json({ message: error.message || "Failed to create payment" });
+      }
+    });
     
-  //   // Confirm payment and transfer to babysitter
-  //   app.post("/api/bookings/:id/confirm-payment", authenticate, async (req: Request, res: Response) => {
-  //     try {
-  //       const bookingId = parseInt(req.params.id);
-  //       const { paymentIntentId } = req.body;
+    // Confirm payment and transfer to babysitter
+    app.post("/api/bookings/:id/confirm-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const bookingId = parseInt(req.params.id);
+        const { paymentIntentId } = req.body;
         
-  //       const booking = await storage.getBooking(bookingId);
-  //       if (!booking) {
-  //         return res.status(404).json({ message: "Booking not found" });
-  //       }
+        const booking = await storage.getBooking(bookingId);
+        if (!booking) {
+          return res.status(404).json({ message: "Booking not found" });
+        }
         
-  //       // Verify payment succeeded
-  //       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-  //       if (paymentIntent.status !== "succeeded") {
-  //         return res.status(400).json({ message: "Payment has not succeeded" });
-  //       }
+        // Verify payment succeeded
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (paymentIntent.status !== "succeeded") {
+          return res.status(400).json({ message: "Payment has not succeeded" });
+        }
         
-  //       // Get babysitter details
-  //       const babysitter = await storage.getUser(booking.babysitterId!);
-  //       if (!babysitter) {
-  //         return res.status(404).json({ message: "Babysitter not found" });
-  //       }
+        // Get babysitter details
+        const babysitter = await storage.getUser(booking.babysitterId!);
+        if (!babysitter) {
+          return res.status(404).json({ message: "Babysitter not found" });
+        }
         
-  //       // Transfer money to babysitter (if they have Stripe Connect setup)
-  //       if (babysitter.stripeAccountId) {
-  //         await stripe.transfers.create({
-  //           amount: booking.babysitterAmount!,
-  //           currency: "usd",
-  //           destination: babysitter.stripeAccountId,
-  //           metadata: {
-  //             bookingId: bookingId.toString(),
-  //           },
-  //         });
-  //       }
+        // Transfer money to babysitter (if they have Stripe Connect setup)
+        if (babysitter.stripeAccountId) {
+          await stripe.transfers.create({
+            amount: booking.babysitterAmount!,
+            currency: "usd",
+            destination: babysitter.stripeAccountId,
+            metadata: {
+              bookingId: bookingId.toString(),
+            },
+          });
+        }
         
-  //       // Update booking status to paid
-  //       await storage.updateBookingStatus(bookingId, "paid");
-  //       await storage.updateBookingPaidAt(bookingId, new Date());
+        // Update booking status to paid
+        await storage.updateBookingStatus(bookingId, "paid");
+        await storage.updateBookingPaidAt(bookingId, new Date());
         
-  //       res.status(200).json({
-  //         success: true,
-  //         message: "Payment processed and transferred to babysitter",
-  //       });
-  //     } catch (error: any) {
-  //       console.error("Error confirming payment:", error);
-  //       res.status(500).json({ message: error.message || "Failed to confirm payment" });
-  //     }
-  //   });
-  // }
+        res.status(200).json({
+          success: true,
+          message: "Payment processed and transferred to babysitter",
+        });
+      } catch (error: any) {
+        console.error("Error confirming payment:", error);
+        res.status(500).json({ message: error.message || "Failed to confirm payment" });
+      }
+    });
+  }
 
-  // // Membership Payment Routes
-  // if (process.env.STRIPE_SECRET_KEY) {
-  //   // Create payment intent for membership payment
-  //   app.post("/api/create-membership-intent", authenticate, async (req: Request, res: Response) => {
-  //     try {
-  //       const { paymentType, userId, promoCode, discount } = req.body;
+  // Membership Payment Routes
+  console.log("------------",process.env.STRIPE_SECRET_KEY);
+  const url= "k_test_51RLY2zGG4xoI06nn2irS2wbdPwXUYiflaVeqJDuHKgeMEae0d1tK4jZIawDz7MeyfveJ4wsr8WVJFFhFwBtKf7PZ00E6huP6up";
+  if (url) {
+    // Create payment intent for membership payment
+    app.post("/api/create-membership-intent", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { paymentType, userId, promoCode, discount } = req.body;
         
-  //       if (!paymentType || !userId) {
-  //         return res.status(400).json({ message: "Payment type and user ID are required" });
-  //       }
+        if (!paymentType || !userId) {
+          return res.status(400).json({ message: "Payment type and user ID are required" });
+        }
         
-  //       // Verify the user exists
-  //       const user = await storage.getUser(Number(userId));
-  //       if (!user) {
-  //         return res.status(404).json({ message: "User not found" });
-  //       }
+        // Verify the user exists
+        const user = await storage.getUser(Number(userId));
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
         
-  //       // Base amount based on payment type
-  //       let baseAmount = paymentType === "full" ? 50000 : 25000; // $500 or $250 in cents
+        // Base amount based on payment type
+        let baseAmount = paymentType === "full" ? 50000 : 25000; // $500 or $250 in cents
         
-  //       // Apply discount if promo code is provided
-  //       let amount = baseAmount;
-  //       if (promoCode && discount) {
-  //         // Apply the discount percentage
-  //         amount = Math.round(baseAmount * (100 - discount) / 100);
-  //         console.log(`Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`);
-  //       }
+        // Apply discount if promo code is provided
+        let amount = baseAmount;
+        if (promoCode && discount) {
+          // Apply the discount percentage
+          amount = Math.round(baseAmount * (100 - discount) / 100);
+          console.log(`Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`);
+        }
         
-  //       if (!stripe) {
-  //         return res.status(500).json({ message: "Stripe is not configured" });
-  //       }
+        if (!stripe) {
+          return res.status(500).json({ message: "Stripe is not configured" });
+        }
 
-  //       const paymentIntent = await stripe.paymentIntents.create({
-  //         amount,
-  //         currency: "usd",
-  //         payment_method_types: ['card'],
-  //         metadata: {
-  //           userId: userId.toString(),
-  //           paymentType,
-  //           membershipType: paymentType === "full" ? "full_payment" : "installment_1",
-  //           promoCode: promoCode || "",
-  //           discount: discount ? discount.toString() : "0"
-  //         },
-  //       });
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: "usd",
+          payment_method_types: ['card'],
+          metadata: {
+            userId: userId.toString(),
+            paymentType,
+            membershipType: paymentType === "full" ? "full_payment" : "installment_1",
+            promoCode: promoCode || "",
+            discount: discount ? discount.toString() : "0"
+          },
+        });
         
-  //       res.status(200).json({
-  //         clientSecret: paymentIntent.client_secret,
-  //         paymentIntentId: paymentIntent.id,
-  //       });
-  //     } catch (error: any) {
-  //       console.error("Error creating payment intent:", error);
-  //       res.status(500).json({ message: error.message || "Failed to create payment intent" });
-  //     }
-  //   });
+        res.status(200).json({
+          clientSecret: paymentIntent.client_secret,
+          paymentIntentId: paymentIntent.id,
+        });
+      } catch (error: any) {
+        console.error("Error creating payment intent:", error);
+        res.status(500).json({ message: error.message || "Failed to create payment intent" });
+      }
+    });
+  
     
-  //   // Verify a completed payment
-  //   app.post("/api/verify-membership-payment", authenticate, async (req: Request, res: Response) => {
-  //     try {
-  //       const { paymentIntentId, userId } = req.body;
+    // Verify a completed payment
+    app.post("/api/verify-membership-payment", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { paymentIntentId, userId } = req.body;
         
-  //       if (!paymentIntentId || !userId) {
-  //         return res.status(400).json({ message: "Payment intent ID and user ID are required" });
-  //       }
+        if (!paymentIntentId || !userId) {
+          return res.status(400).json({ message: "Payment intent ID and user ID are required" });
+        }
         
-  //       // Verify the user exists
-  //       const user = await storage.getUser(Number(userId));
-  //       if (!user) {
-  //         return res.status(404).json({ message: "User not found" });
-  //       }
+        // Verify the user exists
+        const user = await storage.getUser(Number(userId));
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
         
-  //       if (!stripe) {
-  //         return res.status(500).json({ message: "Stripe is not configured" });
-  //       }
+        if (!stripe) {
+          return res.status(500).json({ message: "Stripe is not configured" });
+        }
         
-  //       // Retrieve the payment intent
-  //       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        // Retrieve the payment intent
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
         
-  //       if (paymentIntent.status !== "succeeded") {
-  //         return res.status(400).json({ message: "Payment has not succeeded" });
-  //       }
+        if (paymentIntent.status !== "succeeded") {
+          return res.status(400).json({ message: "Payment has not succeeded" });
+        }
         
-  //       // Extract payment type from metadata
-  //       const paymentType = paymentIntent.metadata.paymentType;
-  //       const membershipStatus = paymentType === "full" ? "active" : "installment_1";
+        // Extract payment type from metadata
+        const paymentType = paymentIntent.metadata.paymentType;
+        const membershipStatus = paymentType === "full" ? "active" : "installment_1";
         
-  //       // Update user's membership status with the new dedicated method
-  //       try {
-  //         await storage.updateUserMembership(Number(userId), {
-  //           membershipStatus,
-  //           membershipType: paymentType === "full" ? "one-time" : "installment",
-  //           membershipPaymentDate: new Date(),
-  //           stripePaymentIntentId: paymentIntentId
-  //         });
-  //       } catch (err) {
-  //         console.warn("Could not update user membership status:", err);
-  //       }
+        // Update user's membership status with the new dedicated method
+        try {
+          await storage.updateUserMembership(Number(userId), {
+            membershipStatus,
+            membershipType: paymentType === "full" ? "one-time" : "installment",
+            membershipPaymentDate: new Date(),
+            stripePaymentIntentId: paymentIntentId
+          });
+        } catch (err) {
+          console.warn("Could not update user membership status:", err);
+        }
         
-  //       res.status(200).json({
-  //         success: true,
-  //         paymentType,
-  //         membershipStatus,
-  //       });
-  //     } catch (error: any) {
-  //       console.error("Error verifying payment:", error);
-  //       res.status(500).json({ message: error.message || "Failed to verify payment" });
-  //     }
-  //   });
+        res.status(200).json({
+          success: true,
+          paymentType,
+          membershipStatus,
+        });
+      } catch (error: any) {
+        console.error("Error verifying payment:", error);
+        res.status(500).json({ message: error.message || "Failed to verify payment" });
+      }
+    });
     
-  //   // Update membership status endpoint
-  //   app.patch("/api/users/membership", authenticate, async (req: Request, res: Response) => {
-  //     try {
-  //       const { userId, membershipStatus, promoCode, discount } = req.body;
+    // Update membership status endpoint
+    app.patch("/api/users/membership", authenticate, async (req: Request, res: Response) => {
+      try {
+        const { userId, membershipStatus, promoCode, discount } = req.body;
         
-  //       if (!userId || !membershipStatus) {
-  //         return res.status(400).json({ message: "User ID and membership status are required" });
-  //       }
+        if (!userId || !membershipStatus) {
+          return res.status(400).json({ message: "User ID and membership status are required" });
+        }
         
-  //       // Only allow specific membership status values
-  //       if (!["active", "installment_1", "installment_2", "expired"].includes(membershipStatus)) {
-  //         return res.status(400).json({ message: "Invalid membership status" });
-  //       }
+        // Only allow specific membership status values
+        if (!["active", "installment_1", "installment_2", "expired"].includes(membershipStatus)) {
+          return res.status(400).json({ message: "Invalid membership status" });
+        }
         
-  //       // Log promo code information if available
-  //       if (promoCode && discount) {
-  //         console.log(`Applying promo code ${promoCode} with ${discount}% discount for user ${userId}`);
-  //       }
+        // Log promo code information if available
+        if (promoCode && discount) {
+          console.log(`Applying promo code ${promoCode} with ${discount}% discount for user ${userId}`);
+        }
         
-  //       // Create a metadata object for tracking promotion information
-  //       const metadata: any = {
-  //         membershipStatus,
-  //         membershipType: membershipStatus === "active" ? "one-time" : "installment",
-  //         membershipPaymentDate: new Date()
-  //       };
+        // Create a metadata object for tracking promotion information
+        const metadata: any = {
+          membershipStatus,
+          membershipType: membershipStatus === "active" ? "one-time" : "installment",
+          membershipPaymentDate: new Date()
+        };
         
-  //       // Add promo code information if available
-  //       if (promoCode) {
-  //         metadata.promoCode = promoCode;
-  //         metadata.discountApplied = discount;
-  //       }
+        // Add promo code information if available
+        if (promoCode) {
+          metadata.promoCode = promoCode;
+          metadata.discountApplied = discount;
+        }
         
-  //       // Update the user's membership status
-  //       const updatedUser = await storage.updateUserMembership(Number(userId), metadata);
+        // Update the user's membership status
+        const updatedUser = await storage.updateUserMembership(Number(userId), metadata);
         
-  //       if (!updatedUser) {
-  //         return res.status(404).json({ message: "User not found" });
-  //       }
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
         
-  //       // Don't send password back
-  //       const { password, ...userWithoutPassword } = updatedUser;
+        // Don't send password back
+        const { password, ...userWithoutPassword } = updatedUser;
         
-  //       res.status(200).json(userWithoutPassword);
-  //     } catch (error: any) {
-  //       res.status(500).json({ message: error.message || "Failed to update membership status" });
-  //     }
-  //   });
-  // }
+        res.status(200).json(userWithoutPassword);
+      } catch (error: any) {
+        res.status(500).json({ message: error.message || "Failed to update membership status" });
+      }
+    });
+  }
 
   // // Review endpoints
   // app.post("/api/reviews", authenticate, async (req: Request, res: Response) => {
