@@ -70,7 +70,7 @@ export default function AuthPage() {
       console.log("Auth page: Redirecting to home page");
       navigate("/");
     }
-    return null;
+    // return null;
   }
 
 
