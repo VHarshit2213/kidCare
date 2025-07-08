@@ -1,10 +1,32 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, CalendarIcon, X, Clock, AlertCircle } from "lucide-react";
@@ -19,6 +41,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import AvailableScheduledSitters from "./AvailableScheduledSitters";
+import supabase from "@/config/supabaseClient";
 
 // Form validation schema
 const scheduledCareSchema = z.object({
@@ -31,12 +54,14 @@ const scheduledCareSchema = z.object({
   endTime: z.string({
     required_error: "Please select an end time",
   }),
-  children: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-    })
-  ).min(1, "Please select at least one child"),
+  children: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+      })
+    )
+    .min(1, "Please select at least one child"),
   careInstructions: z.string().optional(),
 });
 
@@ -47,24 +72,32 @@ interface ScheduledCareModalProps {
   onClose: () => void;
 }
 
-export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareModalProps) {
+export default function ScheduledCareModal({
+  isOpen,
+  onClose,
+}: ScheduledCareModalProps) {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [hoursNeeded, setHoursNeeded] = useState(2);
   const [showAvailableSitters, setShowAvailableSitters] = useState(false);
-  const [playAndGreetStatus, setPlayAndGreetStatus] = useState<{[key: string]: boolean}>({});
-  const [bookingStatus, setBookingStatus] = useState<{[key: string]: boolean}>({});
-  
-  const hasMembership = !!user && (
-    user.membershipStatus === "active" || 
-    user.membershipStatus === "installment_2" ||
-    user.membershipStatus === "installment_1"
-  );
-  
+  const [playAndGreetStatus, setPlayAndGreetStatus] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [bookingStatus, setBookingStatus] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [childOptions, setChildOptions] = useState<Child[]>([]);
+
+  const hasMembership =
+    !!user &&
+    (user.membershipStatus === "active" ||
+      user.membershipStatus === "installment_2" ||
+      user.membershipStatus === "installment_1");
+
   // Check if profile is completed
   const hasCompletedProfile = !!user && user.profileCompleted === true;
-  
+
   // Reset form when modal is opened
   useEffect(() => {
     if (isOpen) {
@@ -73,18 +106,18 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
         startTime: "",
         endTime: "",
         children: [],
-        careInstructions: ""
+        careInstructions: "",
       });
     }
   }, [isOpen]);
-  
+
   // Mock child data - in a real app, this would be fetched from user's children
-  const childOptions: { id: string; name: string }[] = [
-    { id: "1", name: "Emma" },
-    { id: "2", name: "Noah" },
-    { id: "3", name: "Olivia" },
-    { id: "4", name: "Liam" },
-  ];
+  // const childOptions: { id: string; name: string }[] = [
+  //   { id: "1", name: "Emma" },
+  //   { id: "2", name: "Noah" },
+  //   { id: "3", name: "Olivia" },
+  //   { id: "4", name: "Liam" },
+  // ];
 
   const form = useForm<ScheduledCareFormData>({
     resolver: zodResolver(scheduledCareSchema),
@@ -103,8 +136,10 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
         const time = new Date();
         time.setHours(hour, minute, 0);
         slots.push({
-          value: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
-          label: format(time, 'h:mm a')
+          value: `${hour.toString().padStart(2, "0")}:${minute
+            .toString()
+            .padStart(2, "0")}`,
+          label: format(time, "h:mm a"),
         });
       }
     }
@@ -119,20 +154,48 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
     setShowAvailableSitters(true);
     onClose();
   };
-  
+
   const handlePlayAndGreet = (sitterId: number) => {
-    setPlayAndGreetStatus(prev => ({
+    setPlayAndGreetStatus((prev) => ({
       ...prev,
-      [sitterId.toString()]: true
+      [sitterId.toString()]: true,
     }));
   };
-  
+
   const handleBookNow = (sitterId: number) => {
-    setBookingStatus(prev => ({
+    setBookingStatus((prev) => ({
       ...prev,
-      [sitterId.toString()]: true
+      [sitterId.toString()]: true,
     }));
   };
+
+  // fetch parent profile
+  const fetchParentProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("parentprofile")
+      .select("*")
+      .eq("userId", userId) // filter by userId
+      .limit(1); // expects exactly one row
+
+    if (error) {
+      console.error("Fetch error:", error.message);
+      return null;
+    }
+
+    return data;
+  };
+
+  const loadProfile = async () => {
+    const data = await fetchParentProfile(user?.id);
+    const { children } = data?.[0];
+    setChildOptions(children);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadProfile();
+    }
+  }, [user?.id]);
 
   return (
     <>
@@ -150,7 +213,7 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
         playAndGreetStatus={playAndGreetStatus}
         bookingStatus={bookingStatus}
       />
-    
+
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
@@ -165,13 +228,16 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-medium text-amber-800">Membership Required</h3>
+                  <h3 className="text-sm font-medium text-amber-800">
+                    Membership Required
+                  </h3>
                   <p className="text-sm text-amber-700 mt-1">
-                    You need an active membership to schedule childcare services.
+                    You need an active membership to schedule childcare
+                    services.
                   </p>
-                  <Button 
-                    className="mt-2" 
-                    variant="default" 
+                  <Button
+                    className="mt-2"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       onClose();
@@ -184,19 +250,22 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
               </div>
             </div>
           )}
-          
+
           {hasMembership && !hasCompletedProfile && (
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-medium text-blue-800">Profile Completion Required</h3>
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Profile Completion Required
+                  </h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    Please complete your parent profile before scheduling childcare services.
+                    Please complete your parent profile before scheduling
+                    childcare services.
                   </p>
-                  <Button 
-                    className="mt-2" 
-                    variant="default" 
+                  <Button
+                    className="mt-2"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       onClose();
@@ -247,7 +316,7 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                               setDate(date);
                             }
                           }}
-                          disabled={(date) => 
+                          disabled={(date) =>
                             date < new Date() || date > addDays(new Date(), 7)
                           }
                           initialFocus
@@ -268,7 +337,11 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                       role="combobox"
                       className="w-full justify-between"
                     >
-                      {hoursNeeded ? `${hoursNeeded} ${hoursNeeded === 1 ? 'hour' : 'hours'}` : "Select hours..."}
+                      {hoursNeeded
+                        ? `${hoursNeeded} ${
+                            hoursNeeded === 1 ? "hour" : "hours"
+                          }`
+                        : "Select hours..."}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[200px]">
@@ -281,36 +354,47 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                           }`}
                           onClick={() => {
                             setHoursNeeded(hours);
-                            
+
                             // Update end time based on start time and hours
                             const startTimeValue = form.getValues().startTime;
                             if (startTimeValue) {
-                              const [startHour, startMinute] = startTimeValue.split(':').map(Number);
+                              const [startHour, startMinute] = startTimeValue
+                                .split(":")
+                                .map(Number);
                               const endDate = new Date();
                               endDate.setHours(startHour, startMinute, 0);
                               endDate.setHours(endDate.getHours() + hours);
-                              
-                              const endHour = endDate.getHours().toString().padStart(2, '0');
-                              const endMinute = endDate.getMinutes().toString().padStart(2, '0');
+
+                              const endHour = endDate
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0");
+                              const endMinute = endDate
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0");
                               const newEndTime = `${endHour}:${endMinute}`;
-                              
-                              form.setValue('endTime', newEndTime);
+
+                              form.setValue("endTime", newEndTime);
                             }
                           }}
                         >
-                          <div>{hours} {hours === 1 ? 'hour' : 'hours'}</div>
+                          <div>
+                            {hours} {hours === 1 ? "hour" : "hours"}
+                          </div>
                           {hoursNeeded === hours && (
                             <Check className="ml-auto h-4 w-4" />
                           )}
                         </div>
                       ))}
                       <div className="mt-4 pt-3 border-t flex justify-end">
-                        <Button 
-                          type="button" 
+                        <Button
+                          type="button"
                           style={{ backgroundColor: "#3c5679" }}
                           className="text-white font-medium"
                           onClick={() => {
-                            const popover = document.querySelector('[role="combobox"]');
+                            const popover =
+                              document.querySelector('[role="combobox"]');
                             if (popover) {
                               (popover as HTMLElement).click();
                             }
@@ -331,7 +415,10 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Start Time</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select start time" />
@@ -357,7 +444,10 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>End Time</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select end time" />
@@ -413,14 +503,15 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                                   onClick={() => {
                                     const newValue = isSelected
                                       ? field.value.filter(
-                                          (selectedChild) => selectedChild.id !== child.id
+                                          (selectedChild) =>
+                                            selectedChild.id !== child.id
                                         )
                                       : [...(field.value || []), child];
                                     field.onChange(newValue);
                                   }}
                                 >
                                   <Checkbox checked={isSelected} />
-                                  <div>{child.name}</div>
+                                  <div>{child.firstName} {child.lastName}</div>
                                   {isSelected && (
                                     <Check className="ml-auto h-4 w-4" />
                                   )}
@@ -428,12 +519,13 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                               );
                             })}
                             <div className="mt-4 pt-3 border-t flex justify-end">
-                              <Button 
-                                type="button" 
+                              <Button
+                                type="button"
                                 style={{ backgroundColor: "#3c5679" }}
                                 className="text-white font-medium"
                                 onClick={() => {
-                                  const popover = document.querySelector('[role="combobox"]');
+                                  const popover =
+                                    document.querySelector('[role="combobox"]');
                                   if (popover) {
                                     (popover as HTMLElement).click();
                                   }
@@ -448,17 +540,22 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                     </FormControl>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {field.value?.map((child) => (
-                        <Badge key={child.id} variant="outline" className="py-1 border-brand-pink text-brand-blue">
-                          {child.name}
-                          <X 
-                            className="ml-1 h-3 w-3 cursor-pointer" 
+                        <Badge
+                          key={child.id}
+                          variant="outline"
+                          className="py-1 border-brand-pink text-brand-blue"
+                        >
+                          {child.firstName} {child.lastName}
+                          <X
+                            className="ml-1 h-3 w-3 cursor-pointer"
                             onClick={() => {
                               field.onChange(
                                 field.value.filter(
-                                  (selectedChild) => selectedChild.id !== child.id
+                                  (selectedChild) =>
+                                    selectedChild.id !== child.id
                                 )
                               );
-                            }} 
+                            }}
                           />
                         </Badge>
                       ))}
@@ -492,11 +589,11 @@ export default function ScheduledCareModal({ isOpen, onClose }: ScheduledCareMod
                 className="w-full text-white font-medium"
                 disabled={!hasMembership || !hasCompletedProfile}
               >
-                {!hasMembership 
-                  ? "Membership Required" 
-                  : !hasCompletedProfile 
-                    ? "Complete Profile First" 
-                    : "Schedule Sitter"}
+                {!hasMembership
+                  ? "Membership Required"
+                  : !hasCompletedProfile
+                  ? "Complete Profile First"
+                  : "Schedule Sitter"}
               </Button>
             </form>
           </Form>

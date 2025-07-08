@@ -46,67 +46,78 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import supabase from "@/config/supabaseClient";
 
 interface InstantCareModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const instantCareSchema = z.object({
-  startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required"),
-  children: z.array(z.object({
-    id: z.string(),
-    name: z.string()
-  })).min(1, "Please select at least one child"),
-  careInstructions: z.string().optional(),
-}).refine(data => new Date(data.startTime) < new Date(data.endTime), {
-  message: "End time must be after start time",
-  path: ['endTime']
-});
+const instantCareSchema = z
+  .object({
+    startTime: z.string().min(1, "Start time is required"),
+    endTime: z.string().min(1, "End time is required"),
+    children: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        })
+      )
+      .min(1, "Please select at least one child"),
+    careInstructions: z.string().optional(),
+  })
+  .refine((data) => new Date(data.startTime) < new Date(data.endTime), {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  });
 
-export default function InstantCareModal({ isOpen, onClose }: InstantCareModalProps) {
+export default function InstantCareModal({
+  isOpen,
+  onClose,
+}: InstantCareModalProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [bookingDetails, setBookingDetails] = useState<InstantCareFormData | null>(null);
+  const [bookingDetails, setBookingDetails] =
+    useState<InstantCareFormData | null>(null);
   const [showSittersPopup, setShowSittersPopup] = useState(false);
   const [childInput, setChildInput] = useState("");
   const [minDate, setMinDate] = useState<string>("");
   const [maxDate, setMaxDate] = useState<string>("");
   const [hoursNeeded, setHoursNeeded] = useState<number>(2);
-  
-  const hasMembership = !!user && (
-    user.membershipStatus === "active" || 
-    user.membershipStatus === "installment_2" ||
-    user.membershipStatus === "installment_1"
-  );
-  
+
+  const hasMembership =
+    !!user &&
+    (user.membershipStatus === "active" ||
+      user.membershipStatus === "installment_2" ||
+      user.membershipStatus === "installment_1");
+
   // Check if profile is completed
   const hasCompletedProfile = !!user && user.profileCompleted === true;
-  
+
   // Set time constraints for the current day only
   useEffect(() => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+
     setMinDate(format(today, "yyyy-MM-dd'T'HH:mm"));
     setMaxDate(format(tomorrow, "yyyy-MM-dd'T'00:00"));
   }, []);
-  
+
   // Update end time when start time or hours needed changes
   const updateEndTime = (startTimeStr: string, hours: number) => {
     if (startTimeStr) {
       const startTime = new Date(startTimeStr);
       const endTime = new Date(startTime);
       endTime.setHours(endTime.getHours() + hours);
-      
+
       form.setValue("endTime", format(endTime, "yyyy-MM-dd'T'HH:mm"));
     }
   };
-  
+
   // We'll use a simpler approach just to demonstrate the profile completion check
   const [childOptions, setChildOptions] = useState<Child[]>([]);
 
@@ -114,10 +125,16 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
   const now = new Date();
   const nowPlusHours = new Date(now);
   nowPlusHours.setHours(nowPlusHours.getHours() + hoursNeeded);
-  
-  console.log("Initialize form with start time:", format(now, "yyyy-MM-dd'T'HH:mm"));
-  console.log("Initialize form with end time:", format(nowPlusHours, "yyyy-MM-dd'T'HH:mm"));
-  
+
+  console.log(
+    "Initialize form with start time:",
+    format(now, "yyyy-MM-dd'T'HH:mm")
+  );
+  console.log(
+    "Initialize form with end time:",
+    format(nowPlusHours, "yyyy-MM-dd'T'HH:mm")
+  );
+
   const form = useForm<InstantCareFormData>({
     resolver: zodResolver(instantCareSchema),
     defaultValues: {
@@ -127,18 +144,21 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
       careInstructions: "",
     },
   });
-  
+
   // Log form values after initialization
   console.log("Form values after initialization:", form.getValues());
 
   const createBookingMutation = useMutation({
     mutationFn: async (data: InstantCareFormData) => {
       // Transform the data to match what the backend expects
-      const childNames = data.children.map(childId => {
-        const child = childOptions.find(c => c.id === childId);
-        return child ? `${child.firstName} ${child.lastName}` : '';
-      }).filter(Boolean).join(", ");
-      
+      const childNames = data.children
+        .map((childId) => {
+          const child = childOptions.find((c) => c.id === childId);
+          return child ? `${child.firstName} ${child.lastName}` : "";
+        })
+        .filter(Boolean)
+        .join(", ");
+
       const response = await apiRequest("POST", "/api/bookings", {
         parentId: 1, // Using a default parent ID since we're not requiring login
         startTime: data.startTime,
@@ -175,13 +195,13 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     setBookingDetails(data);
     setShowSittersPopup(true);
   };
-  
+
   const handleSittersPopupClose = () => {
     setShowSittersPopup(false);
     // Optional: Close the main form if desired
     // onClose();
   };
-  
+
   const handleBookingSitter = (sitterId: number) => {
     // When a sitter is selected in the popup, we'll submit the booking with that sitter
     if (bookingDetails) {
@@ -192,6 +212,34 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
     }
   };
 
+  // fetch parent profile
+  const fetchParentProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("parentprofile")
+      .select("*")
+      .eq("userId", userId) // filter by userId
+      .limit(1); // expects exactly one row
+
+    if (error) {
+      console.error("Fetch error:", error.message);
+      return null;
+    }
+
+    return data;
+  };
+
+  const loadProfile = async () => {
+    const data = await fetchParentProfile(user?.id);
+    const {children} = data?.[0];
+    setChildOptions(children);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadProfile();
+    }
+  }, [user?.id]);
+
   return (
     <>
       <Dialog open={isOpen && !showSittersPopup} onOpenChange={onClose}>
@@ -199,7 +247,8 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
           <DialogHeader>
             <DialogTitle>Request Instant Childcare</DialogTitle>
             <DialogDescription>
-              Fill out the details below and connect with available babysitters near you.
+              Fill out the details below and connect with available babysitters
+              near you.
             </DialogDescription>
           </DialogHeader>
 
@@ -208,13 +257,15 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-medium text-amber-800">Membership Required</h3>
+                  <h3 className="text-sm font-medium text-amber-800">
+                    Membership Required
+                  </h3>
                   <p className="text-sm text-amber-700 mt-1">
                     You need an active membership to request childcare services.
                   </p>
-                  <Button 
-                    className="mt-2" 
-                    variant="default" 
+                  <Button
+                    className="mt-2"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       onClose();
@@ -227,19 +278,22 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
               </div>
             </div>
           )}
-          
+
           {hasMembership && !hasCompletedProfile && (
             <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-medium text-blue-800">Profile Completion Required</h3>
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Profile Completion Required
+                  </h3>
                   <p className="text-sm text-blue-700 mt-1">
-                    Please complete your parent profile before requesting childcare services.
+                    Please complete your parent profile before requesting
+                    childcare services.
                   </p>
-                  <Button 
-                    className="mt-2" 
-                    variant="default" 
+                  <Button
+                    className="mt-2"
+                    variant="default"
                     size="sm"
                     onClick={() => {
                       onClose();
@@ -257,7 +311,9 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Hours Needed</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Hours Needed
+                  </label>
                   <div className="flex items-center space-x-2">
                     <Select
                       value={hoursNeeded.toString()}
@@ -273,14 +329,14 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                       <SelectContent>
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((hours) => (
                           <SelectItem key={hours} value={hours.toString()}>
-                            {hours} {hours === 1 ? 'hour' : 'hours'}
+                            {hours} {hours === 1 ? "hour" : "hours"}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                
+
                 <FormField
                   control={form.control}
                   name="startTime"
@@ -310,64 +366,107 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               type="time"
                               className="pl-10"
                               {...field}
-                              value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
+                              value={
+                                field.value
+                                  ? new Date(field.value).toLocaleTimeString(
+                                      "en-US",
+                                      {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: false,
+                                      }
+                                    )
+                                  : ""
+                              }
                               onChange={(e) => {
                                 // Convert time-only input to datetime
                                 const today = new Date();
-                                const [hours, minutes] = e.target.value.split(':');
-                                today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-                                
+                                const [hours, minutes] =
+                                  e.target.value.split(":");
+                                today.setHours(
+                                  parseInt(hours),
+                                  parseInt(minutes),
+                                  0,
+                                  0
+                                );
+
                                 // Format as datetime-local value
-                                const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                                const dateTimeValue = format(
+                                  today,
+                                  "yyyy-MM-dd'T'HH:mm"
+                                );
                                 field.onChange(dateTimeValue);
                                 updateEndTime(dateTimeValue, hoursNeeded);
                               }}
                             />
                             <div className="flex flex-col ml-2">
-                              <Button 
-                                type="button" 
-                                size="icon" 
-                                variant="outline" 
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
                                 className="h-7 w-7"
                                 onClick={() => {
                                   console.log("Start Time UP Button Clicked");
-                                  console.log("Current field value:", field.value);
-                                  
+                                  console.log(
+                                    "Current field value:",
+                                    field.value
+                                  );
+
                                   // Get current time value or use now if not set
                                   let currentDate;
                                   try {
                                     currentDate = new Date(field.value);
                                     console.log("Parsed date:", currentDate);
-                                    
+
                                     // Check if date is valid
                                     if (isNaN(currentDate.getTime())) {
-                                      console.log("Invalid date, using current time");
+                                      console.log(
+                                        "Invalid date, using current time"
+                                      );
                                       currentDate = new Date();
                                     }
                                   } catch (e) {
                                     console.log("Error parsing date:", e);
                                     currentDate = new Date();
                                   }
-                                  
+
                                   // Add 30 minutes
-                                  currentDate.setMinutes(currentDate.getMinutes() + 30);
-                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  currentDate.setMinutes(
+                                    currentDate.getMinutes() + 30
+                                  );
+                                  const newValue = format(
+                                    currentDate,
+                                    "yyyy-MM-dd'T'HH:mm"
+                                  );
                                   console.log("New value:", newValue);
-                                  
+
                                   field.onChange(newValue);
                                   updateEndTime(newValue, hoursNeeded);
-                                  
-                                  console.log("After change, field value:", field.value);
+
+                                  console.log(
+                                    "After change, field value:",
+                                    field.value
+                                  );
                                 }}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="m18 15-6-6-6 6"/>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m18 15-6-6-6 6" />
                                 </svg>
                               </Button>
-                              <Button 
-                                type="button" 
-                                size="icon" 
-                                variant="outline" 
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
                                 className="h-7 w-7 mt-1"
                                 onClick={() => {
                                   // Get current time value or use now if not set
@@ -381,16 +480,31 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                   } catch (e) {
                                     currentDate = new Date();
                                   }
-                                  
+
                                   // Subtract 30 minutes
-                                  currentDate.setMinutes(currentDate.getMinutes() - 30);
-                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  currentDate.setMinutes(
+                                    currentDate.getMinutes() - 30
+                                  );
+                                  const newValue = format(
+                                    currentDate,
+                                    "yyyy-MM-dd'T'HH:mm"
+                                  );
                                   field.onChange(newValue);
                                   updateEndTime(newValue, hoursNeeded);
                                 }}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="m6 9 6 6 6-6"/>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m6 9 6 6 6-6" />
                                 </svg>
                               </Button>
                             </div>
@@ -431,23 +545,43 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               type="time"
                               className="pl-10"
                               {...field}
-                              value={field.value ? new Date(field.value).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false}) : ''}
+                              value={
+                                field.value
+                                  ? new Date(field.value).toLocaleTimeString(
+                                      "en-US",
+                                      {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: false,
+                                      }
+                                    )
+                                  : ""
+                              }
                               onChange={(e) => {
                                 // Convert time-only input to datetime
                                 const today = new Date();
-                                const [hours, minutes] = e.target.value.split(':');
-                                today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-                                
+                                const [hours, minutes] =
+                                  e.target.value.split(":");
+                                today.setHours(
+                                  parseInt(hours),
+                                  parseInt(minutes),
+                                  0,
+                                  0
+                                );
+
                                 // Format as datetime-local value
-                                const dateTimeValue = format(today, "yyyy-MM-dd'T'HH:mm");
+                                const dateTimeValue = format(
+                                  today,
+                                  "yyyy-MM-dd'T'HH:mm"
+                                );
                                 field.onChange(dateTimeValue);
                               }}
                             />
                             <div className="flex flex-col ml-2">
-                              <Button 
-                                type="button" 
-                                size="icon" 
-                                variant="outline" 
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
                                 className="h-7 w-7"
                                 onClick={() => {
                                   // Get current time value or use now if not set
@@ -461,21 +595,36 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                   } catch (e) {
                                     currentDate = new Date();
                                   }
-                                  
+
                                   // Add 30 minutes
-                                  currentDate.setMinutes(currentDate.getMinutes() + 30);
-                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  currentDate.setMinutes(
+                                    currentDate.getMinutes() + 30
+                                  );
+                                  const newValue = format(
+                                    currentDate,
+                                    "yyyy-MM-dd'T'HH:mm"
+                                  );
                                   field.onChange(newValue);
                                 }}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="m18 15-6-6-6 6"/>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m18 15-6-6-6 6" />
                                 </svg>
                               </Button>
-                              <Button 
-                                type="button" 
-                                size="icon" 
-                                variant="outline" 
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
                                 className="h-7 w-7 mt-1"
                                 onClick={() => {
                                   // Get current time value or use now if not set
@@ -489,15 +638,30 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                   } catch (e) {
                                     currentDate = new Date();
                                   }
-                                  
+
                                   // Subtract 30 minutes
-                                  currentDate.setMinutes(currentDate.getMinutes() - 30);
-                                  const newValue = format(currentDate, "yyyy-MM-dd'T'HH:mm");
+                                  currentDate.setMinutes(
+                                    currentDate.getMinutes() - 30
+                                  );
+                                  const newValue = format(
+                                    currentDate,
+                                    "yyyy-MM-dd'T'HH:mm"
+                                  );
                                   field.onChange(newValue);
                                 }}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="m6 9 6 6 6-6"/>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m6 9 6 6 6-6" />
                                 </svg>
                               </Button>
                             </div>
@@ -545,14 +709,15 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                                   onClick={() => {
                                     const newValue = isSelected
                                       ? field.value.filter(
-                                          (selectedChild) => selectedChild.id !== child.id
+                                          (selectedChild) =>
+                                            selectedChild.id !== child.id
                                         )
                                       : [...(field.value || []), child];
                                     field.onChange(newValue);
                                   }}
                                 >
                                   <Checkbox checked={isSelected} />
-                                  <div>{child.name}</div>
+                                  <div>{child.firstName} {child.lastName}</div>
                                   {isSelected && (
                                     <Check className="ml-auto h-4 w-4" />
                                   )}
@@ -560,12 +725,13 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                               );
                             })}
                             <div className="mt-4 pt-3 border-t flex justify-end">
-                              <Button 
-                                type="button" 
+                              <Button
+                                type="button"
                                 style={{ backgroundColor: "#3c5679" }}
                                 className="text-white font-medium"
                                 onClick={() => {
-                                  const popover = document.querySelector('[role="combobox"]');
+                                  const popover =
+                                    document.querySelector('[role="combobox"]');
                                   if (popover) {
                                     (popover as HTMLElement).click();
                                   }
@@ -580,17 +746,22 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                     </FormControl>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {field.value?.map((child) => (
-                        <Badge key={child.id} variant="outline" className="py-1 border-brand-pink text-brand-blue">
-                          {child.name}
-                          <X 
-                            className="ml-1 h-3 w-3 cursor-pointer" 
+                        <Badge
+                          key={child.id}
+                          variant="outline"
+                          className="py-1 border-brand-pink text-brand-blue"
+                        >
+                          {child.firstName} {child.lastName}
+                          <X
+                            className="ml-1 h-3 w-3 cursor-pointer"
                             onClick={() => {
                               field.onChange(
                                 field.value.filter(
-                                  (selectedChild) => selectedChild.id !== child.id
+                                  (selectedChild) =>
+                                    selectedChild.id !== child.id
                                 )
                               );
-                            }} 
+                            }}
                           />
                         </Badge>
                       ))}
@@ -625,11 +796,11 @@ export default function InstantCareModal({ isOpen, onClose }: InstantCareModalPr
                 className="w-full text-white font-medium"
                 disabled={!hasMembership || !hasCompletedProfile}
               >
-                {!hasMembership 
-                  ? "Membership Required" 
-                  : !hasCompletedProfile 
-                    ? "Complete Profile First" 
-                    : "Find Available Sitters"}
+                {!hasMembership
+                  ? "Membership Required"
+                  : !hasCompletedProfile
+                  ? "Complete Profile First"
+                  : "Find Available Sitters"}
               </Button>
             </form>
           </Form>
