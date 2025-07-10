@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { User } from "@/lib/types";
+import supabase from "../config/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 type AuthContextType = {
   user: User | null;
@@ -15,6 +17,8 @@ type AuthContextType = {
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
+  loginLoading: boolean;
+  registerLoading: boolean;
 };
 
 type LoginData = {
@@ -34,72 +38,138 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useQuery<User | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: async () => {
-      try {
-        const res = await fetch("/api/user");
-        if (res.status === 401) {
-          return null;
-        }
-        if (!res.ok) {
-          throw new Error("Failed to fetch user");
-        }
-        return res.json();
-      } catch (error) {
-        return null;
-      }
-    },
-  });
+  const [user, setUser] = useState<User | any | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const loginMutation = useMutation<User, Error, LoginData>({
-    mutationFn: async (credentials) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Invalid credentials" }));
-        throw new Error(errorData.message || "Login failed");
+  const navigate = useNavigate();
+
+  // ---------- old code for reference ------------
+  // const {
+  //   data: user,
+  //   error,
+  //   isLoading,
+  // } = useQuery<User | null, Error>({
+  //   queryKey: ["/api/user"],
+  //   queryFn: async () => {
+  //     try {
+  //       const res = await fetch("/api/user");
+  //       if (res.status === 401) {
+  //         return null;
+  //       }
+  //       if (!res.ok) {
+  //         throw new Error("Failed to fetch user");
+  //       }
+  //       return res.json();
+  //     } catch (error) {
+  //       return null;
+  //     }
+  //   },
+  // });
+  // ---------- old code for reference ------------
+
+  // ---------- new code ------------
+  const fetchUser = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      supabase.auth.onAuthStateChange((event, session) => {
+        localStorage.setItem("userData", JSON.stringify(session));
+        setUser(session?.user);
+      });
+    } catch (err: any) {
+      console.error("Fetch user error:", err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // ---------- new code ------------
+
+  // ---------- old code for reference ------------
+  // const loginMutation = useMutation<User, Error, LoginData>({
+  //   mutationFn: async (credentials) => {
+  //     const res = await apiRequest("POST", "/api/login", credentials);
+  //     if (!res.ok) {
+  //       const errorData = await res
+  //         .json()
+  //         .catch(() => ({ message: "Invalid credentials" }));
+  //       throw new Error(errorData.message || "Login failed");
+  //     }
+  //     return res.json();
+  //   },
+  //   onSuccess: (data) => {
+  //     queryClient.setQueryData(["/api/user"], data);
+  //     toast({
+  //       title: "Login successful",
+  //       description: `Welcome back, ${data.fullName}!`,
+  //     });
+  //   },
+  //   onError: (error) => {
+  //     toast({
+  //       title: "Login failed",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
+  // ---------- old code for reference ------------
+
+  //----------- new code ------------
+  const loginMutation = async (credentials: LoginData) => {
+    setLoginLoading(true);
+    setError(null);
+    try {
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      let response = data?.session?.user?.user_metadata;
+
+      if (error || !response) {
+        throw new Error(error?.message || "Invalid credentials");
       }
-      return res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["/api/user"], data);
+
+      setUser(response);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${data.fullName}!`,
+        description: `Welcome back, ${response?.fullName}!`,
       });
-    },
-    onError: (error) => {
+    } catch (err: any) {
+      setError(err);
       toast({
         title: "Login failed",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+  // ----------- new code ------------
 
   const registerMutation = useMutation<User, Error, RegisterData>({
     mutationFn: async (userData) => {
       const res = await apiRequest("POST", "/api/register", userData);
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ message: "Registration failed" }));
+        const errorData = await res
+          .json()
+          .catch(() => ({ message: "Registration failed" }));
         throw new Error(errorData.message || "Registration failed");
       }
       return res.json();
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/user"], data);
-      
+
       // If the user is a parent, redirect to membership page
       if (data.userType === "parent") {
         // Use window.location to force a full page reload and avoid React state issues
         window.location.href = "/membership";
       }
-      
+
       // Simple success message
       toast({
         title: "Registration successful",
