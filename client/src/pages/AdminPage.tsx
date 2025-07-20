@@ -646,7 +646,6 @@ export default function AdminPage() {
       } finally {
         setIsLoading(false);
       }
-    };
   };
 
   useEffect(()=>{
@@ -893,6 +892,5 @@ export default function AdminPage() {
       </div>
     </Layout>
   );
-}
 }
 // ------------- new code ------------
