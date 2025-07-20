@@ -18,6 +18,7 @@ import AdminPage from "@/pages/AdminPage";
 import MembershipPage from "@/pages/MembershipPage";
 import MembershipSuccess from "@/pages/MembershipSuccess";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import { BrowserRouter } from "react-router-dom";
 
 // Wrapper to ensure components never return null
 const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
@@ -28,25 +29,38 @@ const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/auth" component={AuthPage} />
-          <Route path="/reset-password" component={ResetPasswordPage} />
-          <ProtectedRoute path="/profile-completion" component={ProfileCompletion} />
-          <ProtectedRoute path="/bookings" component={MyBookings} />
-          <ProtectedRoute path="/messages" component={Messages} />
-          <ProtectedRoute path="/profile" component={Profile} />
-          <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
-          <ProtectedRoute path="/admin" component={AdminPage} />
-          <Route path="/membership" component={MembershipPage} />
-          <ProtectedRoute path="/membership-success" component={() => <EnsureRender Component={MembershipSuccess} />} />
-          <Route component={NotFound} />
-        </Switch>
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/auth" component={AuthPage} />
+            <Route path="/reset-password" component={ResetPasswordPage} />
+            {/* <ProtectedRoute
+              path="/profile-completion"
+              component={ProfileCompletion}
+            /> */}
+            <Route path="/profile-completion" component={ProfileCompletion} />
+            <ProtectedRoute path="/bookings" component={MyBookings} />
+            <ProtectedRoute path="/messages" component={Messages} />
+            <ProtectedRoute path="/profile" component={Profile} />
+            <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
+            <Route path="/admin" component={AdminPage} />
+            <Route path="/membership" component={MembershipPage} />
+            {/* <ProtectedRoute
+              path="/membership-success"
+              component={() => <EnsureRender Component={MembershipSuccess} />}
+            /> */}
+            <Route
+              path="/membership-success"
+              component={() => <EnsureRender Component={MembershipSuccess} />}
+            />
+            <Route component={NotFound} />
+          </Switch>
+          <Toaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 }
 

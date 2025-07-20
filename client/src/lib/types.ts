@@ -25,8 +25,14 @@ export interface User {
   phoneNumber?: string;
   profileCompleted?: boolean;
   // Payment and membership fields
-  membershipStatus?: 'none' | 'pending' | 'active' | 'installment_1' | 'installment_2' | 'expired';
-  membershipType?: 'one-time' | 'installment';
+  membershipStatus?:
+    | "none"
+    | "pending"
+    | "active"
+    | "installment_1"
+    | "installment_2"
+    | "expired";
+  membershipType?: "one-time" | "installment";
   membershipPaymentDate?: string;
   stripeCustomerId?: string;
   stripePaymentIntentId?: string;
@@ -47,6 +53,16 @@ export interface User {
   caregiverStyle?: string;
   hasVideo?: boolean;
   videoUrl?: string;
+  user_metadata?: {
+    email: string;
+    email_verified: boolean;
+    fullName: string;
+    isPayment: boolean;
+    phone_verified: boolean;
+    sub: string;
+    userType: string;
+    profileCompleted: boolean;
+  };
 }
 
 export interface Booking {
@@ -97,3 +113,52 @@ export interface AppContextType {
   setCurrentUser: (user: User | null) => void;
   isAuthenticated: boolean;
 }
+
+export interface ParentProfile {
+  isPayment: boolean;
+  address: string;
+  floor_number: string;
+  street_name: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  phoneNumber: string;
+  secondParentGuardian?: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+  };
+  parentingStyle?: string;
+  familyDesc?: string;
+  familyActivity?: string;
+  medical?: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phoneNumber: string;
+  }[];
+  children?: any[];
+}
+
+export type babysitterProfile = {
+  user_id?: string;
+  address: string;
+  floor_number: string;
+  street_name: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  phoneNumber: string;
+  shortBio: string;
+  experience: string;
+  mostExperience: string[];
+  parentSkill: string[];
+  aboutWorking: string;
+  caregiving: string;
+  horulyRate: number;
+  certified: string;
+  transportation: string;
+  instrucationVideo: string;
+};

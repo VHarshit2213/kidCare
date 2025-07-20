@@ -1,9 +1,14 @@
-import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { useState } from 'react';
+import {
+  useStripe,
+  useElements,
+  PaymentElement,
+} from "@stripe/react-stripe-js";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import supabase from "@/config/supabaseClient";
 
 interface StripeCheckoutProps {
   clientSecret: string;
@@ -22,7 +27,7 @@ export default function StripeCheckout({
   userId,
   promoCode,
   discount,
-  onSuccess
+  onSuccess,
 }: StripeCheckoutProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -38,9 +43,13 @@ export default function StripeCheckout({
 
     setIsProcessing(true);
 
+    const baseUrl = window.location.origin;
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      redirect: 'if_required',
+      redirect: "if_required",
+      // confirmParams: {
+      //   return_url: `${baseUrl}/profile-completion`,
+      // },
     });
 
     if (error) {
@@ -50,7 +59,7 @@ export default function StripeCheckout({
         variant: "destructive",
       });
       setIsProcessing(false);
-    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
       try {
         // Verify payment and activate membership
         await apiRequest("PATCH", "/api/users/membership", {
@@ -58,7 +67,13 @@ export default function StripeCheckout({
           membershipStatus: paymentType === "full" ? "active" : "installment_1",
           promoCode: promoCode || undefined,
           discount: discount || 0,
-          stripePaymentIntentId: paymentIntent.id
+          stripePaymentIntentId: paymentIntent.id,
+        });
+
+        await supabase.auth.updateUser({
+          data: {
+            isPayment: true,
+          },
         });
 
         toast({
@@ -66,7 +81,10 @@ export default function StripeCheckout({
           description: "Your membership has been activated",
         });
 
-        onSuccess();
+        // onSuccess();
+        onSuccess?.(); // Optional: run your success callback
+        // ✅ Redirect to profile completion
+        window.location.href = `${baseUrl}/profile-completion`;
       } catch (error: any) {
         toast({
           title: "Payment Error",
@@ -88,9 +106,9 @@ export default function StripeCheckout({
         </p>
         <PaymentElement />
       </div>
-      
-      <Button 
-        type="submit" 
+
+      <Button
+        type="submit"
         disabled={!stripe || isProcessing}
         className="w-full"
         size="lg"
@@ -104,9 +122,10 @@ export default function StripeCheckout({
           `Pay $${amount.toFixed(2)} Now`
         )}
       </Button>
-      
+
       <p className="text-xs text-center text-muted-foreground">
-        Your payment is secured by Stripe. We do not store your card information.
+        Your payment is secured by Stripe. We do not store your card
+        information.
       </p>
     </form>
   );
