@@ -244,6 +244,9 @@ export default function AuthPage() {
       }
       console.log("Profile + Payment complete → redirect to /");
       navigate("/");
+    } else if (user?.userType === "admin") {
+      console.log("Admin user → redirect to /admin");
+      navigate("/admin");
     } else {
       // Non-parent users → go to home
       console.log("Non-parent user → redirect to /");

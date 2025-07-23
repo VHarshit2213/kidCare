@@ -8,12 +8,12 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDateTime(date: Date | string): string {
   if (!date) return "";
-  
+
   const dateObj = typeof date === "string" ? new Date(date) : date;
-  
+
   let dayFormat = "EEEE";
   let dayPrefix = "";
-  
+
   if (isToday(dateObj)) {
     dayPrefix = "Today";
     dayFormat = "";
@@ -24,24 +24,28 @@ export function formatDateTime(date: Date | string): string {
     dayPrefix = "Yesterday";
     dayFormat = "";
   }
-  
+
   const timeFormat = format(dateObj, "h:mm a");
-  
+
   if (dayFormat) {
     return `${dayPrefix ? dayPrefix + ", " : ""}${format(dateObj, dayFormat)}, ${timeFormat}`;
   }
-  
+
   return `${dayPrefix}, ${timeFormat}`;
 }
 
-export function formatBookingTimeRange(startTime: Date | string, endTime: Date | string): string {
+export function formatBookingTimeRange(
+  startTime: Date | string,
+  endTime: Date | string,
+): string {
   if (!startTime || !endTime) return "";
-  
-  const startDate = typeof startTime === "string" ? new Date(startTime) : startTime;
+
+  const startDate =
+    typeof startTime === "string" ? new Date(startTime) : startTime;
   const endDate = typeof endTime === "string" ? new Date(endTime) : endTime;
-  
+
   let dayPrefix = "";
-  
+
   if (isToday(startDate)) {
     dayPrefix = "Today";
   } else if (isTomorrow(startDate)) {
@@ -49,15 +53,15 @@ export function formatBookingTimeRange(startTime: Date | string, endTime: Date |
   } else {
     dayPrefix = format(startDate, "EEE, MMM d");
   }
-  
+
   const startTimeStr = format(startDate, "h:mm a");
   const endTimeStr = format(endDate, "h:mm a");
-  
+
   return `${dayPrefix}, ${startTimeStr} - ${endTimeStr}`;
 }
 
 export function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
+  switch (status?.toLowerCase()) {
     case "confirmed":
     case "accepted":
       return "text-blue-600 bg-blue-100";

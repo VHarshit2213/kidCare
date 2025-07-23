@@ -783,6 +783,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -929,6 +930,7 @@ type ChildFormValues = z.infer<typeof childSchema>;
 export default function ParentProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getSignedUrl } = useSignedUrl();
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [isEditingChild, setIsEditingChild] = useState(false);
   const [currentChildId, setCurrentChildId] = useState<number | null>(null);
@@ -1096,14 +1098,10 @@ export default function ParentProfileForm() {
     const imagePath = data?.[0]?.profile_image;
 
     if (imagePath) {
-      const { data: signedUrlData, error: urlError } = await supabase.storage
-        .from("user-uploads")
-        .createSignedUrl(imagePath, 60 * 60 * 24); // 1 day expiration
+      const signedUrl = await getSignedUrl(imagePath);
 
-      if (urlError) {
-        console.error("Signed URL error:", urlError);
-      } else {
-        setUploadedImg(signedUrlData.signedUrl);
+      if (signedUrl) {
+        setUploadedImg(signedUrl);
         setImagePath(imagePath);
       }
     }
@@ -1217,6 +1215,8 @@ export default function ParentProfileForm() {
       const payload = {
         user_id: userId,
         profile_image: profileImageUrl,
+        fullName: values.fullName,
+        email: values.email,
         address: address,
         floor_number: values.floor_number,
         street_name: values.street_name,
@@ -1253,7 +1253,9 @@ export default function ParentProfileForm() {
           .update(payload)
           .eq("user_id", userId);
       } else {
-        response = await supabase.from("parentprofile").insert(payload);
+        response = await supabase
+          .from("parentprofile")
+          .insert({ ...payload, isProfileCompleted: true });
 
         // Update user metadata
         if (!response.error) {

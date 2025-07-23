@@ -11,6 +11,8 @@ export default function Profile() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
+  console.log("user", user);
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -19,6 +21,7 @@ export default function Profile() {
       .toUpperCase();
   };
 
+  
   if (!isAuthenticated) {
     return (
       <Layout>

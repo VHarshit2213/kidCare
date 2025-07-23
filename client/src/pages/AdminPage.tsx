@@ -454,6 +454,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
 import Layout from "@/components/Layout";
 import UserDetailsDialog from "@/components/admin/UserDetailsDialog";
 import { babysitterProfile, ParentProfile } from "@/lib/types";
@@ -461,16 +462,21 @@ import supabase from "@/config/supabaseClient";
 
 type SafeUser = Omit<User, "password">;
 
+type ParentWithType = ParentProfile & { userType: "parent" };
+type BabysitterWithType = babysitterProfile & { userType: "babysitter" };
+type CombinedUser = ParentWithType | BabysitterWithType;
+
 export default function AdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getSignedUrl } = useSignedUrl();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("pending-reviews");
+  const [activeTab, setActiveTab] = useState("parents");
 
-  const [babysitters, setBabysitters] = useState<babysitterProfile[]>([]);
-  const [parents, setParents] = useState<ParentProfile[]>([]);
+  const [babysitters, setBabysitters] = useState<BabysitterWithType[]>([]);
+  const [parents, setParents] = useState<ParentWithType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  console.log("babysitters===>", babysitters);
 
   // Mutation for approving babysitter profiles
   const approveMutation = useMutation({
@@ -527,22 +533,6 @@ export default function AdminPage() {
     },
   });
 
-  // Check if the user is authenticated and has admin privileges
-  // if (!user) {
-  //   return <Redirect to="/auth" />;
-  // }
-
-  // if (user.username !== "ecadmin") {
-  //   return (
-  //     <Layout>
-  //       <div className="container mx-auto py-10 text-center">
-  //         <h1 className="text-2xl font-bold mb-4">Unauthorized Access</h1>
-  //         <p>You do not have permission to access the admin panel.</p>
-  //       </div>
-  //     </Layout>
-  //   );
-  // }
-
   // Fetch all users
   // const { data: users = [], isLoading } = useQuery<SafeUser[]>({
   //   queryKey: ["/api/admin/users"],
@@ -562,7 +552,30 @@ export default function AdminPage() {
   //   (sitter) => sitter.reviewStatus === "pending",
   // );
 
-  const renderUserTable = (userList: SafeUser[]) => {
+  const handleApprovalChange = async (value: string, userId) => {
+    const isApproved = value === "approved";
+    const { error } = await supabase
+      .from("babySitterProfile")
+      .update({ isApproved })
+      .eq("user_id", userId);
+
+    if (error) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Status updated",
+        description: `User has been ${isApproved ? "approved" : "disapproved"}.`,
+      });
+
+      await fetchProfiles();
+    }
+  };
+
+  const renderUserTable = (userList: CombinedUser[]) => {
     return (
       <Table>
         <TableCaption>List of {activeTab}</TableCaption>
@@ -570,9 +583,12 @@ export default function AdminPage() {
           <TableRow>
             <TableHead>ID</TableHead>
             <TableHead>Full Name</TableHead>
-            <TableHead>Username</TableHead>
+            <TableHead>Phone Number</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Profile Status</TableHead>
+            {activeTab === "babysitters" && (
+              <TableHead>Approved Status</TableHead>
+            )}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -586,17 +602,32 @@ export default function AdminPage() {
           ) : (
             userList.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.user_id}</TableCell>
                 <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.phoneNumber}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Badge
-                    variant={user.profileCompleted ? "success" : "outline"}
+                    variant={user.isProfileCompleted ? "success" : "outline"}
                   >
-                    {user.profileCompleted ? "Complete" : "Incomplete"}
+                    {user.isProfileCompleted ? "Completed" : "Incomplete"}
                   </Badge>
                 </TableCell>
+                {user.userType === "babysitter" && (
+                  <TableCell>
+                    {" "}
+                    <select
+                      value={user.isApproved ? "approved" : "not approved"}
+                      onChange={(e) =>
+                        handleApprovalChange(e.target.value, user.user_id)
+                      }
+                      className="border rounded-md px-2 py-1 text-sm"
+                    >
+                      <option value="not_approved">Not Approved</option>
+                      <option value="approved">Approved</option>
+                    </select>
+                  </TableCell>
+                )}
                 <TableCell className="text-right">
                   <UserDetailsDialog
                     user={user}
@@ -617,86 +648,123 @@ export default function AdminPage() {
 
   const fetchProfiles = async () => {
     setIsLoading(true);
-    setError(null);
 
     try {
-        // Fetch babysitters
-        const babysitterRes = await supabase
-          .from("babySitterProfile")
-          .select("*");
+      // Fetch babysitters
+      const babysitterRes = await supabase
+        .from("babySitterProfile")
+        .select("*");
 
-        if (babysitterRes.error) {
-          throw babysitterRes.error;
-        }
+      if (babysitterRes.error) throw new Error(babysitterRes.error.message);
+      const babysittersWithType: BabysitterWithType[] = await Promise.all(
+        babysitterRes.data.map(async (b) => {
+          const profileImageUrl = await getSignedUrl(b.profile_image);
+          const certificateUrl = await getSignedUrl(b.certified);
+          const transportationUrl = await getSignedUrl(b.transportation);
+          const videoUrl = await getSignedUrl(b.instrucationVideo);
 
-        setBabysitters(babysitterRes.data);
+          return {
+            ...b,
+            userType: "babysitter",
+            profileImageUrl,
+            certificateUrl,
+            transportationUrl,
+            videoUrl,
+          };
+        }),
+      );
 
-        // Fetch parents
-        const parentRes = await supabase
-          .from("parentProfile")
-          .select("*");
+      setBabysitters(babysittersWithType);
 
-        if (parentRes.error) {
-          throw parentRes.error;
-        }
+      // Fetch parents
+      const parentRes = await supabase.from("parentprofile").select("*");
 
-        setParents(parentRes.data);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong while fetching profiles.");
-      } finally {
-        setIsLoading(false);
-      }
+      if (parentRes.error) throw new Error(parentRes.error.message);
+      const parentsWithType: ParentWithType[] = await Promise.all(
+        parentRes.data.map(async (p) => {
+          const profileImageUrl = await getSignedUrl(p.profile_image);
+          return {
+            ...p,
+            userType: "parent",
+            profileImageUrl,
+          };
+        }),
+      );
+      setParents(parentsWithType);
+    } catch (err: any) {
+      toast({
+        title: "Error loading profiles",
+        description: err.message || "Unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchProfiles();
-  },[])
-  
+  }, []);
+
+  // Check if the user is authenticated and has admin privileges
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+
+  if (user?.user_metadata?.userType !== "admin") {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 text-center">
+          <h1 className="text-2xl font-bold mb-4">Unauthorized Access</h1>
+          <p>You do not have permission to access the admin panel.</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    <Layout>
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Dashboard</CardTitle>
-            <CardDescription>
-              Manage user accounts and view system data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center my-10">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <TabsList className="w-full grid grid-cols-4">
-                  <TabsTrigger value="pending-reviews" className="relative">
+    // <Layout>
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Dashboard</CardTitle>
+          <CardDescription>
+            Manage user accounts and view system data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center my-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="w-full grid grid-cols-4">
+                {/* <TabsTrigger value="pending-reviews" className="relative">
                     Pending Reviews
                     {pendingReviewBabysitters.length > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                         {pendingReviewBabysitters.length}
                       </span>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="parents">
-                    Parents ({parents.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="babysitters">
-                    Caregivers ({babysitters.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
-                </TabsList>
-                <TabsContent value="parents" className="mt-6">
-                  <h2 className="text-xl font-semibold mb-4">
-                    Parent Profiles
-                  </h2>
-                  {renderUserTable(parents)}
-                </TabsContent>
-                <TabsContent value="pending-reviews" className="mt-6">
+                    )} 
+                  </TabsTrigger> */}
+                <TabsTrigger value="parents">
+                  Parents ({parents.length})
+                </TabsTrigger>
+                <TabsTrigger value="babysitters">
+                  Babysitters ({babysitters.length})
+                </TabsTrigger>
+                {/* <TabsTrigger value="reviews">Reviews</TabsTrigger> */}
+              </TabsList>
+              <TabsContent value="parents" className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Parent Profiles</h2>
+                {renderUserTable(parents)}
+              </TabsContent>
+              {/* <TabsContent value="pending-reviews" className="mt-6">
                   <h2 className="text-xl font-semibold mb-4">
                     Pending Babysitter Profile Reviews
                   </h2>
@@ -798,16 +866,16 @@ export default function AdminPage() {
                       )}
                     </TableBody>
                   </Table>
-                </TabsContent>
+                </TabsContent> */}
 
-                <TabsContent value="babysitters" className="mt-6">
-                  <h2 className="text-xl font-semibold mb-4">
-                    Caregiver Profiles
-                  </h2>
-                  {renderUserTable(babysitters)}
-                </TabsContent>
+              <TabsContent value="babysitters" className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">
+                  Babysitters Profiles
+                </h2>
+                {renderUserTable(babysitters)}
+              </TabsContent>
 
-                <TabsContent value="reviews" className="mt-6">
+              {/* <TabsContent value="reviews" className="mt-6">
                   <h2 className="text-xl font-semibold mb-4">Parent Reviews</h2>
                   <Table>
                     <TableHeader>
@@ -884,13 +952,14 @@ export default function AdminPage() {
                       )}
                     </TableBody>
                   </Table>
-                </TabsContent>
-              </Tabs>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </Layout>
+                </TabsContent> */}
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+    // </Layout>
   );
 }
+
 // ------------- new code ------------

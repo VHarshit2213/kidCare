@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -152,6 +153,7 @@ const AGE_RANGES = [
 export default function BabysitterProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getSignedUrl } = useSignedUrl();
   const [isUploading, setIsUploading] = useState(false);
   const [profiles, setProfiles] = useState<babysitterProfile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -306,22 +308,6 @@ export default function BabysitterProfileForm() {
 
   // -------------- new code ------------
 
-  // Get signed URL for the uploaded file
-  const getSignedUrl = async (path: string | null) => {
-    if (!path) return null;
-
-    const { data, error } = await supabase.storage
-      .from("user-uploads")
-      .createSignedUrl(path, 60 * 60 * 24); // 1 day expiry
-
-    if (error) {
-      console.error("Signed URL error:", error.message);
-      return null;
-    }
-
-    return data.signedUrl;
-  };
-
   // fetch Babysitter profile
   const fetchBabysitterProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -373,6 +359,8 @@ export default function BabysitterProfileForm() {
     setVideoPreviewUrl(data.videoUrl ?? null);
     setImagePath(data?.[0]?.profile_image ?? null);
     setAddress(data?.[0]?.address || "");
+    setLatitude(data?.[0]?.location?.latitude ?? null);
+    setLongitude(data?.[0]?.location?.longitude ?? null);
   };
 
   // Upload file to Supabase
@@ -491,6 +479,7 @@ export default function BabysitterProfileForm() {
         user_id: userId,
         profile_image: profileImageUrl,
         fullName: values.fullName,
+        email: values.email,
         address,
         floor_number: values.floor_number,
         street_name: values.street_name,
@@ -529,7 +518,9 @@ export default function BabysitterProfileForm() {
           .update(payload)
           .eq("user_id", userId);
       } else {
-        response = await supabase.from("babySitterProfile").insert(payload);
+        response = await supabase
+          .from("babySitterProfile")
+          .insert({ ...payload, isProfileCompleted: true });
       }
 
       const { error } = response;

@@ -543,9 +543,16 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, CalendarIcon, X, Clock, AlertCircle } from "lucide-react";
+import {
+  Check,
+  CalendarIcon,
+  X,
+  Clock,
+  AlertCircle,
+  MapPin,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { babysitterProfile, Child } from "@/lib/types";
+import { babysitterProfile, Child, ScheduledCareFormData } from "@/lib/types";
 import { format, addDays } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -556,18 +563,19 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import AvailableScheduledSitters from "./AvailableScheduledSitters";
 import supabase from "@/config/supabaseClient";
+import mapboxgl from "mapbox-gl";
+import { useToast } from "@/hooks/use-toast";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
+
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // Form validation schema
 const scheduledCareSchema = z.object({
   date: z.date({
     required_error: "Please select a date",
   }),
-  startTime: z.string({
-    required_error: "Please select a start time",
-  }),
-  endTime: z.string({
-    required_error: "Please select an end time",
-  }),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
   children: z
     .array(
       z.object({
@@ -580,7 +588,7 @@ const scheduledCareSchema = z.object({
   careInstructions: z.string().optional(),
 });
 
-type ScheduledCareFormData = z.infer<typeof scheduledCareSchema>;
+// type ScheduledCareFormData = z.infer<typeof scheduledCareSchema>;
 
 interface ScheduledCareModalProps {
   isOpen: boolean;
@@ -591,7 +599,9 @@ export default function ScheduledCareModal({
   isOpen,
   onClose,
 }: ScheduledCareModalProps) {
+  const { toast } = useToast();
   const { user } = useAuth();
+  const { getSignedUrl } = useSignedUrl();
   const [, navigate] = useLocation();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [hoursNeeded, setHoursNeeded] = useState(2);
@@ -602,7 +612,7 @@ export default function ScheduledCareModal({
   const [bookingStatus, setBookingStatus] = useState<{
     [key: string]: boolean;
   }>({});
-  const [parentlocation, setParentLocation] = useState({
+  const [parentLocation, setParentLocation] = useState({
     latitude: 0,
     longitude: 0,
   });
@@ -612,6 +622,10 @@ export default function ScheduledCareModal({
   const [nearbySitters, setNearbySitters] = useState([]);
   const [childOptions, setChildOptions] = useState<Child[]>([]);
   const [childrenPopoverOpen, setChildrenPopoverOpen] = useState(false);
+  const [address, setAddress] = useState("");
+  const [AddressLoading, setAddressLoading] = useState(false);
+  const [bookingDetails, setBookingDetails] =
+    useState<ScheduledCareFormData | null>(null);
 
   const isPaymentSuccess = user?.user_metadata?.isPayment;
   const hasCompletedProfile = user?.user_metadata?.profileCompleted;
@@ -647,6 +661,8 @@ export default function ScheduledCareModal({
     resolver: zodResolver(scheduledCareSchema),
     defaultValues: {
       date: new Date(),
+      startTime: "",
+      endTime: "",
       children: [],
       careInstructions: "",
     },
@@ -671,8 +687,28 @@ export default function ScheduledCareModal({
   const timeSlots = generateTimeSlots();
 
   const onSubmit = (data: ScheduledCareFormData) => {
-    console.log("Scheduled care form submitted:", data);
-    // Here you would normally send this data to your backend
+    const { latitude, longitude } = parentLocation;
+
+    if (!address || !latitude || !longitude) {
+      toast({
+        title: "Location is required",
+        description: "Please use 'Use My Location' to fetch location.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      address,
+      latitude,
+      longitude,
+      hoursNeeded,
+    };
+
+    console.log("payload", payload);
+
+    setBookingDetails(payload);
     setShowAvailableSitters(true);
     onClose();
   };
@@ -709,12 +745,12 @@ export default function ScheduledCareModal({
   }
 
   // Find sitters within 8 miles of the parent's location
-  function findNearbySitters(babySitterProfiles, radiusMiles = 2) {
+  function findNearbySitters(babySitterProfiles, radiusMiles = 8) {
     return babySitterProfiles
       ?.map((sitter) => {
         const distance = getDistanceInMiles(
-          parentlocation?.latitude,
-          parentlocation?.longitude,
+          parentLocation?.latitude,
+          parentLocation?.longitude,
           sitter.location?.latitude,
           sitter.location?.longitude,
         );
@@ -741,28 +777,84 @@ export default function ScheduledCareModal({
 
   const loadProfile = async () => {
     const data = await fetchParentProfile(user?.id);
-    const { children, location, isPayment } = data?.[0];
+    const { children } = data?.[0];
     setChildOptions(children);
-    setParentLocation(location);
   };
 
   // fetch babysitters profile
   const fetchBabySitterProfiles = async () => {
-    const { data, error } = await supabase
+    const babysitterRes = await supabase
       .from("babySitterProfile")
-      .select("*");
+      .select("*")
+      .eq("isApproved", true);
 
-    if (error) {
-      console.error("Error fetching characters:", error);
-    } else {
-      setBabySitterProfiles(data || []);
+    if (babysitterRes.error) {
+      console.error("Error fetching babysitter profiles:", babysitterRes.error);
+      return;
     }
+
+    const babysittersWithDoc = await Promise.all(
+      babysitterRes.data.map(async (b) => {
+        const profileImageUrl = await getSignedUrl(b.profile_image);
+        // const certificateUrl = await getSignedUrl(b.certified);
+        // const transportationUrl = await getSignedUrl(b.transportation);
+        // const videoUrl = await getSignedUrl(b.instrucationVideo);
+
+        return {
+          ...b,
+          profileImageUrl,
+          // certificateUrl,
+          // transportationUrl,
+          // videoUrl,
+        };
+      }),
+    );
+
+    setBabySitterProfiles(babysittersWithDoc);
+  };
+
+  // Function to get the current location
+  const handleUseMyLocation = () => {
+    setAddressLoading(true);
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported by your browser");
+      setAddressLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setParentLocation({ latitude, longitude });
+        try {
+          const res = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`,
+          );
+          const data = await res.json();
+          const placeName = data.features?.[0]?.place_name || "";
+          setAddress(placeName);
+        } catch (err) {
+          alert("Failed to get address");
+        } finally {
+          setAddressLoading(false);
+        }
+      },
+      () => {
+        alert("Permission denied or location unavailable");
+        setAddressLoading(false);
+      },
+      {
+        enableHighAccuracy: true, // 📍 Request more precise location
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
   };
 
   useEffect(() => {
-    const result = findNearbySitters(babySitterProfiles, 2);
+    const result = findNearbySitters(babySitterProfiles, 8);
     setNearbySitters(result);
-  }, [babySitterProfiles, parentlocation]);
+  }, [babySitterProfiles, parentLocation]);
 
   useEffect(() => {
     if (user?.id) {
@@ -783,10 +875,11 @@ export default function ScheduledCareModal({
         onBookNow={handleBookNow}
         date={date || new Date()}
         startTime={form.getValues().startTime || ""}
-        endTime={form.getValues().endTime || ""}
+        /* endTime={form.getValues().endTime || ""} */
         playAndGreetStatus={playAndGreetStatus}
         bookingStatus={bookingStatus}
         nearbySitters={nearbySitters}
+        bookingDetails={bookingDetails}
       />
 
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -856,6 +949,29 @@ export default function ScheduledCareModal({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={handleUseMyLocation}
+                  className="px-4 py-2 bg-blue-100 text-black rounded w-full"
+                  disabled={AddressLoading}
+                >
+                  {AddressLoading ? (
+                    "Fetching..."
+                  ) : (
+                    <>
+                      <MapPin className="inline-block mr-2" />
+                      Use My Current Location
+                    </>
+                  )}
+                </button>
+                {AddressLoading && <p>Getting address...</p>}
+                {address && (
+                  <p className="pt-1">
+                    <strong>Address:</strong> {address}
+                  </p>
+                )}
+              </div>
               <FormField
                 control={form.control}
                 name="date"
@@ -990,7 +1106,7 @@ export default function ScheduledCareModal({
                       <FormLabel>Start Time</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>

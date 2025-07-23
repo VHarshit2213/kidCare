@@ -66,13 +66,19 @@ export interface User {
 }
 
 export interface Booking {
-  id: number;
-  parentId: number;
-  babysitterId: number | null;
-  childName: string;
-  startTime: string;
-  endTime: string;
-  careInstructions?: string;
+  id: string;
+  parent_id: string;
+  sitter_id: string;
+  hours: number;
+  start_time: string;
+  end_time: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  address: string;
+  children: string[];
+  careInstructions: string;
   status: "pending" | "accepted" | "completed" | "cancelled";
   requiresFirstAid: boolean;
   requiresTransportation: boolean;
@@ -106,6 +112,20 @@ export interface InstantCareFormData {
   endTime: string;
   children: Child[];
   careInstructions?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface ScheduledCareFormData {
+  date: string;
+  startTime: string;
+  endTime: string;
+  children: Child[];
+  careInstructions?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface AppContextType {
@@ -115,6 +135,9 @@ export interface AppContextType {
 }
 
 export interface ParentProfile {
+  user_id?: string;
+  email: string;
+  fullName: string;
   isPayment: boolean;
   address: string;
   floor_number: string;
@@ -139,10 +162,14 @@ export interface ParentProfile {
     phoneNumber: string;
   }[];
   children?: any[];
+  profile_image?: string;
+  profileCompleted?: boolean;
 }
 
 export type babysitterProfile = {
   user_id?: string;
+  fullName?: string;
+  email?: string;
   address: string;
   floor_number: string;
   street_name: string;
@@ -161,4 +188,7 @@ export type babysitterProfile = {
   certified: string;
   transportation: string;
   instrucationVideo: string;
+  isApproved: boolean;
+  isAvailable: boolean;
+  profile_image: string;
 };

@@ -8,18 +8,21 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { User, InstantCareFormData } from "@/lib/types";
+import { User, InstantCareFormData, babysitterProfile } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { Booking } from "@/lib/types";
 import { Spinner } from "./ui/spinner";
 import BookingConfirmation from "./BookingConfirmation";
+import supabase from "@/config/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface AvailableSittersPopupProps {
   isOpen: boolean;
   onClose: () => void;
   bookingDetails: InstantCareFormData;
+  nearbySitters: babysitterProfile & { distance: number }[];
 }
 
 // This function simulates calculating distance between two points
@@ -42,57 +45,121 @@ export default function AvailableSittersPopup({
   bookingDetails,
   nearbySitters,
 }: AvailableSittersPopupProps) {
-  const [selectedSitter, setSelectedSitter] = useState<number | null>(null);
+  const { toast } = useToast();
+  const [selectedSitter, setSelectedSitter] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookedSitter, setBookedSitter] = useState<
-    (User & { distance: number }) | null
+    (babysitterProfile & { distance: number }) | null
   >(null);
 
+  const parentData = JSON.parse(
+    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}",
+  );
+  const parentId = parentData.user?.id;
+  console.log("selectedSitter", selectedSitter);
+  console.log("bookedSitter", bookedSitter);
+
+  // ------------------old code for reference------------
+
   // Fetch all babysitters
-  const { data, isLoading } = useQuery<User[]>({
-    queryKey: ["/api/babysitters"],
-  });
+  // const { data, isLoading } = useQuery<User[]>({
+  //   queryKey: ["/api/babysitters"],
+  // });
 
-  // Ensure we have an array to work with
-  const allSitters: User[] = data || [];
+  // // Ensure we have an array to work with
+  // const allSitters: User[] = data || [];
 
-  // Filter and sort sitters
-  const availableSitters: (User & { distance: number })[] = allSitters
-    .filter(
-      (sitter: User) =>
-        // Only show sitters who are available (not busy or offline)
-        sitter.availabilityStatus === "available" &&
-        // Check if sitter is available during the requested time
-        isSitterAvailableDuringTime(sitter),
-    )
-    .map((sitter: User) => {
-      // Add distance information
-      const distance = calculateDistance(sitter.location);
-      return { ...sitter, distance };
-    })
-    .filter(
-      (sitter: User & { distance: number }) =>
-        // Filter sitters within 8 miles
-        sitter.distance <= 8,
-    )
-    .sort(
-      (a: User & { distance: number }, b: User & { distance: number }) =>
-        // Sort by distance (closest first)
-        a.distance - b.distance,
-    )
-    .slice(0, 3); // Limit to 3 sitters
+  // // Filter and sort sitters
+  // const availableSitters: (User & { distance: number })[] = allSitters
+  //   .filter(
+  //     (sitter: User) =>
+  //       // Only show sitters who are available (not busy or offline)
+  //       sitter.availabilityStatus === "available" &&
+  //       // Check if sitter is available during the requested time
+  //       isSitterAvailableDuringTime(sitter),
+  //   )
+  //   .map((sitter: User) => {
+  //     // Add distance information
+  //     const distance = calculateDistance(sitter.location);
+  //     return { ...sitter, distance };
+  //   })
+  //   .filter(
+  //     (sitter: User & { distance: number }) =>
+  //       // Filter sitters within 8 miles
+  //       sitter.distance <= 8,
+  //   )
+  //   .sort(
+  //     (a: User & { distance: number }, b: User & { distance: number }) =>
+  //       // Sort by distance (closest first)
+  //       a.distance - b.distance,
+  //   )
+  //   .slice(0, 3); // Limit to 3 sitters
 
-  const handleBookNow = (sitterId: number) => {
+  // const handleBookNow = (sitterId: number) => {
+  //   setSelectedSitter(sitterId);
+
+  //   // Find the selected sitter from the filtered list
+  //   const sitter = availableSitters.find((s) => s.id === sitterId);
+
+  //   // Store the booked sitter
+  //   if (sitter) {
+  //     setBookedSitter(sitter);
+
+  //     // In a real implementation, you would send the booking to the server here
+
+  //     // Simulate a brief loading state
+  //     setTimeout(() => {
+  //       setShowConfirmation(true);
+  //     }, 800);
+  //   }
+  // };
+
+  // ------------------old code for reference------------
+
+  // ---------------new code------------
+
+  const handleBookNow = async (sitterId: string) => {
     setSelectedSitter(sitterId);
 
     // Find the selected sitter from the filtered list
-    const sitter = availableSitters.find((s) => s.id === sitterId);
+    const sitter = nearbySitters.find((sitter) => sitter.user_id === sitterId);
+    if (!sitter) return;
 
     // Store the booked sitter
     if (sitter) {
-      setBookedSitter(sitter);
+      const payload = {
+        parent_id: parentId,
+        sitter_id: sitter.user_id,
+        hours: bookingDetails.hoursNeeded,
+        start_time: bookingDetails.startTime,
+        end_time: bookingDetails.endTime,
+        location: {
+          latitude: bookingDetails.latitude,
+          longitude: bookingDetails.longitude,
+        },
+        address: bookingDetails.address,
+        children: bookingDetails.children,
+        careInstructions: bookingDetails.careInstructions,
+      };
 
-      // In a real implementation, you would send the booking to the server here
+      const { error } = await supabase.from("InstantCare").insert([payload]);
+
+      if (error) {
+        toast({
+          title: "Booking Failed",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+        setSelectedSitter(null);
+        return;
+      }
+
+      toast({
+        title: "Booking Confirmed",
+        description: "Your babysitter has been successfully booked!",
+      });
+
+      setBookedSitter(sitter);
 
       // Simulate a brief loading state
       setTimeout(() => {
@@ -100,6 +167,8 @@ export default function AvailableSittersPopup({
       }, 800);
     }
   };
+
+  // ---------------new code------------
 
   const handleConfirmationClose = () => {
     setShowConfirmation(false);
@@ -131,128 +200,133 @@ export default function AvailableSittersPopup({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
+        {
+          /* isLoading ? (
           <div className="flex justify-center items-center py-12">
             <Spinner className="w-8 h-8" />
             <span className="ml-2">Finding available sitters...</span>
-          </div>
-        ) : nearbySitters.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-lg font-medium mb-4">No sitters available</p>
-            <p className="text-muted-foreground mb-6">
-              We couldn't find any available sitters within 8 miles for your
-              requested time.
-            </p>
-            <Button
-              onClick={onClose}
-              style={{ backgroundColor: "#3c5679" }}
-              className="text-white font-medium"
-            >
-              Try Different Time
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4 py-2">
-            {nearbySitters.map((sitter) => (
-              <Card key={sitter.userId} className="p-4">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-12 w-12 border">
-                    {sitter?.profileImageUrl ? (
-                      <img
-                        src={sitter?.profileImageUrl}
-                        alt={sitter?.fullName}
-                      />
-                    ) : (
-                      <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
-                        {sitter?.fullName?.charAt(0)}
-                      </div>
-                    )}
-                  </Avatar>
-
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p
-                          className={`text-sm font-medium ${sitter?.isAvailable ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {sitter?.isAvailable ? "Online" : "Offline"}
-                        </p>
-                        <h3 className="font-semibold">{sitter?.fullName}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {sitter?.distance.toFixed(2)} miles away • $
-                          {sitter?.horulyRate}
-                          /hr
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Badge
-                          variant="outline"
-                          className="px-2 py-0.5 border-brand-blue text-brand-blue"
-                        >
-                          {sitter?.experience} yrs exp
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {sitter?.certified && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs px-2 border-brand-pink text-brand-blue"
-                        >
-                          First Aid
-                        </Badge>
+          </div> 
+        ):*/
+          nearbySitters.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-lg font-medium mb-4">No sitters available</p>
+              <p className="text-muted-foreground mb-6">
+                We couldn't find any available sitters within 8 miles for your
+                requested time.
+              </p>
+              <Button
+                onClick={onClose}
+                style={{ backgroundColor: "#3c5679" }}
+                className="text-white font-medium"
+              >
+                Try Different Time
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {nearbySitters.map((sitter) => (
+                <Card key={sitter.user_id} className="p-4">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-12 w-12 border">
+                      {sitter?.profileImageUrl ? (
+                        <AvatarImage
+                          src={sitter?.profileImageUrl}
+                          alt={sitter?.fullName}
+                        />
+                      ) : (
+                        <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
+                          {sitter?.fullName?.charAt(0)}
+                        </div>
                       )}
-                      {sitter?.transportation && (
-                        <Badge
-                          variant="outline"
-                          className="text-xs px-2 border-brand-pink text-brand-blue"
-                        >
-                          Transportation
-                        </Badge>
-                      )}
-                      {sitter?.parentSkill?.slice(0, 2).map((skill, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs px-2 border-brand-pink text-brand-blue"
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
+                    </Avatar>
 
-                    <div className="mt-3 flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          window.alert(
-                            `Viewing ${sitter?.fullName}'s profile...`,
-                          )
-                        }
-                        style={{ borderColor: "#3c5679", color: "#3c5679" }}
-                      >
-                        View Profile
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleBookNow(sitter.id)}
-                        disabled={selectedSitter === sitter.id}
-                        style={{ backgroundColor: "#3c5679" }}
-                        className="text-white font-medium"
-                      >
-                        {selectedSitter === sitter.id
-                          ? "Booking..."
-                          : "Book Now"}
-                      </Button>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p
+                            className={`text-sm font-medium ${sitter?.isAvailable ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {sitter?.isAvailable ? "Online" : "Offline"}
+                          </p>
+                          <h3 className="font-semibold">{sitter?.fullName}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {sitter?.distance.toFixed(2)} miles away • $
+                            {sitter?.horulyRate}
+                            /hr
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className="px-2 py-0.5 border-brand-blue text-brand-blue"
+                          >
+                            {sitter?.experience} yrs exp
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {sitter?.certified && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-2 border-brand-pink text-brand-blue"
+                          >
+                            First Aid
+                          </Badge>
+                        )}
+                        {sitter?.transportation && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-2 border-brand-pink text-brand-blue"
+                          >
+                            Transportation
+                          </Badge>
+                        )}
+                        {sitter?.parentSkill
+                          ?.slice(0, 2)
+                          .map((skill, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs px-2 border-brand-pink text-brand-blue"
+                            >
+                              {skill}
+                            </Badge>
+                          ))}
+                      </div>
+
+                      <div className="mt-3 flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.alert(
+                              `Viewing ${sitter?.fullName}'s profile...`,
+                            )
+                          }
+                          style={{ borderColor: "#3c5679", color: "#3c5679" }}
+                        >
+                          View Profile
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleBookNow(sitter.user_id)}
+                          disabled={selectedSitter === sitter.user_id}
+                          style={{ backgroundColor: "#3c5679" }}
+                          className="text-white font-medium"
+                        >
+                          {selectedSitter === sitter.user_id
+                            ? "Booking..."
+                            : "Book Now"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+                </Card>
+              ))}
+            </div>
+          )
+        }
       </DialogContent>
     </Dialog>
   );
