@@ -17,12 +17,14 @@ import { Spinner } from "./ui/spinner";
 import BookingConfirmation from "./BookingConfirmation";
 import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
+import UserDetailsDialog from "./admin/UserDetailsDialog";
 
 interface AvailableSittersPopupProps {
   isOpen: boolean;
   onClose: () => void;
   bookingDetails: InstantCareFormData;
-  nearbySitters: babysitterProfile & { distance: number }[];
+  nearbySitters: babysitterProfile &
+    { distance: number; userType: "babysitter" }[];
 }
 
 // This function simulates calculating distance between two points
@@ -55,9 +57,9 @@ export default function AvailableSittersPopup({
   const parentData = JSON.parse(
     localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}",
   );
+
   const parentId = parentData.user?.id;
-  console.log("selectedSitter", selectedSitter);
-  console.log("bookedSitter", bookedSitter);
+  console.log("nearbySitters", nearbySitters);
 
   // ------------------old code for reference------------
 
@@ -296,7 +298,7 @@ export default function AvailableSittersPopup({
                       </div>
 
                       <div className="mt-3 flex justify-end gap-2">
-                        <Button
+                        {/* <Button
                           size="sm"
                           variant="outline"
                           onClick={() =>
@@ -307,7 +309,15 @@ export default function AvailableSittersPopup({
                           style={{ borderColor: "#3c5679", color: "#3c5679" }}
                         >
                           View Profile
-                        </Button>
+                        </Button> */}
+                        <UserDetailsDialog
+                          user={sitter}
+                          trigger={
+                            <Button variant="outline" size="sm">
+                              View Profile
+                            </Button>
+                          }
+                        />
                         <Button
                           size="sm"
                           onClick={() => handleBookNow(sitter.user_id)}

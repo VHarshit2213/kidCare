@@ -22,6 +22,10 @@ export default function MyBookings() {
   const [instantCareOpen, setInstantCareOpen] = useState(false);
   const [scheduledCareOpen, setScheduledCareOpen] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [instantCareBookings, setInstantCareBookings] = useState<Booking[]>([]);
+  const [scheduleCareBookings, setScheduleCareBookings] = useState<Booking[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
 
   console.log("bookings", bookings);
@@ -44,31 +48,44 @@ export default function MyBookings() {
     if (!user) return;
 
     const userType = user?.user_metadata?.userType;
-    let response;
 
-    if (userType === "parent") {
-      response = await supabase
-        .from("InstantCare")
-        .select("*")
-        .eq("parent_id", user.id)
-        .order("start_time", { ascending: false });
-    } else if (userType === "babysitter") {
-      response = await supabase
-        .from("InstantCare")
-        .select("*")
-        .eq("sitter_id", user.id)
-        .order("start_time", { ascending: false });
-    } else {
-      return;
+    try {
+      const [instantCareRes, scheduleCareRes] = await Promise.all([
+        supabase
+          .from("InstantCare")
+          .select("*")
+          .eq(userType === "parent" ? "parent_id" : "sitter_id", user.id)
+          .order("start_time", { ascending: false }),
+
+        supabase
+          .from("scheduledCare")
+          .select("*")
+          .eq(userType === "parent" ? "parent_id" : "sitter_id", user.id)
+          .order("start_time", { ascending: false }),
+      ]);
+
+      if (instantCareRes.error) {
+        console.error(
+          "Error fetching InstantCare:",
+          instantCareRes.error.message,
+        );
+      } else {
+        setInstantCareBookings(instantCareRes.data || []);
+      }
+
+      if (scheduleCareRes.error) {
+        console.error(
+          "Error fetching ScheduleCare:",
+          scheduleCareRes.error.message,
+        );
+      } else {
+        setScheduleCareBookings(scheduleCareRes.data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    if (response.error) {
-      console.error("Error fetching bookings:", response.error.message);
-    } else {
-      setBookings(response.data || []);
-    }
-
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -100,12 +117,41 @@ export default function MyBookings() {
               </div>
             ))}
           </div>
-        ) : bookings?.length ? (
-          <div className="space-y-4">
-            {bookings.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
-            ))}
-          </div>
+        ) : instantCareBookings.length > 0 ||
+          scheduleCareBookings.length > 0 ? (
+          <>
+            {/* Instant Care Bookings */}
+            <h2 className="text-xl font-semibold text-neutral-700 mb-2">
+              Instant Care Bookings
+            </h2>
+            {instantCareBookings.length > 0 ? (
+              <div className="space-y-4 mb-6">
+                {instantCareBookings.map((booking) => (
+                  <BookingCard key={booking.id} booking={booking} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-neutral-500 mb-6">
+                No Instant Care bookings yet.
+              </p>
+            )}
+
+            {/* Scheduled Care Bookings */}
+            <h2 className="text-xl font-semibold text-neutral-700 mb-2">
+              Scheduled Care Bookings
+            </h2>
+            {scheduleCareBookings.length > 0 ? (
+              <div className="space-y-4">
+                {scheduleCareBookings.map((booking) => (
+                  <BookingCard key={booking.id} booking={booking} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-neutral-500">
+                No Scheduled Care bookings yet.
+              </p>
+            )}
+          </>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600 mb-6">

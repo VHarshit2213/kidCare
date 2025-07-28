@@ -328,6 +328,11 @@ import { User } from "@shared/schema";
 import { format } from "date-fns";
 import { Phone, MessageSquare } from "lucide-react";
 import MessageDialog from "./MessageDialog";
+import { babysitterProfile, ScheduledCareFormData } from "@/lib/types";
+import supabase from "@/config/supabaseClient";
+import { useToast } from "@/hooks/use-toast";
+import BookingConfirmation from "./BookingConfirmation";
+import UserDetailsDialog from "./admin/UserDetailsDialog";
 
 interface AvailableScheduledSittersProps {
   isOpen: boolean;
@@ -339,43 +344,10 @@ interface AvailableScheduledSittersProps {
   endTime: string;
   playAndGreetStatus: { [key: string]: boolean };
   bookingStatus: { [key: string]: boolean };
+  bookingDetails: ScheduledCareFormData;
+  nearbySitters: babysitterProfile &
+    { distance: number; userType: "babysitter" }[];
 }
-
-// Mock data for available sitters
-const mockSitters: (User & { distance: number })[] = [
-  {
-    id: 1,
-    username: "emily_wilson",
-    email: "emily@example.com",
-    fullName: "Emily Wilson",
-    userType: "babysitter",
-    profileImageUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-    bio: "Passionate about childcare with 5+ years of experience",
-    hourlyRate: 35,
-    skills: ["First Aid Certified", "Arts & Crafts", "Meal Preparation"],
-    firstAidCertified: true,
-    hasTransportation: true,
-    yearsExperience: 5,
-    location: "San Francisco, CA",
-    distance: 3.2,
-  },
-  {
-    id: 2,
-    username: "michael_johnson",
-    email: "michael@example.com",
-    fullName: "Michael Johnson",
-    userType: "babysitter",
-    profileImageUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-    bio: "Former elementary teacher with a love for educational activities",
-    hourlyRate: 35,
-    skills: ["Educational Activities", "Music", "Special Needs Experience"],
-    firstAidCertified: true,
-    hasTransportation: true,
-    yearsExperience: 7,
-    location: "San Francisco, CA",
-    distance: 4.8,
-  },
-];
 
 export default function AvailableScheduledSitters({
   isOpen,
@@ -390,10 +362,90 @@ export default function AvailableScheduledSitters({
   nearbySitters,
   bookingDetails,
 }: AvailableScheduledSittersProps) {
+  const { toast } = useToast();
+  const [selectedSitter, setSelectedSitter] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
-  const [selectedSitter, setSelectedSitter] = useState<
-    (User & { distance: number }) | null
+  const [bookedSitter, setBookedSitter] = useState<
+    (babysitterProfile & { distance: number }) | null
   >(null);
+
+  const parentData = JSON.parse(
+    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}",
+  );
+  const parentId = parentData.user?.id;
+
+  console.log("nearbySitters", nearbySitters);
+
+  const handleBookNow = async (sitterId: string) => {
+    setSelectedSitter(sitterId);
+
+    // Find the selected sitter from the filtered list
+    const sitter = nearbySitters.find((sitter) => sitter.user_id === sitterId);
+    if (!sitter) return;
+
+    // Store the booked sitter
+    if (sitter) {
+      const payload = {
+        parent_id: parentId,
+        sitter_id: sitter.user_id,
+        hours: bookingDetails.hoursNeeded,
+        start_time: bookingDetails.startTime,
+        end_time: bookingDetails.endTime,
+        location: {
+          latitude: bookingDetails.latitude,
+          longitude: bookingDetails.longitude,
+        },
+        address: bookingDetails.address,
+        children: bookingDetails.children,
+        careInstructions: bookingDetails.careInstructions,
+        date: bookingDetails.date,
+      };
+
+      const { error } = await supabase.from("scheduledCare").insert([payload]);
+
+      if (error) {
+        toast({
+          title: "Booking Failed",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+        setSelectedSitter(null);
+        return;
+      }
+
+      toast({
+        title: "Booking Confirmed",
+        description: "Your babysitter has been successfully booked!",
+      });
+
+      setBookedSitter(sitter);
+
+      // Simulate a brief loading state
+      setTimeout(() => {
+        setShowConfirmation(true);
+      }, 800);
+    }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    setSelectedSitter(null);
+    setBookedSitter(null);
+    onClose();
+  };
+
+  // Don't show the sitters dialog if we're showing confirmation
+  if (showConfirmation && bookedSitter) {
+    return (
+      <BookingConfirmation
+        isOpen={showConfirmation}
+        onClose={handleConfirmationClose}
+        sitter={bookedSitter}
+        bookingDetails={bookingDetails}
+      />
+    );
+  }
 
   return (
     <>
@@ -498,7 +550,9 @@ export default function AvailableScheduledSitters({
                       )}
                     </div>
 
-                    {bookingStatus[sitter.id.toString()] ? (
+                    {/* old  code for reference */}
+
+                    {/* {bookingStatus[sitter.id.toString()] ? (
                       <div>
                         <div className="mt-3 p-3 bg-green-50 text-green-700 rounded-md text-sm mb-4">
                           Booking confirmed! {sitter.fullName} will be at your
@@ -595,7 +649,33 @@ export default function AvailableScheduledSitters({
                           View Profile
                         </Button>
                       </div>
-                    )}
+                    )} */}
+
+                    {/* old  code for reference */}
+
+                    {/* new code  */}
+                    <div className="mt-3 flex justify-end gap-2">
+                      <UserDetailsDialog
+                        user={sitter}
+                        trigger={
+                          <Button variant="outline" size="sm">
+                            View Profile
+                          </Button>
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleBookNow(sitter.user_id)}
+                        disabled={selectedSitter === sitter.user_id}
+                        style={{ backgroundColor: "#3c5679" }}
+                        className="text-white font-medium"
+                      >
+                        {selectedSitter === sitter.user_id
+                          ? "Booking..."
+                          : "Book Now"}
+                      </Button>
+                    </div>
+                    {/* new code  */}
                   </div>
                 </div>
               </Card>

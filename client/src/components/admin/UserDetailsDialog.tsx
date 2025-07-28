@@ -44,9 +44,12 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">User Details</DialogTitle>
+          <DialogTitle className="text-2xl">
+            {user === "parent" ? "Parent" : "Babysitter"} Details
+          </DialogTitle>
           <DialogDescription>
-            View detailed information about this user
+            View detailed information about this{" "}
+            {user === "parent" ? "Parent" : "Babysitter"}
           </DialogDescription>
         </DialogHeader>
 

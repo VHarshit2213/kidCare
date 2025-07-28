@@ -626,9 +626,10 @@ export default function ScheduledCareModal({
   const [AddressLoading, setAddressLoading] = useState(false);
   const [bookingDetails, setBookingDetails] =
     useState<ScheduledCareFormData | null>(null);
+  const [userData, setUserData] = useState<any>(null);
 
   const isPaymentSuccess = user?.user_metadata?.isPayment;
-  const hasCompletedProfile = user?.user_metadata?.profileCompleted;
+  const hasCompletedProfile = userData?.user_metadata?.profileCompleted;
 
   const hasMembership =
     !!user &&
@@ -649,14 +650,6 @@ export default function ScheduledCareModal({
     }
   }, [isOpen]);
 
-  // Mock child data - in a real app, this would be fetched from user's children
-  // const childOptions: { id: string; name: string }[] = [
-  //   { id: "1", name: "Emma" },
-  //   { id: "2", name: "Noah" },
-  //   { id: "3", name: "Olivia" },
-  //   { id: "4", name: "Liam" },
-  // ];
-
   const form = useForm<ScheduledCareFormData>({
     resolver: zodResolver(scheduledCareSchema),
     defaultValues: {
@@ -675,9 +668,11 @@ export default function ScheduledCareModal({
       for (let minute = 0; minute < 60; minute += 30) {
         const time = new Date();
         time.setHours(hour, minute, 0);
+        const formattedTime = format(time, "h:mm a"); // e.g., "6:00 AM", "6:30 PM"
+
         slots.push({
-          value: `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`,
-          label: format(time, "h:mm a"),
+          value: formattedTime,
+          label: formattedTime,
         });
       }
     }
@@ -705,8 +700,6 @@ export default function ScheduledCareModal({
       longitude,
       hoursNeeded,
     };
-
-    console.log("payload", payload);
 
     setBookingDetails(payload);
     setShowAvailableSitters(true);
@@ -796,16 +789,17 @@ export default function ScheduledCareModal({
     const babysittersWithDoc = await Promise.all(
       babysitterRes.data.map(async (b) => {
         const profileImageUrl = await getSignedUrl(b.profile_image);
-        // const certificateUrl = await getSignedUrl(b.certified);
-        // const transportationUrl = await getSignedUrl(b.transportation);
-        // const videoUrl = await getSignedUrl(b.instrucationVideo);
+        const certificateUrl = await getSignedUrl(b.certified);
+        const transportationUrl = await getSignedUrl(b.transportation);
+        const videoUrl = await getSignedUrl(b.instrucationVideo);
 
         return {
           ...b,
           profileImageUrl,
-          // certificateUrl,
-          // transportationUrl,
-          // videoUrl,
+          certificateUrl,
+          transportationUrl,
+          videoUrl,
+          userType: "babysitter",
         };
       }),
     );
@@ -862,6 +856,19 @@ export default function ScheduledCareModal({
       fetchBabySitterProfiles();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Error:", error.message);
+      } else {
+        setUserData(data?.user);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <>

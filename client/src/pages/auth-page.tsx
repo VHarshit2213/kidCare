@@ -63,7 +63,10 @@ type RegisterValues = z.infer<typeof registerSchema>;
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function AuthPage() {
+  const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [adminMode, setAdminMode] = useState(false);
+
   // const { user, loginMutation, registerMutation } = useAuth();
   const {
     user,
@@ -72,7 +75,7 @@ export default function AuthPage() {
     loginMutation,
     registerMutation,
   } = useAuth();
-  const [_, navigate] = useLocation();
+
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
@@ -259,6 +262,18 @@ export default function AuthPage() {
       handleRedirection();
     }
   }, [user]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    const admin = params.get("admin");
+
+    if (tab === "register" || tab === "login" || tab === "forgot-password") {
+      setActiveTab(tab);
+    }
+
+    setAdminMode(admin === "true");
+  }, []);
   /* ----------- new code ------------ */
 
   return (
@@ -281,17 +296,27 @@ export default function AuthPage() {
             value={activeTab}
             onValueChange={setActiveTab}
           >
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList
+              className={`grid w-full  mb-6 ${!adminMode ? "grid-cols-3" : "grid-cols-1 justify-normal"} `}
+            >
               <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-              <TabsTrigger value="forgot-password">Forgot Password</TabsTrigger>
+              {!adminMode && (
+                <>
+                  <TabsTrigger value="register">Register</TabsTrigger>
+                  <TabsTrigger value="forgot-password">
+                    Forgot Password
+                  </TabsTrigger>
+                </>
+              )}
+              {/* <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="forgot-password">Forgot Password</TabsTrigger> */}
             </TabsList>
 
             {/* Login Form */}
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome back</CardTitle>
+                  <CardTitle>Welcome back {adminMode ? "Admin" : ""}</CardTitle>
                   <CardDescription>
                     Sign in to access your account and manage your bookings
                   </CardDescription>
@@ -354,7 +379,7 @@ export default function AuthPage() {
                               />
                             </FormControl>
                             <FormMessage />
-                            <div className="text-right mt-1">
+                            {/* <div className="text-right mt-1">
                               <Button
                                 variant="link"
                                 className="p-0 h-auto text-xs text-blue-600"
@@ -363,7 +388,21 @@ export default function AuthPage() {
                               >
                                 Forgot password?
                               </Button>
-                            </div>
+                            </div> */}
+                            {!adminMode && (
+                              <div className="text-right mt-1">
+                                <Button
+                                  variant="link"
+                                  className="p-0 h-auto text-xs text-blue-600"
+                                  onClick={() =>
+                                    setActiveTab("forgot-password")
+                                  }
+                                  type="button"
+                                >
+                                  Forgot password?
+                                </Button>
+                              </div>
+                            )}
                           </FormItem>
                         )}
                       />
@@ -386,14 +425,16 @@ export default function AuthPage() {
                     </form>
                   </Form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                  <Button
-                    variant="link"
-                    onClick={() => setActiveTab("register")}
-                  >
-                    Don't have an account? Register
-                  </Button>
-                </CardFooter>
+                {!adminMode && (
+                  <CardFooter className="flex justify-center">
+                    <Button
+                      variant="link"
+                      onClick={() => setActiveTab("register")}
+                    >
+                      Don't have an account? Register
+                    </Button>
+                  </CardFooter>
+                )}
               </Card>
             </TabsContent>
 

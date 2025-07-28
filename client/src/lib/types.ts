@@ -84,6 +84,7 @@ export interface Booking {
   requiresTransportation: boolean;
   requiresExperience: boolean;
   createdAt: string;
+  date: string;
 }
 
 export interface Message {
@@ -110,6 +111,7 @@ export interface Child {
 export interface InstantCareFormData {
   startTime: string;
   endTime: string;
+  hoursNeeded: number;
   children: Child[];
   careInstructions?: string;
   address: string;
@@ -126,6 +128,7 @@ export interface ScheduledCareFormData {
   address: string;
   latitude: number;
   longitude: number;
+  hoursNeeded: number;
 }
 
 export interface AppContextType {

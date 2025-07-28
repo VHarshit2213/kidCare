@@ -12,6 +12,7 @@ import ReviewForm from "./ReviewForm";
 import ParentReviewForm from "./ParentReviewForm";
 import NavigationMap from "./NavigationMap";
 import supabase from "@/config/supabaseClient";
+import { format } from "date-fns";
 
 interface BookingCardProps {
   booking: Booking;
@@ -26,8 +27,6 @@ export default function BookingCard({ booking }: BookingCardProps) {
   const { user } = useAuth();
   const { getSignedUrl } = useSignedUrl();
 
-  console.log("parent", parent);
-  console.log("babysitter", babysitter);
   // const { data: babysitter } = useQuery<User>({
   //   queryKey: booking.babysitterId
   //     ? [`/api/users/${booking.babysitterId}`]
@@ -123,7 +122,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                   Address :{" "}
                   <span className="font-medium"> {babysitter?.address}</span>
                 </p>
-                <div className="mt-1 flex items-center text-sm text-neutral-600">
+                <div className="mt-1 flex items-start text-sm text-neutral-600">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 mr-1"
@@ -138,12 +137,32 @@ export default function BookingCard({ booking }: BookingCardProps) {
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>
-                    {formatBookingTimeRange(
-                      booking.start_time,
-                      booking.end_time,
-                    )}
-                  </span>
+                  {booking.date ? (
+                    <div className="flex flex-col">
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Date:
+                        </span>{" "}
+                        {format(booking.date, "MMM d, yyyy")}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Time:
+                        </span>{" "}
+                        {/* {format(booking?.date, "MMM d, yyyy")} ( */}
+                        {booking.start_time} - {booking.end_time}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <span>
+                        {formatBookingTimeRange(
+                          booking.start_time,
+                          booking.end_time,
+                        )}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </>
@@ -177,9 +196,9 @@ export default function BookingCard({ booking }: BookingCardProps) {
                 </h3>
                 <p className="font-bold">
                   Address :{" "}
-                  <span className="font-medium">{parent?.address}</span>
+                  <span className="font-medium">{booking?.address}</span>
                 </p>
-                <div className="mt-1 flex items-center text-sm text-neutral-600">
+                <div className="mt-1 flex items-start text-sm text-neutral-600">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4 mr-1"
@@ -194,12 +213,32 @@ export default function BookingCard({ booking }: BookingCardProps) {
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>
-                    {formatBookingTimeRange(
-                      booking.start_time,
-                      booking.end_time,
-                    )}
-                  </span>
+                  {booking.date ? (
+                    <div className="flex flex-col">
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Date:
+                        </span>{" "}
+                        {format(booking.date, "MMM d, yyyy")}
+                      </p>
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Time:
+                        </span>{" "}
+                        {/* {format(booking?.date, "MMM d, yyyy")} ( */}
+                        {booking.start_time} - {booking.end_time}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <span>
+                        {formatBookingTimeRange(
+                          booking.start_time,
+                          booking.end_time,
+                        )}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </>
@@ -213,7 +252,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
               booking.sitter_id === user.id &&
               // (booking.status === "confirmed" ||
               //   booking.status === "in-progress") &&
-              parent?.address && (
+              booking?.address && (
                 <Button
                   onClick={() => setShowNavigation(true)}
                   size="sm"
@@ -328,7 +367,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
       )}
 
       {/* Navigation Modal */}
-      {showNavigation && parent?.address && (
+      {showNavigation && booking?.address && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
@@ -356,7 +395,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
             </div>
             <div className="p-6">
               <NavigationMap
-                destinationAddress={parent.address}
+                destinationAddress={booking.address}
                 onNavigationStart={() => setShowNavigation(false)}
               />
             </div>

@@ -1,5 +1,7 @@
 import { MailService } from '@sendgrid/mail';
 import { User } from '@shared/schema';
+import dotenv from 'dotenv';
+dotenv.config();
 
 if (!process.env.SENDGRID_API_KEY) {
   throw new Error("SENDGRID_API_KEY environment variable must be set");

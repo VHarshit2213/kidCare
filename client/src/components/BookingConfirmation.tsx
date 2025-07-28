@@ -273,11 +273,22 @@ export default function BookingConfirmation({
                 </span>
               ))}
             </p>
-            <p>
-              <span className="font-medium text-foreground">Time:</span>{" "}
-              {format(new Date(bookingDetails.startTime), "MMM d, h:mm a")} -{" "}
-              {format(new Date(bookingDetails.endTime), "h:mm a")}
-            </p>
+            {bookingDetails.date ? (
+              <p>
+                <span className="font-medium text-foreground">Time:</span>{" "}
+                {format(bookingDetails.date, "MMM d, yyyy")} (
+                {bookingDetails.startTime} -{bookingDetails.endTime})
+              </p>
+            ) : (
+              <>
+                <p>
+                  <span className="font-medium text-foreground">Time:</span>{" "}
+                  {format(new Date(bookingDetails.startTime), "MMM d, h:mm a")}{" "}
+                  - {format(new Date(bookingDetails.endTime), "h:mm a")}
+                </p>
+              </>
+            )}
+
             {bookingDetails.careInstructions && (
               <p>
                 <span className="font-medium text-foreground">

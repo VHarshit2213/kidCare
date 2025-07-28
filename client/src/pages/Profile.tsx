@@ -5,13 +5,19 @@ import Skill from "@/components/common/Skill";
 import { useAuth } from "@/hooks/use-auth";
 import AvailabilityToggle from "@/components/AvailabilityToggle";
 import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import supabase from "@/config/supabaseClient";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAuthenticated = !!user;
+  const { getSignedUrl } = useSignedUrl();
 
-  console.log("user", user);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const isAuthenticated = !!user;
 
   const getInitials = (name: string) => {
     return name
@@ -21,7 +27,43 @@ export default function Profile() {
       .toUpperCase();
   };
 
-  
+  const fetchProfile = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+
+    const userType = user.user_metadata?.userType;
+
+    let tableName = "";
+    if (userType === "parent") tableName = "parentprofile";
+    else if (userType === "babysitter") tableName = "babySitterProfile";
+    else return;
+
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data?.profile_image) {
+      const signedUrl = await getSignedUrl(data.profile_image);
+      data.profileImageUrl = signedUrl;
+    }
+
+    setProfile(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [user]);
+
   if (!isAuthenticated) {
     return (
       <Layout>
@@ -39,6 +81,16 @@ export default function Profile() {
     );
   }
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center text-neutral-600">Loading profile...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -47,10 +99,10 @@ export default function Profile() {
             <div className="sm:flex sm:items-center sm:justify-between">
               <div className="sm:flex sm:items-center">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
-                  {user?.profileImageUrl ? (
+                  {profile?.profileImageUrl ? (
                     <AvatarImage
-                      src={user.profileImageUrl}
-                      alt={user.fullName}
+                      src={profile.profileImageUrl}
+                      alt={profile.fullName}
                     />
                   ) : (
                     <AvatarFallback className="text-xl">

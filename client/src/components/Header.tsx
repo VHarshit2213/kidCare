@@ -10,10 +10,16 @@ import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
 import { useEffect, useState } from "react";
+import { useSignedUrl } from "@/hooks/use-signedUrl";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
-  const [location, navigate] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { getSignedUrl } = useSignedUrl();
+
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
   const isAuthenticated = !!user;
   const hasMembership =
     !!user &&
@@ -59,13 +65,50 @@ export default function Header() {
 
   const handleCareButtonClick = () => {
     if (!isAuthenticated) {
-      navigate("/auth");
+      setLocation("/auth");
     } else if (!isPaymentSuccess) {
-      navigate("/membership");
+      setLocation("/membership");
     } else {
       window.dispatchEvent(new CustomEvent("open-sitter-request"));
     }
   };
+
+  const fetchProfile = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+
+    const userType = user.user_metadata?.userType;
+
+    let tableName = "";
+    if (userType === "parent") tableName = "parentprofile";
+    else if (userType === "babysitter") tableName = "babySitterProfile";
+    else return;
+
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data?.profile_image) {
+      const signedUrl = await getSignedUrl(data.profile_image);
+      data.profileImageUrl = signedUrl;
+    }
+
+    setProfile(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, [user]);
 
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
@@ -128,9 +171,9 @@ export default function Header() {
                       <Button
                         onClick={() => {
                           if (!isAuthenticated) {
-                            navigate("/auth");
+                            setLocation("/auth");
                           } else if (!isPaymentSuccess) {
-                            navigate("/membership");
+                            setLocation("/membership");
                           } else {
                             window.dispatchEvent(
                               new CustomEvent("open-sitter-request"),
@@ -159,9 +202,9 @@ export default function Header() {
                       <Button
                         onClick={() => {
                           if (!isAuthenticated) {
-                            navigate("/auth");
+                            setLocation("/auth");
                           } else if (!isPaymentSuccess) {
-                            navigate("/membership");
+                            setLocation("/membership");
                           } else {
                             window.dispatchEvent(
                               new CustomEvent("open-scheduled-care"),
@@ -245,10 +288,10 @@ export default function Header() {
                   <PopoverTrigger asChild>
                     <button className="flex items-center max-w-xs rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#ed4aea] focus:ring-offset-1 px-2 py-1 hover:bg-pink-50 transition-colors">
                       <Avatar className="h-8 w-8 rounded-md">
-                        {user?.profileImageUrl ? (
+                        {profile?.profileImageUrl ? (
                           <AvatarImage
-                            src={user.profileImageUrl}
-                            alt={user.fullName}
+                            src={profile.profileImageUrl}
+                            alt={profile.fullName}
                             className="rounded-md"
                           />
                         ) : (
@@ -347,13 +390,13 @@ export default function Header() {
                   variant="ghost"
                   size="sm"
                   className="text-[#3c5679] hover:text-[#3c5679]/90 hover:bg-blue-50 font-medium tracking-wide"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => setLocation("/auth")}
                 >
                   Login
                 </Button>
                 <Button
                   className="bg-[#3c5679] hover:bg-[#2c4059] text-white font-medium tracking-wide rounded-[4px]"
-                  onClick={() => navigate("/auth")}
+                  onClick={() => setLocation("/auth?tab=register")}
                 >
                   Sign Up
                 </Button>
@@ -361,7 +404,8 @@ export default function Header() {
                   variant="outline"
                   size="sm"
                   className="text-red-600 border-red-600 hover:bg-red-50 rounded-[4px]"
-                  onClick={() => navigate("/admin")}
+                  /* onClick={() => setLocation("/admin")} */
+                  onClick={() => setLocation("/auth?tab=login&admin=true")}
                 >
                   Admin
                 </Button>
@@ -391,7 +435,7 @@ export default function Header() {
               </svg>
             </button>
             <button
-              onClick={() => navigate("/admin")}
+              onClick={() => setLocation("/admin")}
               className="inline-flex items-center justify-center p-2 border border-red-600 text-red-600 rounded-[4px]"
             >
               <svg

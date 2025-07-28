@@ -765,6 +765,7 @@ export default function InstantCareModal({
   const [childrenPopoverOpen, setChildrenPopoverOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [AddressLoading, setAddressLoading] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
 
   const isPaymentSuccess = user?.user_metadata?.isPayment;
   const hasMembership =
@@ -774,7 +775,7 @@ export default function InstantCareModal({
       user.membershipStatus === "installment_1");
 
   // Check if profile is completed
-  const hasCompletedProfile = user?.user_metadata?.profileCompleted;
+  const hasCompletedProfile = userData?.user_metadata?.profileCompleted;
 
   // Set time constraints for the current day only
   useEffect(() => {
@@ -981,16 +982,17 @@ export default function InstantCareModal({
     const babysittersWithDoc = await Promise.all(
       babysitterRes.data.map(async (b) => {
         const profileImageUrl = await getSignedUrl(b.profile_image);
-        // const certificateUrl = await getSignedUrl(b.certified);
-        // const transportationUrl = await getSignedUrl(b.transportation);
-        // const videoUrl = await getSignedUrl(b.instrucationVideo);
+        const certificateUrl = await getSignedUrl(b.certified);
+        const transportationUrl = await getSignedUrl(b.transportation);
+        const videoUrl = await getSignedUrl(b.instrucationVideo);
 
         return {
           ...b,
           profileImageUrl,
-          // certificateUrl,
-          // transportationUrl,
-          // videoUrl,
+          certificateUrl,
+          transportationUrl,
+          videoUrl,
+          userType: "babysitter",
         };
       }),
     );
@@ -1047,6 +1049,19 @@ export default function InstantCareModal({
       fetchBabySitterProfiles();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Error:", error.message);
+      } else {
+        setUserData(data?.user);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <>
