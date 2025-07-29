@@ -194,9 +194,13 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     (child) => child.firstName + " " + child.lastName,
                   )}
                 </h3>
-                <p className="font-bold">
+                {/* <p className="font-bold">
                   Address :{" "}
                   <span className="font-medium">{booking?.address}</span>
+                </p> */}
+                <p className="font-bold">
+                  parent Name :{" "}
+                  <span className="font-medium">{parent.fullName}</span>
                 </p>
                 <div className="mt-1 flex items-start text-sm text-neutral-600">
                   <svg

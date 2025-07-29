@@ -11,9 +11,12 @@ import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
 import { useEffect, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
+import { Badge } from "./ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const { getSignedUrl } = useSignedUrl();
 
@@ -113,7 +116,7 @@ export default function Header() {
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-18">
+        <div className="flex justify-between items-center h-18">
           <div className="flex items-center">
             <Link href="/" className="flex-shrink-0 flex items-center">
               <img
@@ -174,9 +177,16 @@ export default function Header() {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
                             setLocation("/membership");
+                          } else if (!profile.isApproved) {
+                            toast({
+                              title: "Access Denied",
+                              description:
+                                "Your profile is under review you can not book babysitter.",
+                              variant: "destructive",
+                            });
                           } else {
                             window.dispatchEvent(
-                              new CustomEvent("open-sitter-request"),
+                              new CustomEvent("open-sitter-request")
                             );
                           }
                         }}
@@ -205,9 +215,16 @@ export default function Header() {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
                             setLocation("/membership");
+                          } else if (!profile.isApproved) {
+                            toast({
+                              title: "Access Denied",
+                              description:
+                                "Your profile is under review you can not book babysitter.",
+                              variant: "destructive",
+                            });
                           } else {
                             window.dispatchEvent(
-                              new CustomEvent("open-scheduled-care"),
+                              new CustomEvent("open-scheduled-care")
                             );
                           }
                         }}
@@ -258,6 +275,13 @@ export default function Header() {
               </Link>
             </nav>
           </div>
+          <div>
+            {!profile?.isApproved && (
+              <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600">
+                Your Profile is Under Review
+              </Badge>
+            )}
+          </div>
           <div className="hidden sm:flex sm:items-center">
             {isAuthenticated ? (
               <div className="ml-4 flex items-center">
@@ -297,7 +321,7 @@ export default function Header() {
                         ) : (
                           <AvatarFallback className="rounded-md bg-[#ed4aea]/10 text-[#ed4aea]">
                             {getInitials(
-                              user?.user_metadata?.fullName || "User",
+                              user?.user_metadata?.fullName || "User"
                             )}
                           </AvatarFallback>
                         )}

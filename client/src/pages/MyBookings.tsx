@@ -28,8 +28,6 @@ export default function MyBookings() {
   );
   const [loading, setLoading] = useState(true);
 
-  console.log("bookings", bookings);
-
   // const { data: bookings, isLoading } = useQuery<Booking[]>({
   //   queryKey: ["/api/bookings/parent"],
   //   enabled: isAuthenticated && user?.userType === "parent",
@@ -154,11 +152,11 @@ export default function MyBookings() {
           </>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
-            <p className="text-neutral-600 mb-6">
+            <p className="text-neutral-600 m-6">
               You don't have any bookings yet.
             </p>
 
-            {user?.user_metadata?.userType === "parent" && (
+            {/* {user?.user_metadata?.userType === "parent" && (
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-medium mb-3">
                   Create your first booking
@@ -183,7 +181,7 @@ export default function MyBookings() {
                   </Button>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         )}
       </div>

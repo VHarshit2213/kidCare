@@ -467,7 +467,7 @@ type BabysitterWithType = babysitterProfile & { userType: "babysitter" };
 type CombinedUser = ParentWithType | BabysitterWithType;
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user,logoutMutation } = useAuth();
   const { toast } = useToast();
   const { getSignedUrl } = useSignedUrl();
   const queryClient = useQueryClient();
@@ -484,7 +484,7 @@ export default function AdminPage() {
       const response = await apiRequest(
         "PATCH",
         `/api/admin/users/${sitterId}/review`,
-        { reviewStatus: "approved" },
+        { reviewStatus: "approved" }
       );
       return response.json();
     },
@@ -511,7 +511,7 @@ export default function AdminPage() {
       const response = await apiRequest(
         "PATCH",
         `/api/admin/users/${sitterId}/review`,
-        { reviewStatus: "rejected" },
+        { reviewStatus: "rejected" }
       );
       return response.json();
     },
@@ -552,23 +552,45 @@ export default function AdminPage() {
   //   (sitter) => sitter.reviewStatus === "pending",
   // );
 
-  const handleApprovalChange = async (value: string, userId) => {
+  const handleApprovalChange = async (value: string, userId: string) => {
     const isApproved = value === "approved";
-    const { error } = await supabase
-      .from("babySitterProfile")
-      .update({ isApproved })
-      .eq("user_id", userId);
 
-    if (error) {
+    // First, check if the user is a babysitter
+    const { data: babysitterProfile, error: babysitterError } = await supabase
+      .from("babySitterProfile")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+      
+    let profileUpdateError = null;
+
+    if (babysitterProfile) {
+      const { error } = await supabase
+        .from("babySitterProfile")
+        .update({ isApproved })
+        .eq("user_id", userId);
+      profileUpdateError = error;
+    } else {
+      // If not babysitter, assume parent
+      const { error } = await supabase
+        .from("parentprofile")
+        .update({ isApproved })
+        .eq("user_id", userId);
+      profileUpdateError = error;
+    }
+
+    if (profileUpdateError) {
       toast({
         title: "Update failed",
-        description: error.message,
+        description: profileUpdateError.message,
         variant: "destructive",
       });
     } else {
       toast({
         title: "Status updated",
-        description: `User has been ${isApproved ? "approved" : "disapproved"}.`,
+        description: `User has been ${
+          isApproved ? "approved" : "disapproved"
+        }.`,
       });
 
       await fetchProfiles();
@@ -586,9 +608,7 @@ export default function AdminPage() {
             <TableHead>Phone Number</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Profile Status</TableHead>
-            {activeTab === "babysitters" && (
-              <TableHead>Approved Status</TableHead>
-            )}
+            <TableHead>Approved Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -613,21 +633,19 @@ export default function AdminPage() {
                     {user.isProfileCompleted ? "Completed" : "Incomplete"}
                   </Badge>
                 </TableCell>
-                {user.userType === "babysitter" && (
-                  <TableCell>
-                    {" "}
-                    <select
-                      value={user.isApproved ? "approved" : "not approved"}
-                      onChange={(e) =>
-                        handleApprovalChange(e.target.value, user.user_id)
-                      }
-                      className="border rounded-md px-2 py-1 text-sm"
-                    >
-                      <option value="not_approved">Not Approved</option>
-                      <option value="approved">Approved</option>
-                    </select>
-                  </TableCell>
-                )}
+                <TableCell>
+                  {" "}
+                  <select
+                    value={user.isApproved ? "approved" : "not approved"}
+                    onChange={(e) =>
+                      handleApprovalChange(e.target.value, user.user_id)
+                    }
+                    className="border rounded-md px-2 py-1 text-sm"
+                  >
+                    <option value="not_approved">Not Approved</option>
+                    <option value="approved">Approved</option>
+                  </select>
+                </TableCell>
                 <TableCell className="text-right">
                   <UserDetailsDialog
                     user={user}
@@ -671,7 +689,7 @@ export default function AdminPage() {
             transportationUrl,
             videoUrl,
           };
-        }),
+        })
       );
 
       setBabysitters(babysittersWithType);
@@ -688,7 +706,7 @@ export default function AdminPage() {
             userType: "parent",
             profileImageUrl,
           };
-        }),
+        })
       );
       setParents(parentsWithType);
     } catch (err: any) {
@@ -700,6 +718,11 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+    const handleLogout = () => {
+    // logoutMutation.mutate();
+    logoutMutation();
   };
 
   useEffect(() => {
@@ -726,12 +749,17 @@ export default function AdminPage() {
     // <Layout>
     <div className="container mx-auto py-10">
       <Card>
-        <CardHeader>
-          <CardTitle>Admin Dashboard</CardTitle>
-          <CardDescription>
-            Manage user accounts and view system data.
-          </CardDescription>
-        </CardHeader>
+        <div className="flex justify-between items-center">
+          <CardHeader>
+            <CardTitle>Admin Dashboard</CardTitle>
+            <CardDescription>
+              Manage user accounts and view system data.
+            </CardDescription>
+          </CardHeader>
+          <div>
+            <button className="m-6 bg-[#3c5679] hover:bg-[#2c4059] text-white py-2 px-4 rounded-lg" onClick={handleLogout}>Logout</button>
+          </div>
+        </div>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center my-10">
