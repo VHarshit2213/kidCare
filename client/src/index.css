@@ -15,6 +15,7 @@
   
   * {
     @apply border-border;
+    scrollbar-width: thin;
   }
 
   body {

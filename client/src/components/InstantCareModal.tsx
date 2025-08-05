@@ -1066,7 +1066,7 @@ export default function InstantCareModal({
   return (
     <>
       <Dialog open={isOpen && !showSittersPopup} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Request Instant Childcare</DialogTitle>
             <DialogDescription>

@@ -127,7 +127,7 @@ export default function BookingConfirmation({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Booking Confirmed!</DialogTitle>
           <DialogDescription>

@@ -457,7 +457,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import Layout from "@/components/Layout";
 import UserDetailsDialog from "@/components/admin/UserDetailsDialog";
-import { babysitterProfile, ParentProfile } from "@/lib/types";
+import {
+  babysitterProfile,
+  ParentProfile,
+  TransactionsData,
+} from "@/lib/types";
 import supabase from "@/config/supabaseClient";
 
 type SafeUser = Omit<User, "password">;
@@ -467,7 +471,7 @@ type BabysitterWithType = babysitterProfile & { userType: "babysitter" };
 type CombinedUser = ParentWithType | BabysitterWithType;
 
 export default function AdminPage() {
-  const { user,logoutMutation } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const { getSignedUrl } = useSignedUrl();
   const queryClient = useQueryClient();
@@ -475,8 +479,8 @@ export default function AdminPage() {
 
   const [babysitters, setBabysitters] = useState<BabysitterWithType[]>([]);
   const [parents, setParents] = useState<ParentWithType[]>([]);
+  const [transactions, setTransactions] = useState<TransactionsData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  console.log("babysitters===>", babysitters);
 
   // Mutation for approving babysitter profiles
   const approveMutation = useMutation({
@@ -709,9 +713,15 @@ export default function AdminPage() {
         })
       );
       setParents(parentsWithType);
+
+      // ✅ Fetch transactions
+      const transactionRes = await supabase.from("transaction").select("*");
+
+      if (transactionRes.error) throw new Error(transactionRes.error.message);
+      setTransactions(transactionRes.data);
     } catch (err: any) {
       toast({
-        title: "Error loading profiles",
+        title: "Error loading profiles or transactions",
         description: err.message || "Unexpected error occurred.",
         variant: "destructive",
       });
@@ -720,7 +730,7 @@ export default function AdminPage() {
     }
   };
 
-    const handleLogout = () => {
+  const handleLogout = () => {
     // logoutMutation.mutate();
     logoutMutation();
   };
@@ -757,7 +767,12 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <div>
-            <button className="m-6 bg-[#3c5679] hover:bg-[#2c4059] text-white py-2 px-4 rounded-lg" onClick={handleLogout}>Logout</button>
+            <button
+              className="m-6 bg-[#3c5679] hover:bg-[#2c4059] text-white py-2 px-4 rounded-lg"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
           </div>
         </div>
         <CardContent>
@@ -785,6 +800,9 @@ export default function AdminPage() {
                 </TabsTrigger>
                 <TabsTrigger value="babysitters">
                   Babysitters ({babysitters.length})
+                </TabsTrigger>
+                <TabsTrigger value="transactions">
+                  Transactions ({transactions.length})
                 </TabsTrigger>
                 {/* <TabsTrigger value="reviews">Reviews</TabsTrigger> */}
               </TabsList>
@@ -904,83 +922,126 @@ export default function AdminPage() {
               </TabsContent>
 
               {/* <TabsContent value="reviews" className="mt-6">
-                  <h2 className="text-xl font-semibold mb-4">Parent Reviews</h2>
-                  <Table>
-                    <TableHeader>
+                <h2 className="text-xl font-semibold mb-4">Parent Reviews</h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Review ID</TableHead>
+                      <TableHead>Parent</TableHead>
+                      <TableHead>Babysitter</TableHead>
+                      <TableHead>Booking</TableHead>
+                      <TableHead>Overall Rating</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reviews.length === 0 ? (
                       <TableRow>
-                        <TableHead>Review ID</TableHead>
-                        <TableHead>Parent</TableHead>
-                        <TableHead>Babysitter</TableHead>
-                        <TableHead>Booking</TableHead>
-                        <TableHead>Overall Rating</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableCell colSpan={7} className="text-center">
+                          No reviews found
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reviews.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center">
-                            No reviews found
+                    ) : (
+                      reviews.map((review) => (
+                        <TableRow key={review.id}>
+                          <TableCell>{review.id}</TableCell>
+                          <TableCell className="font-medium">
+                            {review.parent?.fullName || "Unknown"}
+                          </TableCell>
+                          <TableCell>
+                            {review.babysitter?.fullName || "Unknown"}
+                          </TableCell>
+                          <TableCell>
+                            {review.booking ? (
+                              <div className="text-sm">
+                                <div>{review.booking.childName}</div>
+                                <div className="text-gray-500">
+                                  {new Date(
+                                    review.booking.startTime
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            ) : (
+                              "Unknown"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <span
+                                  key={i}
+                                  className={`text-sm ${
+                                    i < review.overallRating
+                                      ? "text-yellow-400"
+                                      : "text-gray-300"
+                                  }`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                              <span className="ml-2 text-sm text-gray-600">
+                                ({review.overallRating}/5)
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm">
+                              View Details
+                            </Button>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        reviews.map((review) => (
-                          <TableRow key={review.id}>
-                            <TableCell>{review.id}</TableCell>
-                            <TableCell className="font-medium">
-                              {review.parent?.fullName || "Unknown"}
-                            </TableCell>
-                            <TableCell>
-                              {review.babysitter?.fullName || "Unknown"}
-                            </TableCell>
-                            <TableCell>
-                              {review.booking ? (
-                                <div className="text-sm">
-                                  <div>{review.booking.childName}</div>
-                                  <div className="text-gray-500">
-                                    {new Date(
-                                      review.booking.startTime,
-                                    ).toLocaleDateString()}
-                                  </div>
-                                </div>
-                              ) : (
-                                "Unknown"
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center">
-                                {Array.from({ length: 5 }, (_, i) => (
-                                  <span
-                                    key={i}
-                                    className={`text-sm ${
-                                      i < review.overallRating
-                                        ? "text-yellow-400"
-                                        : "text-gray-300"
-                                    }`}
-                                  >
-                                    ★
-                                  </span>
-                                ))}
-                                <span className="ml-2 text-sm text-gray-600">
-                                  ({review.overallRating}/5)
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="outline" size="sm">
-                                View Details
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TabsContent> */}
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent> */}
+              <TabsContent value="transactions" className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">All Transactions</h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>BabySitter Name</TableHead>
+                      <TableHead>Parent Name</TableHead>
+                      <TableHead>Total Amount</TableHead>
+                      <TableHead>BabySitter Amount </TableHead>
+                      <TableHead>Platform Fee</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center">
+                          No Transactions found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      transactions.map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell className="font-medium">
+                            {transaction.babySitterName || "Unknown"}
+                          </TableCell>
+                          <TableCell>
+                            {transaction.parentName || "Unknown"}
+                          </TableCell>
+                          <TableCell className="items-center">
+                            ${transaction.totalAmount || "00"}
+                          </TableCell>
+                          <TableCell>
+                            ${transaction.babySitterAmount || "00"}
+                          </TableCell>
+                          <TableCell>
+                            ${transaction.platformFee || "00"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TabsContent>
             </Tabs>
           )}
         </CardContent>

@@ -74,6 +74,7 @@ export default function AvailableSittersPopup({
   );
 
   const parentId = parentData.user?.id;
+  const parentName = parentData.user?.user_metadata?.fullName;  
 
   // ------------------old code for reference------------
 
@@ -187,6 +188,7 @@ export default function AvailableSittersPopup({
       setTotalAmount(totalAmount);
 
       const stripeAccountID = sitter.stripeAccountID;
+      const babySitterName = sitter.fullName;
 
       // create payment intent
       const response = await apiRequest(
@@ -196,6 +198,8 @@ export default function AvailableSittersPopup({
           totalAmount,
           bookingType: "instant",
           stripeAccountID,
+          parentName,
+          babySitterName
         }
       );
 
@@ -241,7 +245,7 @@ export default function AvailableSittersPopup({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Available Sitters Near You</DialogTitle>
             <DialogDescription>

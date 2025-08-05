@@ -195,3 +195,11 @@ export type babysitterProfile = {
   isAvailable: boolean;
   profile_image: string;
 };
+export interface TransactionsData {
+  id: string;
+  babySitterName: string;
+  parentName: string;
+  totalAmount: Float16Array;
+  babySitterAmount: Float16Array;
+  platformFee: Float16Array;
+}

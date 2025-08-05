@@ -389,6 +389,7 @@ export default function AvailableScheduledSitters({
     localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}"
   );
   const parentId = parentData.user?.id;
+  const parentName = parentData.user?.user_metadata?.fullName;
 
   const handleBookNow = async (sitterId: string) => {
     setSelectedSitter(sitterId);
@@ -442,6 +443,7 @@ export default function AvailableScheduledSitters({
     setTotalAmount(totalAmount);
 
     const stripeAccountID = sitter.stripeAccountID;
+    const babySitterName = sitter.fullName;
 
     // create payment intent
     const response = await apiRequest(
@@ -451,6 +453,8 @@ export default function AvailableScheduledSitters({
         totalAmount,
         bookingType: "scheduled",
         stripeAccountID,
+        parentName,
+        babySitterName,
       }
     );
 

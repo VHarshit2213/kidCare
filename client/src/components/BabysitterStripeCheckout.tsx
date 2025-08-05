@@ -56,7 +56,7 @@ export const BabysitterStripeCheckout: React.FC<
 
   return (
     <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-      <div className="p-6 max-w-xl w-full mx-auto bg-white rounded-2xl shadow-lg ">
+      <div className="p-6 max-w-xl w-full mx-auto bg-white rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-semibold mb-4">Pay for Babysitter</h2>
         {amount && (
           <p className="text-sm text-gray-500 mb-2">

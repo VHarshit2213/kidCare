@@ -1420,7 +1420,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // const bookingId = parseInt(req.params.id);
           const bookingId = req.params.id;
 
-          const { totalAmount, bookingType, stripeAccountID } = req.body;
+          const {
+            totalAmount,
+            bookingType,
+            stripeAccountID,
+            parentName,
+            babySitterName,
+          } = req.body;
 
           const table =
             bookingType === "scheduled" ? "scheduledCare" : "InstantCare";
@@ -1464,13 +1470,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
 
+          // Insert transaction data in supabase
+          const formattedTotal = (totalAmountCents / 100).toFixed(2);
+          const formattedPlatformFee = (platformFeeCents / 100).toFixed(2);
+          const formattedBabysitterAmount = (
+            babysitterAmountCents / 100
+          ).toFixed(2);
+
+          const payload = {
+            babySitterName: babySitterName,
+            parentName: parentName,
+            totalAmount: formattedTotal,
+            babySitterAmount: formattedBabysitterAmount,
+            platformFee: formattedPlatformFee,
+          };
+
+          await supabase.from("transaction").insert([payload]);
+
           // Update booking with payment details
-          await storage.updateBookingPayment(bookingId, {
-            totalAmount: totalAmountCents,
-            platformFee: platformFeeCents,
-            babysitterAmount: babysitterAmountCents,
-            stripePaymentIntentId: paymentIntent.id,
-          });
+          // await storage.updateBookingPayment(bookingId, {
+          //   totalAmount: totalAmountCents,
+          //   platformFee: platformFeeCents,
+          //   babysitterAmount: babysitterAmountCents,
+          //   stripePaymentIntentId: paymentIntent.id,
+          // });
 
           res.status(200).json({
             clientSecret: paymentIntent.client_secret,
@@ -1502,8 +1525,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Verify payment succeeded
-          const paymentIntent =
-            await stripe.paymentIntents.retrieve(paymentIntentId);
+          const paymentIntent = await stripe.paymentIntents.retrieve(
+            paymentIntentId
+          );
           if (paymentIntent.status !== "succeeded") {
             return res
               .status(400)
@@ -1580,7 +1604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Apply the discount percentage
             amount = Math.round((baseAmount * (100 - discount)) / 100);
             console.log(
-              `Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`,
+              `Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`
             );
           }
 
@@ -1644,8 +1668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Retrieve the payment intent
-          const paymentIntent =
-            await stripe.paymentIntents.retrieve(paymentIntentId);
+          const paymentIntent = await stripe.paymentIntents.retrieve(
+            paymentIntentId
+          );
 
           if (paymentIntent.status !== "succeeded") {
             return res
