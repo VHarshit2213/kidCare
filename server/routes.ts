@@ -27,11 +27,10 @@ import { sendPasswordResetEmail } from "./email-service";
 import { randomBytes } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "https://pkmghxgahplhoyxglryf.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbWdoeGdhaHBsaG95eGdscnlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzOTQ2NzgsImV4cCI6MjA2Njk3MDY3OH0.jkY4hzSag2IlC9eu_51RbpiI1w2ZSnluHEda2ECt8-Y";
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey =process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -1367,6 +1366,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // ----------------------- new code -------------------------
+
+  // for onboarding 
+  app.post(
+    "/api/create-onboarding-link",
+    async (req: Request, res: Response) => {
+      const { email, user_id, return_url, refresh_url } = req.body;
+
+      // 1. Create connected account
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "US",
+        email,
+        capabilities: {
+          transfers: { requested: true },
+        },
+      });
+
+      // 2. Save account.id to Supabase babysitter profile
+      const { error } = await supabase
+        .from("babySitterProfile")
+        .update({ stripeAccountID: account.id })
+        .eq("user_id", user_id);
+
+      if (error) {
+        console.error("Error saving Stripe ID to Supabase:", error.message);
+        return res.status(500).send({ error: "Failed to save to Supabase" });
+      }
+
+      // 3. Create onboarding link
+      const accountLink = await stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: refresh_url,
+        return_url: return_url,
+        type: "account_onboarding",
+      });
+
+      res.send({ url: accountLink.url });
+    }
+  );
+
+  // ----------------------- new code -------------------------
+  
   // Booking Payment Routes - 15% platform commission
   if (process.env.STRIPE_SECRET_KEY) {
     // Create payment intent for completed booking
@@ -1375,19 +1417,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authenticate,
       async (req: Request, res: Response) => {
         try {
-          const bookingId = parseInt(req.params.id);
-          const { totalAmount } = req.body; // in dollars
+          // const bookingId = parseInt(req.params.id);
+          const bookingId = req.params.id;
 
-          const booking = await storage.getBooking(bookingId);
+          const { totalAmount, bookingType, stripeAccountID } = req.body;
+
+          const table =
+            bookingType === "scheduled" ? "scheduledCare" : "InstantCare";
+
+          const { data: booking, error } = await supabase
+            .from(table)
+            .select("*")
+            .eq("id", bookingId)
+            .single();
+
+          // const booking = await storage.getBooking(bookingId);
           if (!booking) {
             return res.status(404).json({ message: "Booking not found" });
           }
 
-          if (booking.status !== "completed") {
-            return res
-              .status(400)
-              .json({ message: "Booking must be completed before payment" });
-          }
+          // if (booking.status !== "completed") {
+          //   return res
+          //     .status(400)
+          //     .json({ message: "Booking must be completed before payment" });
+          // }
 
           // Calculate amounts: 15% platform fee, 85% to babysitter
           const totalAmountCents = Math.round(totalAmount * 100);
@@ -1399,6 +1452,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             amount: totalAmountCents,
             currency: "usd",
             payment_method_types: ["card"],
+            // application_fee_amount: platformFeeCents,
+            transfer_data: {
+              destination: stripeAccountID,
+              amount: babysitterAmountCents,
+            },
             metadata: {
               bookingId: bookingId.toString(),
               platformFee: platformFeeCents.toString(),
@@ -1426,7 +1484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .status(500)
             .json({ message: error.message || "Failed to create payment" });
         }
-      },
+      }
     );
 
     // Confirm payment and transfer to babysitter
@@ -1486,7 +1544,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       },
     );
-  }
+
+  } 
 
   // Membership Payment Routes
   if (process.env.STRIPE_SECRET_KEY) {

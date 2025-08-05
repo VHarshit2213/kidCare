@@ -177,7 +177,7 @@ export default function Header() {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
                             setLocation("/membership");
-                          } else if (!profile.isApproved) {
+                          } else if (!profile?.isApproved) {
                             toast({
                               title: "Access Denied",
                               description:
@@ -276,7 +276,7 @@ export default function Header() {
             </nav>
           </div>
           <div>
-            {!profile?.isApproved && (
+            {isAuthenticated && (profile?.isApproved === false) && (
               <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600">
                 Your Profile is Under Review
               </Badge>

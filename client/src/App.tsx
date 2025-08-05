@@ -19,6 +19,7 @@ import MembershipPage from "@/pages/MembershipPage";
 import MembershipSuccess from "@/pages/MembershipSuccess";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import { BrowserRouter } from "react-router-dom";
+import ResumeOnboarding from "@/components/ResumeOnboarding";
 
 // Wrapper to ensure components never return null
 const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
@@ -47,6 +48,7 @@ function App() {
             <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
             <Route path="/admin" component={AdminPage} />
             <Route path="/membership" component={MembershipPage} />
+            <Route path="/resume-onboarding" component={ResumeOnboarding} />
             {/* <ProtectedRoute
               path="/membership-success"
               component={() => <EnsureRender Component={MembershipSuccess} />}

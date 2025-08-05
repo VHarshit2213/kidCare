@@ -23,7 +23,6 @@ export default function MembershipPage() {
   console.log("MembershipPage: Component rendered");
   const [_, navigate] = useLocation();
   const { user } = useAuth();
-  console.log("user", user);
   const { toast } = useToast();
   const [activating, setActivating] = useState(false);
   const [paymentType, setPaymentType] = useState<"full" | "installment">(

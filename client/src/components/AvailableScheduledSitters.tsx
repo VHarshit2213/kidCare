@@ -333,7 +333,12 @@ import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import BookingConfirmation from "./BookingConfirmation";
 import UserDetailsDialog from "./admin/UserDetailsDialog";
+import { loadStripe } from "@stripe/stripe-js";
+import { CardElement, Elements } from "@stripe/react-stripe-js";
+import { apiRequest } from "@/lib/queryClient";
+import { BabysitterStripeCheckout } from "./BabysitterStripeCheckout";
 
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 interface AvailableScheduledSittersProps {
   isOpen: boolean;
   onClose: () => void;
@@ -369,63 +374,101 @@ export default function AvailableScheduledSitters({
   const [bookedSitter, setBookedSitter] = useState<
     (babysitterProfile & { distance: number }) | null
   >(null);
+  const [stripeClientSecret, setStripeClientSecret] = useState("");
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [totalAmount, setTotalAmount] = useState<number | null>(null);
+
+  const options = {
+    clientSecret: stripeClientSecret,
+    appearance: {
+      theme: "stripe" as const,
+    },
+  };
 
   const parentData = JSON.parse(
-    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}",
+    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}"
   );
   const parentId = parentData.user?.id;
 
-  console.log("nearbySitters", nearbySitters);
-
   const handleBookNow = async (sitterId: string) => {
     setSelectedSitter(sitterId);
-
     // Find the selected sitter from the filtered list
     const sitter = nearbySitters.find((sitter) => sitter.user_id === sitterId);
+
     if (!sitter) return;
-
     // Store the booked sitter
-    if (sitter) {
-      const payload = {
-        parent_id: parentId,
-        sitter_id: sitter.user_id,
-        hours: bookingDetails.hoursNeeded,
-        start_time: bookingDetails.startTime,
-        end_time: bookingDetails.endTime,
-        location: {
-          latitude: bookingDetails.latitude,
-          longitude: bookingDetails.longitude,
-        },
-        address: bookingDetails.address,
-        children: bookingDetails.children,
-        careInstructions: bookingDetails.careInstructions,
-        date: bookingDetails.date,
-      };
+    const payload = {
+      parent_id: parentId,
+      sitter_id: sitter.user_id,
+      hours: bookingDetails.hoursNeeded,
+      start_time: bookingDetails.startTime,
+      end_time: bookingDetails.endTime,
+      location: {
+        latitude: bookingDetails.latitude,
+        longitude: bookingDetails.longitude,
+      },
+      address: bookingDetails.address,
+      children: bookingDetails.children,
+      careInstructions: bookingDetails.careInstructions,
+      date: bookingDetails.date,
+    };
 
-      const { error } = await supabase.from("scheduledCare").insert([payload]);
+    // Insert into Supabase and get the new booking ID
+    const { data, error } = await supabase
+      .from("scheduledCare")
+      .insert([payload])
+      .select()
+      .single();
 
-      if (error) {
-        toast({
-          title: "Booking Failed",
-          description: error.message || "Please try again later.",
-          variant: "destructive",
-        });
-        setSelectedSitter(null);
-        return;
-      }
-
+    if (error || !data) {
       toast({
-        title: "Booking Confirmed",
-        description: "Your babysitter has been successfully booked!",
+        title: "Booking Failed",
+        description: error?.message || "Please try again later.",
+        variant: "destructive",
       });
-
-      setBookedSitter(sitter);
-
-      // Simulate a brief loading state
-      setTimeout(() => {
-        setShowConfirmation(true);
-      }, 800);
+      setSelectedSitter(null);
+      return;
     }
+
+    const bookingId = data.id;
+
+    toast({
+      title: "Booking Confirmed",
+      description: "Proceeding to payment...",
+    });
+
+    // Calculate total amount (e.g. hourly rate × hours)
+    const totalAmount = sitter.horulyRate * bookingDetails.hoursNeeded;
+    setTotalAmount(totalAmount);
+
+    const stripeAccountID = sitter.stripeAccountID;
+
+    // create payment intent
+    const response = await apiRequest(
+      "POST",
+      `/api/bookings/${bookingId}/create-payment`,
+      {
+        totalAmount,
+        bookingType: "scheduled",
+        stripeAccountID,
+      }
+    );
+
+    const payment = await response.json();
+
+    if (!response.ok || !payment?.clientSecret) {
+      toast({
+        title: "Payment Error",
+        description: payment?.message || "Failed to initiate payment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setStripeClientSecret(payment.clientSecret);
+    setBookedSitter(sitter);
+    setShowStripeModal(true);
+    onClose();
   };
 
   const handleConfirmationClose = () => {
@@ -493,7 +536,11 @@ export default function AvailableScheduledSitters({
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
                       <div>
                         <p
-                          className={`text-sm font-medium ${sitter?.isAvailable ? "text-green-600" : "text-red-600"}`}
+                          className={`text-sm font-medium ${
+                            sitter?.isAvailable
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
                         >
                           {sitter?.isAvailable ? "Online" : "Offline"}
                         </p>
@@ -694,6 +741,23 @@ export default function AvailableScheduledSitters({
           </div>
         </DialogContent>
       </Dialog>
+
+      {showStripeModal && stripeClientSecret && totalAmount !== null && (
+        <Elements stripe={stripePromise} options={options}>
+          <BabysitterStripeCheckout
+            clientSecret={stripeClientSecret}
+            amount={totalAmount}
+            onSuccess={() => {
+              setShowStripeModal(false);
+              setShowConfirmation(true); // optional: show BookingConfirmation
+            }}
+            onClose={() => {
+              setShowStripeModal(false);
+              setSelectedSitter(null);
+            }}
+          />
+        </Elements>
+      )}
     </>
   );
 }

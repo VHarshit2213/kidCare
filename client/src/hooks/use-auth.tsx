@@ -249,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response?.userType === "babysitter") {
         await supabase
           .from("babySitterProfile")
-          .update({ isAvailable: true })
+          .upsert({ isAvailable: true })
           .eq("user_id", data.session?.user.id);
       }
 
@@ -257,7 +257,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Registration successful",
         description: `Welcome to The Enchanted Co., ${response?.fullName}!`,
-      });
+      });      
+      
+      // ✅ Stripe Connect Onboarding for babysitters
+      if (response?.userType === "babysitter") {
+        const res = await fetch("/api/create-onboarding-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: userName,
+            user_id: data.session?.user.id,
+            refresh_url: `${window.location.origin}/resume-onboarding`,
+            return_url: `${window.location.origin}/profile-completion`,
+          }),
+        });
+
+        const { url } = await res.json();
+        window.location.href = url; // redirect to Stripe onboarding
+        return;
+      }
 
       // if (registeredUser?.userType === "parent") {
       //   window.location.href = "/membership";

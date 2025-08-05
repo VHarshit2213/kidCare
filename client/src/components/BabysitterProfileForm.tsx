@@ -515,7 +515,7 @@ export default function BabysitterProfileForm() {
       if (Array.isArray(existingProfile) && existingProfile.length > 0) {
         response = await supabase
           .from("babySitterProfile")
-          .update(payload)
+          .update({ ...payload, isProfileCompleted: true })
           .eq("user_id", userId);
       } else {
         response = await supabase

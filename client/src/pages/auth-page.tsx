@@ -219,7 +219,7 @@ export default function AuthPage() {
       id: user.id,
       userName: user.username,
       userType: user.userType,
-    });
+    });    
 
     if (user?.userType === "parent") {
       const data = await fetchParentProfile(user?.sub);
@@ -239,8 +239,8 @@ export default function AuthPage() {
       navigate("/");
     } else if (user?.userType === "babysitter") {
       const data = await fetchBabysitterProfile(user?.sub);
-
-      if (!data || data.length === 0) {
+      
+      if (!data?.[0]?.isProfileCompleted) {
         console.log("No parent profile → redirect to /profile-completion");
         navigate("/profile-completion");
         return;
