@@ -166,7 +166,8 @@ export interface ParentProfile {
   }[];
   children?: any[];
   profile_image?: string;
-  profileCompleted?: boolean;
+  isProfileCompleted?: boolean;
+  isApproved:boolean;
 }
 
 export type babysitterProfile = {
@@ -194,6 +195,8 @@ export type babysitterProfile = {
   isApproved: boolean;
   isAvailable: boolean;
   profile_image: string;
+  isProfileCompleted:boolean;
+  stripeAccountID:string;
 };
 export interface TransactionsData {
   id: string;

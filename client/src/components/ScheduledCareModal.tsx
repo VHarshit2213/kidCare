@@ -851,11 +851,11 @@ export default function ScheduledCareModal({
   }, [babySitterProfiles, parentLocation]);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && user?.user_metadata?.userType === "parent") {
       loadProfile();
       fetchBabySitterProfiles();
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     const fetchUser = async () => {

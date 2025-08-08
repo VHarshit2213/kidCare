@@ -837,6 +837,8 @@ import supabase from "@/config/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { ParentProfile } from "@/lib/types";
 import mapboxgl from "mapbox-gl";
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
@@ -1670,9 +1672,11 @@ export default function ParentProfileForm() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your phone number"
+                          <PhoneInput
+                            defaultCountry="in"
+                            value={field.value}
+                            onChange={field.onChange}
+                            inputClassName="w-full px-4 py-2 border border-gray-300 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           />
                         </FormControl>
                         <FormMessage />

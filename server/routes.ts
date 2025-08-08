@@ -26,6 +26,7 @@ import {
 import { sendPasswordResetEmail } from "./email-service";
 import { randomBytes } from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import twilio from 'twilio';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey =process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
@@ -41,6 +42,21 @@ if (!process.env.STRIPE_SECRET_KEY) {
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
+
+// Initialize Twilio client with environment variables
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+// Check if all required environment variables are present
+if (!accountSid || !authToken || !twilioPhoneNumber) {
+  console.warn('Twilio credentials not fully configured. Masked communication features will not work.');
+}
+
+// Initialize the Twilio client only if we have all credentials
+const client = accountSid && authToken 
+  ? twilio(accountSid, authToken) 
   : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2065,6 +2081,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  // for send massage using twilio ( new code )
+  app.post("/api/send-message", async (req: Request, res: Response) => {
+    const { sender_phone, receiver_phone, message, sender_id, receiver_id } =
+      req.body;
+
+    try {
+      // 1. Send SMS
+      await client.messages.create({
+        body: message,
+        from: twilioPhoneNumber,
+        to:receiver_phone,
+      });
+
+      // 2. Save in Supabase
+      const payload = {
+        sender_id,
+        receiver_id,
+        sender_phone,
+        receiver_phone,
+        message,
+        direction: "outbound",
+      };
+
+      const { error } = await supabase.from("messages").insert([payload]);
+
+      if (error) throw error;
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Twilio send error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // for received massage using twilio ( new code )
+  const getUserIdByPhone = async (phone: string) => {
+    const { data: parent } = await supabase
+      .from("parentprofile")
+      .select("user_id")
+      .eq("phoneNumber", phone)
+      .single();
+
+    if (parent) return parent.user_id;
+
+    const { data: sitter } = await supabase
+      .from("babySitterProfile")
+      .select("user_id")
+      .eq("phoneNumber", phone)
+      .single();
+
+    return sitter?.user_id || null;
+  };
+
+  app.use(express.urlencoded({ extended: false }));
+
+  app.post("/api/receive-message", async (req: Request, res: Response) => {
+    const { From, To, Body } = req.body;
+
+    console.log("TWILIO WEBHOOK:", { From, To, Body });
+    try {
+      const senderId = await getUserIdByPhone(From);
+      const receiverId = await getUserIdByPhone(To);
+
+      if (!senderId || !receiverId) {
+        return res.status(400).json({ error: "User not found" });
+      }
+
+      const payload = {
+        sender_id: senderId,
+        receiver_id: receiverId,
+        sender_phone: From,
+        receiver_phone: To,
+        message: Body,
+        direction: "inbound",
+      };
+
+      const { error } = await supabase.from("messages").insert([payload]);
+      if (error) throw error;
+
+      res.status(200).json({ success: true });
+      res.type("text/xml").send("<Response></Response>");
+    } catch (error: any) {
+      console.error("Receive message error:", error.message);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // for get all messages 
+  app.get("/api/conversation", async (req: Request, res: Response) => {
+    const {  sender_id, receiver_id  } = req.query;
+
+    if (!sender_id || !receiver_id) {
+      return res.status(400).json({ error: "Missing sender_id or receiver_id" });
+    }
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(
+        `and(sender_id.eq.${sender_id},receiver_id.eq.${receiver_id}),and(sender_id.eq.${receiver_id},receiver_id.eq.${sender_id})`
+      )
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching messages:", error.message);
+      return res.status(500).json({ error: "Failed to fetch messages" });
+    }
+
+    res.status(200).json(data);
+  });
 
   const httpServer = createServer(app);
 
