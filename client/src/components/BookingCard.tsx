@@ -16,12 +16,14 @@ import { format } from "date-fns";
 import { babysitterProfile, ParentProfile } from "@/lib/types";
 import ChatDialog from "@/components/ChatDialog";
 import { IoIosChatboxes } from "react-icons/io";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import { MdOutlineRateReview } from "react-icons/md";
 
 interface BookingCardProps {
   booking: Booking;
 }
 
-export default function BookingCard({ booking }: BookingCardProps) {
+export default function BookingCard({ booking, fetchBookings }: BookingCardProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showParentReviewForm, setShowParentReviewForm] = useState(false);
   const [showNavigation, setShowNavigation] = useState(false);
@@ -31,6 +33,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
   const { user } = useAuth();
   const { getSignedUrl } = useSignedUrl();
   const [loading, setLoading] = useState(true);
+  const [babySitterStatus, setBabySitterStatus] = useState<string>("Booked");
 
   // const { data: babysitter } = useQuery<User>({
   //   queryKey: booking.babysitterId
@@ -44,16 +47,16 @@ export default function BookingCard({ booking }: BookingCardProps) {
   // });
 
   // Check if current user has already reviewed this booking (babysitter reviews)
-  const { data: existingReviews } = useQuery<any[]>({
-    queryKey: [`/api/reviews/booking/${booking.id}`],
-    enabled: user?.userType === "babysitter" && booking.status === "completed",
-  });
-
-  // Check if current user has already reviewed this booking (parent reviews)
-  const { data: existingParentReviews } = useQuery<any[]>({
-    queryKey: [`/api/parent-reviews/booking/${booking.id}`],
-    enabled: user?.userType === "parent" && booking.status === "completed",
-  });
+  // const { data: existingReviews } = useQuery<any[]>({
+  //   queryKey: [`/api/reviews/booking/${booking.id}`],
+  //   enabled: user?.userType === "babysitter" && booking.status === "completed",
+  // });
+  //
+  // // Check if current user has already reviewed this booking (parent reviews)
+  // const { data: existingParentReviews } = useQuery<any[]>({
+  //   queryKey: [`/api/parent-reviews/booking/${booking.id}`],
+  //   enabled: user?.userType === "parent" && booking.status === "completed",
+  // });
 
   const openChatDialog = (props) => {
     setChatProps(props);
@@ -112,6 +115,22 @@ export default function BookingCard({ booking }: BookingCardProps) {
     }
   }, [booking]);
 
+  const updateBabySitterStatus = async (value) => {
+    const { data, error } = await supabase
+        .from("InstantCare")
+        .update({ status: value})
+        .eq('id' , booking.id)
+
+    setBabySitterStatus(value);
+
+    if (error) {
+      console.error(error);
+    } else {
+      console.log("data ==>", data);
+    }
+    await  fetchBookings();
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-4">
       {loading ? (
@@ -126,11 +145,11 @@ export default function BookingCard({ booking }: BookingCardProps) {
         ))
       ) : (
         <div className="sm:flex sm:items-center sm:justify-between">
-          <div className="sm:flex sm:items-center w-full">
+          <div className="sm:flex sm:items-start w-full">
             {/* Parent logged in → show babysitter details */}
             {user?.user_metadata?.userType === "parent" && babysitter && (
               <>
-                <div className="hidden sm:block mr-4">
+                <div className="hidden sm:block mr-4 mt-3">
                   <Avatar className="h-12 w-12">
                     {babysitter.profileImageUrl ? (
                       <AvatarImage
@@ -144,7 +163,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     )}
                   </Avatar>
                 </div>
-                <div>
+                <div className={'w-full'}>
                   <h3 className="text-lg font-medium text-neutral-800">
                     {babysitter.fullName} with{" "}
                     {booking.children.map(
@@ -155,73 +174,95 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     Address :{" "}
                     <span className="font-medium"> {babysitter?.address}</span>
                   </p>
-                  <div className="mt-1 flex items-start text-sm text-neutral-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {booking.date ? (
-                      <div className="flex flex-col">
-                        <p>
+                    <div className="flex items-end text-sm text-neutral-600">
+                      <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                      >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {booking.date ? (
+                          <div className="flex flex-col">
+                            <p>
                           <span className="font-medium text-foreground">
                             Date:
                           </span>{" "}
-                          {format(booking.date, "MMM d, yyyy")}
-                        </p>
-                        <p>
+                              {format(booking.date, "MMM d, yyyy")}
+                            </p>
+                            <p>
                           <span className="font-medium text-foreground">
                             Time:
                           </span>{" "}
-                          {/* {format(booking?.date, "MMM d, yyyy")} ( */}
-                          {booking.start_time} - {booking.end_time}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
+                              {/* {format(booking?.date, "MMM d, yyyy")} ( */}
+                              {booking.start_time} - {booking.end_time}
+                            </p>
+                          </div>
+                      ) : (
+                          <>
                         <span>
                           {formatBookingTimeRange(
-                            booking.start_time,
-                            booking.end_time
+                              booking.start_time,
+                              booking.end_time
                           )}
                         </span>
-                      </>
-                    )}
+                          </>
+                      )}
+                    </div>
+                  <div className="flex justify-between mt-5">
+                    <div className={'flex gap-2 w-auto'}>
+                      <Select
+                          value={babySitterStatus}
+                          onValueChange={(value) => updateBabySitterStatus(value)}
+                      >
+                        <SelectTrigger className="w-full !h-8">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["Booked","Away", "Completed"].map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {babySitterStatus === "Completed" && <MdOutlineRateReview size={30}  onClick={() => setShowReviewForm(true)}/>}
+                    </div>
+
+                    <div className="ml-auto">
+                      <button
+                          className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
+                          onClick={() =>
+                              openChatDialog({
+                                currentUserId: parent?.user_id,
+                                otherUserId: babysitter?.user_id,
+                                currentUserPhone: parent?.phoneNumber,
+                                otherUserPhone: babysitter?.phoneNumber,
+                                otherUserName: babysitter.fullName,
+                              })
+                          }
+                      >
+                        <IoIosChatboxes className="h-4 w-4" />
+                        Chat
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-auto">
-                  <button
-                    className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
-                    onClick={() =>
-                      openChatDialog({
-                        currentUserId: parent?.user_id,
-                        otherUserId: babysitter?.user_id,
-                        currentUserPhone: parent?.phoneNumber,
-                        otherUserPhone: babysitter?.phoneNumber,
-                        otherUserName: babysitter.fullName,
-                      })
-                    }
-                  >
-                    <IoIosChatboxes className="h-4 w-4" />
-                    Chat
-                  </button>
-                </div>
+
               </>
             )}
 
             {/* Babysitter logged in → show parent details */}
             {user?.user_metadata?.userType === "babysitter" && parent && (
               <>
-                <div className="hidden sm:block mr-4">
+                <div className="hidden sm:block mr-4  mt-3">
                   <Avatar className="h-12 w-12">
                     <Avatar className="h-12 w-12">
                       {parent.profileImageUrl ? (
@@ -237,7 +278,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     </Avatar>
                   </Avatar>
                 </div>
-                <div>
+                <div className={'w-full'}>
                   <h3 className="text-lg font-medium text-neutral-800">
                     {parent.fullName}’s children:{" "}
                     {booking.children.map(
@@ -294,111 +335,166 @@ export default function BookingCard({ booking }: BookingCardProps) {
                       </>
                     )}
                   </div>
+                  <div className="flex justify-between mt-5">
+                    <div className={'flex gap-2 w-auto'}>
+                      <Select
+                          value={babySitterStatus}
+                          onValueChange={(value) => {
+                            setBabySitterStatus(value);
+                          }}
+                      >
+                        <SelectTrigger className="w-full !h-8">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["Booked","Away", "Completed"].map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {babySitterStatus === "Completed" && <MdOutlineRateReview size={30}/>}
+                    </div>
+                    <div className="ml-4 flex flex-shrink-0 space-x-2">
+                      {user?.user_metadata?.userType === "babysitter" &&
+                          booking.sitter_id === user.id &&
+                          // (booking.status === "confirmed" ||
+                          //   booking.status === "in-progress") &&
+                          booking?.address && (
+                              <>
+                                <Button
+                                    onClick={() => setShowNavigation(true)}
+                                    size="sm"
+                                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                                >
+                                  <Navigation className="h-4 w-4 mr-1" />
+                                  Navigate
+                                </Button>
+                                <button
+                                    className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
+                                    onClick={() =>
+                                        openChatDialog({
+                                          currentUserId: babysitter?.user_id,
+                                          otherUserId: parent?.user_id,
+                                          currentUserPhone: babysitter?.phoneNumber,
+                                          otherUserPhone: parent?.phoneNumber,
+                                          otherUserName: parent.fullName,
+                                        })
+                                    }
+                                >
+                                  <IoIosChatboxes className="h-4 w-4" />
+                                  Chat
+                                </button>
+                              </>
+                          )}
+                    </div>
+                  </div>
                 </div>
               </>
             )}
           </div>
-          <div className="mt-4 flex items-center justify-between sm:mt-0 sm:ml-6">
-            {/* <StatusBadge status={booking.status} /> */}
-            <div className="ml-4 flex flex-shrink-0 space-x-2">
-              {/* Navigation button for babysitters on confirmed or in-progress bookings */}
-              {user?.user_metadata?.userType === "babysitter" &&
-                booking.sitter_id === user.id &&
-                // (booking.status === "confirmed" ||
-                //   booking.status === "in-progress") &&
-                booking?.address && (
-                  <>
-                    <Button
-                      onClick={() => setShowNavigation(true)}
-                      size="sm"
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
-                    >
-                      <Navigation className="h-4 w-4 mr-1" />
-                      Navigate
-                    </Button>
-                    <button
-                      className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
-                      onClick={() =>
-                        openChatDialog({
-                          currentUserId: babysitter?.user_id,
-                          otherUserId: parent?.user_id,
-                          currentUserPhone: babysitter?.phoneNumber,
-                          otherUserPhone: parent?.phoneNumber,
-                          otherUserName: parent.fullName,
-                        })
-                      }
-                    >
-                      <IoIosChatboxes className="h-4 w-4" />
-                      Chat
-                    </button>
-                  </>
-                )}
+          {/*<div className="mt-4 flex items-center justify-between sm:mt-0 sm:ml-6">*/}
+          {/*  /!* <StatusBadge status={booking.status} /> *!/*/}
+          {/*  <div className="ml-4 flex flex-shrink-0 space-x-2">*/}
+          {/*    /!* Navigation button for babysitters on confirmed or in-progress bookings *!/*/}
+          {/*    {user?.user_metadata?.userType === "babysitter" &&*/}
+          {/*      booking.sitter_id === user.id &&*/}
+          {/*      // (booking.status === "confirmed" ||*/}
+          {/*      //   booking.status === "in-progress") &&*/}
+          {/*      booking?.address && (*/}
+          {/*        <>*/}
+          {/*          <Button*/}
+          {/*            onClick={() => setShowNavigation(true)}*/}
+          {/*            size="sm"*/}
+          {/*            className="bg-blue-500 hover:bg-blue-600 text-white"*/}
+          {/*          >*/}
+          {/*            <Navigation className="h-4 w-4 mr-1" />*/}
+          {/*            Navigate*/}
+          {/*          </Button>*/}
+          {/*          <button*/}
+          {/*            className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"*/}
+          {/*            onClick={() =>*/}
+          {/*              openChatDialog({*/}
+          {/*                currentUserId: babysitter?.user_id,*/}
+          {/*                otherUserId: parent?.user_id,*/}
+          {/*                currentUserPhone: babysitter?.phoneNumber,*/}
+          {/*                otherUserPhone: parent?.phoneNumber,*/}
+          {/*                otherUserName: parent.fullName,*/}
+          {/*              })*/}
+          {/*            }*/}
+          {/*          >*/}
+          {/*            <IoIosChatboxes className="h-4 w-4" />*/}
+          {/*            Chat*/}
+          {/*          </button>*/}
+          {/*        </>*/}
+          {/*      )}*/}
 
-              {/* Review button for babysitters on completed bookings */}
-              {user?.userType === "babysitter" &&
-                booking.status === "completed" &&
-                booking.babysitterId === user.id &&
-                !existingReviews?.length && (
-                  <Button
-                    onClick={() => setShowReviewForm(true)}
-                    size="sm"
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white"
-                  >
-                    <Star className="h-4 w-4 mr-1" />
-                    Leave Review
-                  </Button>
-                )}
+          {/*    /!* Review button for babysitters on completed bookings *!/*/}
+          {/*    {user?.userType === "babysitter" &&*/}
+          {/*      booking.status === "completed" &&*/}
+          {/*      booking.babysitterId === user.id &&*/}
+          {/*      !existingReviews?.length && (*/}
+          {/*        <Button*/}
+          {/*          onClick={() => setShowReviewForm(true)}*/}
+          {/*          size="sm"*/}
+          {/*          className="bg-yellow-500 hover:bg-yellow-600 text-white"*/}
+          {/*        >*/}
+          {/*          <Star className="h-4 w-4 mr-1" />*/}
+          {/*          Leave Review*/}
+          {/*        </Button>*/}
+          {/*      )}*/}
 
-              {user?.userType === "parent" &&
-                booking.status === "completed" &&
-                booking.parentId === user.id &&
-                !existingParentReviews?.length && (
-                  <Button
-                    onClick={() => setShowParentReviewForm(true)}
-                    size="sm"
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    <Star className="h-4 w-4 mr-1" />
-                    Review Babysitter
-                  </Button>
-                )}
+          {/*    {user?.userType === "parent" &&*/}
+          {/*      booking.status === "completed" &&*/}
+          {/*      booking.parentId === user.id &&*/}
+          {/*      !existingParentReviews?.length && (*/}
+          {/*        <Button*/}
+          {/*          onClick={() => setShowParentReviewForm(true)}*/}
+          {/*          size="sm"*/}
+          {/*          className="bg-blue-500 hover:bg-blue-600 text-white"*/}
+          {/*        >*/}
+          {/*          <Star className="h-4 w-4 mr-1" />*/}
+          {/*          Review Babysitter*/}
+          {/*        </Button>*/}
+          {/*      )}*/}
 
-              {/* {babysitter && (
-              <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-              </button>
-            )} */}
-              {/* <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button> */}
-            </div>
-          </div>
+          {/*    /!* {babysitter && (*/}
+          {/*    <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">*/}
+          {/*      <svg*/}
+          {/*        xmlns="http://www.w3.org/2000/svg"*/}
+          {/*        className="h-4 w-4"*/}
+          {/*        fill="none"*/}
+          {/*        viewBox="0 0 24 24"*/}
+          {/*        stroke="currentColor"*/}
+          {/*      >*/}
+          {/*        <path*/}
+          {/*          strokeLinecap="round"*/}
+          {/*          strokeLinejoin="round"*/}
+          {/*          strokeWidth={2}*/}
+          {/*          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"*/}
+          {/*        />*/}
+          {/*      </svg>*/}
+          {/*    </button>*/}
+          {/*  )} *!/*/}
+          {/*    /!* <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">*/}
+          {/*    <svg*/}
+          {/*      xmlns="http://www.w3.org/2000/svg"*/}
+          {/*      className="h-4 w-4"*/}
+          {/*      fill="none"*/}
+          {/*      viewBox="0 0 24 24"*/}
+          {/*      stroke="currentColor"*/}
+          {/*    >*/}
+          {/*      <path*/}
+          {/*        strokeLinecap="round"*/}
+          {/*        strokeLinejoin="round"*/}
+          {/*        strokeWidth={2}*/}
+          {/*        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"*/}
+          {/*      />*/}
+          {/*    </svg>*/}
+          {/*  </button> *!/*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
       )}
 

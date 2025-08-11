@@ -125,7 +125,7 @@ export default function MyBookings() {
             {instantCareBookings.length > 0 ? (
               <div className="space-y-4 mb-6">
                 {instantCareBookings.map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
+                  <BookingCard key={booking.id} booking={booking} fetchBookings={fetchBookings}/>
                 ))}
               </div>
             ) : (
