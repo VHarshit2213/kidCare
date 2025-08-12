@@ -33,7 +33,7 @@ const ChatDialog = ({
       if (initial) setLoading(true);
       try {
         const res = await fetch(
-          `/api/conversation?sender_id=${currentUserId}&receiver_id=${otherUserId}`,
+          `/api/conversation?sender_id=${currentUserId}&receiver_id=${otherUserId}`
         );
         if (!res.ok) {
           throw new Error("Failed to fetch messages");
@@ -76,7 +76,7 @@ const ChatDialog = ({
         receiver_id: otherUserId,
         message: input,
         direction: "outbound",
-        // created_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       },
     ]);
     setInput("");
@@ -87,7 +87,7 @@ const ChatDialog = ({
       <div className="bg-white rounded-xl w-full max-w-md shadow-lg flex flex-col h-[80vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-100 rounded-t-xl">
-          <h4 className="text-lg font-semibold text-gray-700">
+          <h4 className="text-lg font-semibold text-gray-700 capitalize">
             Chat with {otherUserName}
           </h4>
           <button
@@ -168,7 +168,8 @@ const ChatDialog = ({
           />
           <button
             onClick={handleSend}
-            className="px-4 py-2 bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md flex items-center gap-1 gap-1"
+            disabled={!input.trim()}
+            className={`px-4 py-2 bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
           >
             <IoIosSend />
             Send

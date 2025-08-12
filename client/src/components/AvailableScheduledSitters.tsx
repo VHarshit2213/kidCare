@@ -412,6 +412,7 @@ export default function AvailableScheduledSitters({
       children: bookingDetails.children,
       careInstructions: bookingDetails.careInstructions,
       date: bookingDetails.date,
+      status: "Booked",
     };
 
     // Insert into Supabase and get the new booking ID

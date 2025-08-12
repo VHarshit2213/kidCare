@@ -273,10 +273,22 @@ export default function Header() {
               >
                 Messages
               </Link>
+              {isBabySitter && (
+                <Link
+                  href="/reviews"
+                  className={`${
+                    isActive("/reviews")
+                      ? "text-[#3c5679] font-medium"
+                      : "text-neutral-700 hover:text-[#3c5679]"
+                  } px-1 pt-1 text-sm tracking-wide`}
+                >
+                  Reviews
+                </Link>
+              )}
             </nav>
           </div>
           <div>
-            {isAuthenticated && (profile?.isApproved === false) && (
+            {isAuthenticated && profile?.isApproved === false && (
               <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600">
                 Your Profile is Under Review
               </Badge>

@@ -157,6 +157,7 @@ export default function AvailableSittersPopup({
         address: bookingDetails.address,
         children: bookingDetails.children,
         careInstructions: bookingDetails.careInstructions,
+        status: "Booked",
       };
 
       // Insert into Supabase and get the new booking ID

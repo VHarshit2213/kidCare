@@ -1,7 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -10,17 +23,44 @@ import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertParentReviewSchema, type Booking, type User } from "@shared/schema";
+import {
+  insertParentReviewSchema,
+  type Booking,
+  type User,
+} from "@shared/schema";
+import supabase from "@/config/supabaseClient";
 
-const parentReviewFormSchema = insertParentReviewSchema.extend({
-  punctuality: z.number().min(1).max(5),
-  communication: z.number().min(1).max(5),
-  childEngagement: z.number().min(1).max(5),
-  safety: z.number().min(1).max(5),
-  cleanlinessResponsibility: z.number().min(1).max(5),
-  followsInstructions: z.number().min(1).max(5),
-  childReaction: z.number().min(1).max(5),
-  wouldBookAgain: z.number().min(1).max(5),
+// const parentReviewFormSchema = insertParentReviewSchema.extend({
+//   punctuality: z.number().min(1).max(5),
+//   communication: z.number().min(1).max(5),
+//   childEngagement: z.number().min(1).max(5),
+//   safety: z.number().min(1).max(5),
+//   cleanlinessResponsibility: z.number().min(1).max(5),
+//   followsInstructions: z.number().min(1).max(5),
+//   childReaction: z.number().min(1).max(5),
+//   wouldBookAgain: z.number().min(1).max(5),
+//   notes: z.string().optional(),
+// });
+
+const parentReviewFormSchema = z.object({
+  punctuality: z.number().min(1, { message: "Please rate punctuality." }),
+  communication: z.number().min(1, { message: "Please rate communication." }),
+  childEngagement: z
+    .number()
+    .min(1, { message: "Please rate child engagement." }),
+  safety: z.number().min(1, { message: "Please rate safety." }),
+  cleanlinessResponsibility: z
+    .number()
+    .min(1, { message: "Please rate cleanliness & responsibility." }),
+  followsInstructions: z
+    .number()
+    .min(1, { message: "Please rate how well they followed instructions." }),
+  childReaction: z
+    .number()
+    .min(1, { message: "Please rate child's reaction." }),
+  wouldBookAgain: z
+    .number()
+    .min(1, { message: "Please rate whether you would book again." }),
   notes: z.string().optional(),
 });
 
@@ -29,6 +69,7 @@ type ParentReviewFormValues = z.infer<typeof parentReviewFormSchema>;
 interface ParentReviewFormProps {
   booking: Booking;
   babysitter: User;
+  parent: any;
   onSuccess: () => void;
 }
 
@@ -48,13 +89,20 @@ const criteriaDescriptions = {
   communication: "How well did the babysitter communicate with you?",
   childEngagement: "How well did the babysitter engage with your child?",
   safety: "How safe did you feel leaving your child with this babysitter?",
-  cleanlinessResponsibility: "How responsible was the babysitter with your home and child's care?",
+  cleanlinessResponsibility:
+    "How responsible was the babysitter with your home and child's care?",
   followsInstructions: "How well did the babysitter follow your instructions?",
   childReaction: "How did your child react to the babysitter?",
   wouldBookAgain: "Would you book this babysitter again?",
 };
 
-function StarRating({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+function StarRating({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+}) {
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -77,7 +125,12 @@ function StarRating({ value, onChange }: { value: number; onChange: (value: numb
   );
 }
 
-export default function ParentReviewForm({ booking, babysitter, onSuccess }: ParentReviewFormProps) {
+export default function ParentReviewForm({
+  booking,
+  babysitter,
+  parent,
+  onSuccess,
+}: ParentReviewFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,16 +138,14 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
   const form = useForm<ParentReviewFormValues>({
     resolver: zodResolver(parentReviewFormSchema),
     defaultValues: {
-      bookingId: booking.id,
-      revieweeId: babysitter.id,
-      punctuality: 5,
-      communication: 5,
-      childEngagement: 5,
-      safety: 5,
-      cleanlinessResponsibility: 5,
-      followsInstructions: 5,
-      childReaction: 5,
-      wouldBookAgain: 5,
+      punctuality: 0,
+      communication: 0,
+      childEngagement: 0,
+      safety: 0,
+      cleanlinessResponsibility: 0,
+      followsInstructions: 0,
+      childReaction: 0,
+      wouldBookAgain: 0,
       notes: "",
     },
   });
@@ -110,7 +161,9 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
         description: "Thank you for your feedback!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/bookings/parent"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/parent-reviews/booking", booking.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/parent-reviews/booking", booking.id],
+      });
       onSuccess();
     },
     onError: (error: any) => {
@@ -122,10 +175,59 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
     },
   });
 
+  // const onSubmit = async (values: ParentReviewFormValues) => {
+  //   setIsSubmitting(true);
+  //   try {
+  //     await createReviewMutation.mutateAsync(values);
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const onSubmit = async (values: ParentReviewFormValues) => {
     setIsSubmitting(true);
     try {
-      await createReviewMutation.mutateAsync(values);
+      // Calculate average (overall rating)
+      const ratings = [
+        values.punctuality,
+        values.communication,
+        values.childEngagement,
+        values.safety,
+        values.cleanlinessResponsibility,
+        values.followsInstructions,
+        values.childReaction,
+        values.wouldBookAgain,
+      ];
+
+      const overallRating = Math.round(
+        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      );
+
+      const payload = {
+        bookingId: booking.id,
+        parent_id: parent.user_id,
+        babysitter_id: babysitter.user_id,
+        overAllRating: overallRating,
+        ...values,
+      };
+
+      const { error } = await supabase.from("reviews").insert([payload]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Review Submitted",
+        description: "Thank you for your feedback!",
+      });
+
+      onSuccess();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description:
+          err.message || "Something went wrong while submitting your review.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +238,8 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
       <CardHeader>
         <CardTitle>Review {babysitter.fullName}</CardTitle>
         <CardDescription>
-          Please rate your experience with {babysitter.fullName} for the babysitting session on{" "}
+          Please rate your experience with {babysitter.fullName} for the
+          babysitting session on{" "}
           {new Date(booking.startTime).toLocaleDateString()}
         </CardDescription>
       </CardHeader>
@@ -150,9 +253,15 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
                 name={key as keyof ParentReviewFormValues}
                 render={({ field }) => (
                   <FormItem className="space-y-3">
-                    <FormLabel className="text-base font-medium">{label}</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {label}
+                    </FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      {criteriaDescriptions[key as keyof typeof criteriaDescriptions]}
+                      {
+                        criteriaDescriptions[
+                          key as keyof typeof criteriaDescriptions
+                        ]
+                      }
                     </p>
                     <FormControl>
                       <StarRating
@@ -183,12 +292,8 @@ export default function ParentReviewForm({ booking, babysitter, onSuccess }: Par
               )}
             />
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting || createReviewMutation.isPending}
-            >
-              {isSubmitting || createReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit Review"}
             </Button>
           </form>
         </Form>
