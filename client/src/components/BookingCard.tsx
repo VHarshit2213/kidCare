@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx";
+import { IoMdInformationCircleOutline } from "react-icons/io";
+import BookingConfirmation from "./BookingConfirmation";
 
 interface BookingCardProps {
   booking: Booking;
@@ -38,7 +40,6 @@ export default function BookingCard({
   const [showNavigation, setShowNavigation] = useState(false);
   const [parent, setParent] = useState<ParentProfile[]>([]);
   const [babysitter, setBabySitter] = useState<babysitterProfile[]>([]);
-  const [chatProps, setChatProps] = useState(null);
   const { user } = useAuth();
   const { getSignedUrl } = useSignedUrl();
   const [loading, setLoading] = useState({
@@ -49,6 +50,7 @@ export default function BookingCard({
     booking?.status || "Booked"
   );
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [showBookingInfo, setShowBookingInfo] = useState(false);
 
   // const { data: babysitter } = useQuery<User>({
   //   queryKey: booking.babysitterId
@@ -73,10 +75,6 @@ export default function BookingCard({
   //   enabled: user?.userType === "parent" && booking.status === "completed",
   // });
 
-  const openChatDialog = (props) => {
-    setChatProps(props);
-  };
-
   const getInitials = (name?: string) => {
     if (!name) return "";
     return name
@@ -86,12 +84,29 @@ export default function BookingCard({
       .toUpperCase();
   };
 
+  // Function to calculate distance between parent and babysitter
+  function getDistanceInMiles(lat1, lon1, lat2, lon2) {
+    const R = 3958.8; // Radius of the Earth in miles
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
   const fetchProfiles = async () => {
     if (!booking?.parent_id && !booking?.sitter_id) return;
 
     setLoading((prev) => ({ ...prev, profiles: true }));
 
-    const getProfile = async (table, userId) => {
+    const getProfile = async (table: any, userId: string) => {
       if (!userId) return null;
       const { data, error } = await supabase
         .from(table)
@@ -116,7 +131,24 @@ export default function BookingCard({
       ]);
 
       if (parent) setParent(parent);
-      if (sitter) setBabySitter(sitter);
+      if (sitter) {
+        if (
+          parent?.location?.latitude &&
+          parent?.location?.longitude &&
+          sitter?.location?.latitude &&
+          sitter?.location?.longitude
+        ) {
+          const distance = getDistanceInMiles(
+            parent.location.latitude,
+            parent.location.longitude,
+            sitter.location.latitude,
+            sitter.location.longitude
+          );
+          sitter.distance = distance;
+        }
+
+        setBabySitter(sitter);
+      }
     } catch (error) {
       console.error("Error fetching profiles:", error);
     } finally {
@@ -170,6 +202,10 @@ export default function BookingCard({
     } finally {
       setLoading((prev) => ({ ...prev, review: false }));
     }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowBookingInfo(false);
   };
 
   useEffect(() => {
@@ -291,22 +327,30 @@ export default function BookingCard({
                       Review Babysitter
                     </Button>
                   )}
-                <div className="flex justify-between mt-5">
-                  <button
-                    className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
-                    onClick={() =>
-                      openChatDialog({
-                        currentUserId: parent?.user_id,
-                        otherUserId: babysitter?.user_id,
-                        currentUserPhone: parent?.phoneNumber,
-                        otherUserPhone: babysitter?.phoneNumber,
-                        otherUserName: babysitter?.fullName,
-                      })
+                <div className="flex justify-between gap-2 mt-5">
+                  {user?.user_metadata?.userType === "parent" && (
+                    <Button
+                      className="flex items-center gap-1"
+                      onClick={() => setShowBookingInfo(true)}
+                    >
+                      <IoMdInformationCircleOutline className="h-4 w-4" />
+                      Booking Info
+                    </Button>
+                  )}
+
+                  <ChatDialog
+                    currentUserId={parent?.user_id}
+                    otherUserId={babysitter?.user_id}
+                    currentUserPhone={parent?.phoneNumber}
+                    otherUserPhone={babysitter?.phoneNumber}
+                    otherUserName={babysitter?.fullName}
+                    trigger={
+                      <button className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1">
+                        <IoIosChatboxes className="h-4 w-4" />
+                        Chat
+                      </button>
                     }
-                  >
-                    <IoIosChatboxes className="h-4 w-4" />
-                    Chat
-                  </button>
+                  />
                 </div>
               </>
             )}
@@ -423,21 +467,19 @@ export default function BookingCard({
                               <Navigation className="h-4 w-4 mr-1" />
                               Navigate
                             </Button>
-                            <button
-                              className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1"
-                              onClick={() =>
-                                openChatDialog({
-                                  currentUserId: babysitter?.user_id,
-                                  otherUserId: parent?.user_id,
-                                  currentUserPhone: babysitter?.phoneNumber,
-                                  otherUserPhone: parent?.phoneNumber,
-                                  otherUserName: parent?.fullName,
-                                })
+                            <ChatDialog
+                              currentUserId={babysitter?.user_id}
+                              otherUserId={parent?.user_id}
+                              currentUserPhone={babysitter?.phoneNumber}
+                              otherUserPhone={parent?.phoneNumber}
+                              otherUserName={parent?.fullName}
+                              trigger={
+                                <button className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1">
+                                  <IoIosChatboxes className="h-4 w-4" />
+                                  Chat
+                                </button>
                               }
-                            >
-                              <IoIosChatboxes className="h-4 w-4" />
-                              Chat
-                            </button>
+                            />
                           </>
                         )}
                     </div>
@@ -579,8 +621,13 @@ export default function BookingCard({
         </div>
       )}
 
-      {chatProps && (
-        <ChatDialog {...chatProps} onClose={() => setChatProps(null)} />
+      {showBookingInfo && (
+        <BookingConfirmation
+          isOpen={showBookingInfo}
+          onClose={handleConfirmationClose}
+          sitter={babysitter}
+          bookingDetails={booking}
+        />
       )}
     </div>
   );

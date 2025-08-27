@@ -77,7 +77,7 @@ export default function BookingConfirmation({
           // Calculate and set estimated arrival time
           const arrival = calculateArrivalTime(sitter.distance);
           setEstimatedArrival(
-            `${arrival.timeDisplay} (in about ${arrival.minutes} minutes)`,
+            `${arrival.timeDisplay} (in about ${arrival.minutes} minutes)`
           );
           setLoadingLocation(false);
         },
@@ -86,11 +86,11 @@ export default function BookingConfirmation({
           // Fallback to distance-based calculation without precise location
           const arrival = calculateArrivalTime(sitter.distance);
           setEstimatedArrival(
-            `${arrival.timeDisplay} (in about ${arrival.minutes} minutes)`,
+            `${arrival.timeDisplay} (in about ${arrival.minutes} minutes)`
           );
           setLoadingLocation(false);
         },
-        { timeout: 10000, enableHighAccuracy: true },
+        { timeout: 10000, enableHighAccuracy: true }
       );
     }
   }, [isOpen, sitter.distance]);
@@ -136,7 +136,7 @@ export default function BookingConfirmation({
         </DialogHeader>
 
         <Card className="p-4 mt-4 bg-brand-pink/10">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-brand-pink/20 flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -276,15 +276,19 @@ export default function BookingConfirmation({
             {bookingDetails.date ? (
               <p>
                 <span className="font-medium text-foreground">Time:</span>{" "}
-                {format(bookingDetails.date, "MMM d, yyyy")} (
-                {bookingDetails.startTime} -{bookingDetails.endTime})
+                {format(bookingDetails?.date, "MMM d, yyyy")} (
+                {bookingDetails.startTime || bookingDetails.start_time} -{bookingDetails.endTime || bookingDetails.end_time})
               </p>
             ) : (
               <>
                 <p>
                   <span className="font-medium text-foreground">Time:</span>{" "}
-                  {format(new Date(bookingDetails.startTime), "MMM d, h:mm a")}{" "}
-                  - {format(new Date(bookingDetails.endTime), "h:mm a")}
+                  {format(new Date(bookingDetails.startTime || bookingDetails.start_time), "MMM d, h:mm a")}{" "}
+                  -{" "}
+                  {format(
+                    new Date(bookingDetails.endTime || bookingDetails.end_time),
+                    "h:mm a"
+                  )}
                 </p>
               </>
             )}

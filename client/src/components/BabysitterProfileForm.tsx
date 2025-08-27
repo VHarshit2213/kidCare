@@ -145,11 +145,11 @@ const EXPERIENCE_YEARS = [
 
 // Age ranges options
 const AGE_RANGES = [
-  { value: "infant", label: "Infant (0-1 year)" },
-  { value: "toddler", label: "Toddler (1-3 years)" },
-  { value: "preschool", label: "Preschool (3-5 years)" },
-  { value: "schoolAge", label: "School Age (5-12 years)" },
-  { value: "teenager", label: "Teenager (13-18 years)" },
+  { value: "Infant (0-1 year)", label: "Infant (0-1 year)" },
+  { value: "Toddler (1-3 years)", label: "Toddler (1-3 years)" },
+  { value: "Preschool (3-5 years)", label: "Preschool (3-5 years)" },
+  { value: "School Age (5-12 years)", label: "School Age (5-12 years)" },
+  { value: "Teenager (13-18 years)", label: "Teenager (13-18 years)" },
 ];
 
 export default function BabysitterProfileForm() {

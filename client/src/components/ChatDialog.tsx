@@ -3,6 +3,13 @@ import { IoMdClose, IoIosSend } from "react-icons/io";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogContent,
+} from "./ui/dialog";
 
 interface ChatDialogProps {
   currentUserId: string;
@@ -10,7 +17,7 @@ interface ChatDialogProps {
   currentUserPhone: string;
   otherUserPhone: string;
   otherUserName: string;
-  onClose: () => void;
+  trigger: React.ReactNode;
 }
 
 const ChatDialog = ({
@@ -19,14 +26,16 @@ const ChatDialog = ({
   currentUserPhone,
   otherUserPhone,
   otherUserName,
-  onClose,
+  trigger,
 }: ChatDialogProps) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   //  Fetch chat history
   useEffect(() => {
+    if (!isOpen) return;
     let initial = true;
 
     const fetchMessages = async () => {
@@ -55,7 +64,7 @@ const ChatDialog = ({
     // Optional: polling every 5s or use Supabase real-time
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, [currentUserId, otherUserId]);
+  }, [currentUserId, otherUserId,isOpen]);
 
   //  Send message
   const handleSend = async () => {
@@ -83,21 +92,15 @@ const ChatDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-md shadow-lg flex flex-col h-[80vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-100 rounded-t-xl">
-          <h4 className="text-lg font-semibold text-gray-700 capitalize">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {" "}
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="flex flex-col h-[80vh] max-w-md w-full bg-white !rounded-xl shadow-lg p-0 gap-0">
+        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-100 rounded-t-xl">
+          <DialogTitle className="text-lg font-semibold text-gray-700 capitalize">
             Chat with {otherUserName}
-          </h4>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-red-600 font-bold text-xl"
-          >
-            <IoMdClose />
-          </button>
-        </div>
-
+          </DialogTitle>
+        </DialogHeader>
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
           {loading ? (
@@ -117,14 +120,14 @@ const ChatDialog = ({
                 const today = format(new Date(), "yyyy-MM-dd");
                 const yesterday = format(
                   new Date(Date.now() - 86400000),
-                  "yyyy-MM-dd",
+                  "yyyy-MM-dd"
                 );
                 const label =
                   msgDate === today
                     ? "Today"
                     : msgDate === yesterday
-                      ? "Yesterday"
-                      : format(new Date(msg.created_at), "dd MMM yyyy");
+                    ? "Yesterday"
+                    : format(new Date(msg.created_at), "dd MMM yyyy");
 
                 return (
                   <div key={i} className="flex flex-col items-center">
@@ -175,8 +178,8 @@ const ChatDialog = ({
             Send
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

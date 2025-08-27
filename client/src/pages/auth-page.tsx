@@ -240,7 +240,7 @@ export default function AuthPage() {
     } else if (user?.userType === "babysitter") {
       const data = await fetchBabysitterProfile(user?.sub);
       
-      if (!data?.[0]?.isProfileCompleted) {
+      if (!data?.[0]?.isProfileCompleted && data?.[0]?.stripeAccountID) {
         console.log("No parent profile → redirect to /profile-completion");
         navigate("/profile-completion");
         return;

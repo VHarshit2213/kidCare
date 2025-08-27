@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Password reset email sent successfully to ${email}`);
       } else {
         console.log(
-          `Password reset requested for non-existent email: ${email}`,
+          `Password reset requested for non-existent email: ${email}`
         );
         // Still add a small delay for security (timing attack prevention)
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Filter out only available babysitters (not busy or offline)
       const availableBabysitters = babysitters.filter(
-        (babysitter) => babysitter.availabilityStatus === "available",
+        (babysitter) => babysitter.availabilityStatus === "available"
       );
 
       // Remove passwords from the response
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (babysitter) => {
           const { password, ...babysitterWithoutPassword } = babysitter;
           return babysitterWithoutPassword;
-        },
+        }
       );
 
       res.status(200).json(babysittersWithoutPasswords);
@@ -369,14 +369,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to create booking" });
       }
-    },
+    }
   );
 
   // Anonymous booking creation (instant care) for non-authenticated users
   app.post("/api/instant-bookings", async (req: Request, res: Response) => {
     const { data, error } = validateRequest(
       insertBookingSchema.omit({ parentId: true }),
-      req.body,
+      req.body
     );
 
     if (error) {
@@ -420,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get bookings" });
       }
-    },
+    }
   );
 
   app.get(
@@ -444,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get bookings" });
       }
-    },
+    }
   );
 
   app.patch(
@@ -488,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const updatedBooking = await storage.updateBookingStatus(
           bookingId,
-          status,
+          status
         );
 
         // Send notifications when booking is confirmed/accepted
@@ -501,19 +501,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Get both the parent and babysitter details for the notification
             const parent = await storage.getUser(updatedBooking.parentId);
             const babysitter = await storage.getUser(
-              updatedBooking.babysitterId,
+              updatedBooking.babysitterId
             );
 
             if (parent && babysitter) {
               console.log(
-                `Sending booking confirmation notifications for booking #${bookingId}`,
+                `Sending booking confirmation notifications for booking #${bookingId}`
               );
 
               // Send SMS notifications
               await sendBookingConfirmationSMS(
                 updatedBooking,
                 parent,
-                babysitter,
+                babysitter
               );
 
               // Make confirmation calls if phone numbers are available
@@ -525,14 +525,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await makeBookingConfirmationCall(
                   updatedBooking,
                   babysitter,
-                  false,
+                  false
                 );
               }
             }
           } catch (notificationError: any) {
             console.error(
               "Error sending booking notifications:",
-              notificationError.message || notificationError,
+              notificationError.message || notificationError
             );
             // We continue even if notifications fail - don't block the booking update
           }
@@ -544,7 +544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: error.message || "Failed to update booking status",
         });
       }
-    },
+    }
   );
 
   app.patch(
@@ -586,14 +586,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const updatedBooking = await storage.assignBabysitterToBooking(
           bookingId,
-          Number(babysitterId),
+          Number(babysitterId)
         );
 
         // Set babysitter to "busy" when assigned to a booking
         if (updatedBooking && updatedBooking.babysitterId) {
           await storage.updateUserAvailability(
             updatedBooking.babysitterId,
-            "busy",
+            "busy"
           );
         }
 
@@ -608,14 +608,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (parent && babysitter) {
               console.log(
-                `Sending babysitter assignment notifications for booking #${bookingId}`,
+                `Sending babysitter assignment notifications for booking #${bookingId}`
               );
 
               // Send SMS notifications
               await sendBookingConfirmationSMS(
                 updatedBooking,
                 parent,
-                babysitter,
+                babysitter
               );
 
               // Make confirmation calls if phone numbers are available
@@ -627,14 +627,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await makeBookingConfirmationCall(
                   updatedBooking,
                   babysitter,
-                  false,
+                  false
                 );
               }
             }
           } catch (notificationError) {
             console.error(
               "Error sending babysitter assignment notifications:",
-              notificationError,
+              notificationError
             );
             // We continue even if notifications fail - don't block the booking update
           }
@@ -646,7 +646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: error.message || "Failed to assign babysitter to booking",
         });
       }
-    },
+    }
   );
 
   // Dedicated endpoint for sending Twilio notifications for a booking
@@ -722,7 +722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const smsSent = await sendBookingConfirmationSMS(
               booking,
               parent,
-              babysitter,
+              babysitter
             );
             notifications.sms.sent = smsSent;
           } catch (error: any) {
@@ -737,7 +737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const parentCallSent = await makeBookingConfirmationCall(
                 booking,
                 parent,
-                true,
+                true
               );
               notifications.call.sent = parentCallSent;
             }
@@ -746,7 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const sitterCallSent = await makeBookingConfirmationCall(
                 booking,
                 babysitter,
-                false,
+                false
               );
               notifications.call.sent =
                 sitterCallSent && notifications.call.sent;
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to send notifications" });
       }
-    },
+    }
   );
 
   // Message Routes
@@ -775,7 +775,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/twilio/sms-webhook",
     express.urlencoded({ extended: false }),
-    getSMSWebhookHandler(),
+    getSMSWebhookHandler()
   );
 
   // API endpoint to send a masked message between users
@@ -836,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fromUser,
           toUser,
           bookingId,
-          message,
+          message
         );
 
         if (result.success) {
@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to send masked message" });
       }
-    },
+    }
   );
 
   // API endpoint to initiate a masked call between users
@@ -921,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to make masked call" });
       }
-    },
+    }
   );
 
   // Regular messages endpoint (for in-app messaging)
@@ -958,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to send message" });
       }
-    },
+    }
   );
 
   app.get(
@@ -983,7 +983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get messages" });
       }
-    },
+    }
   );
 
   app.get(
@@ -1004,7 +1004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const messages = await storage.getMessagesBetweenUsers(
           user1Id,
-          user2Id,
+          user2Id
         );
         res.status(200).json(messages);
       } catch (error: any) {
@@ -1012,7 +1012,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get conversation" });
       }
-    },
+    }
   );
 
   app.patch(
@@ -1028,7 +1028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to mark message as read" });
       }
-    },
+    }
   );
 
   // Profile Management Routes
@@ -1047,7 +1047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: z.string(),
           relationship: z.string(),
           phoneNumber: z.string(),
-        }),
+        })
       )
       .optional(),
     profileCompleted: z.boolean().optional(),
@@ -1092,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to update profile" });
       }
-    },
+    }
   );
 
   // Update babysitter availability status
@@ -1123,7 +1123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const updatedUser = await storage.updateUserAvailability(
           user.id,
-          availabilityStatus,
+          availabilityStatus
         );
 
         if (!updatedUser) {
@@ -1139,7 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to update availability" });
       }
-    },
+    }
   );
 
   // Admin Routes
@@ -1173,7 +1173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to fetch users" });
       }
-    },
+    }
   );
 
   // Update babysitter review status (for admin approval workflow)
@@ -1234,7 +1234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to update review status" });
       }
-    },
+    }
   );
 
   // Child Management Routes
@@ -1282,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to add child" });
       }
-    },
+    }
   );
 
   // Get all children for a parent
@@ -1307,7 +1307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get children" });
       }
-    },
+    }
   );
 
   // Update a child's information
@@ -1334,7 +1334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const { data, error } = validateRequest(
           insertChildSchema.partial().omit({ parentId: true }),
-          req.body,
+          req.body
         );
 
         if (error) {
@@ -1348,7 +1348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to update child" });
       }
-    },
+    }
   );
 
   // Get a specific child by ID
@@ -1379,12 +1379,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get child" });
       }
-    },
+    }
   );
 
   // ----------------------- new code -------------------------
 
-  // for onboarding 
+  // for onboarding
   app.post(
     "/api/create-onboarding-link",
     async (req: Request, res: Response) => {
@@ -1424,7 +1424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // ----------------------- new code -------------------------
-  
+
   // Booking Payment Routes - 15% platform commission
   if (process.env.STRIPE_SECRET_KEY) {
     // Create payment intent for completed booking
@@ -1582,10 +1582,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .status(500)
             .json({ message: error.message || "Failed to confirm payment" });
         }
-      },
+      }
     );
-
-  } 
+  }
 
   // Membership Payment Routes
   if (process.env.STRIPE_SECRET_KEY) {
@@ -1654,7 +1653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: error.message || "Failed to create payment intent",
           });
         }
-      },
+      }
     );
 
     // Verify a completed payment
@@ -1723,7 +1722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .status(500)
             .json({ message: error.message || "Failed to verify payment" });
         }
-      },
+      }
     );
 
     // Update membership status endpoint
@@ -1743,7 +1742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Only allow specific membership status values
           if (
             !["active", "installment_1", "installment_2", "expired"].includes(
-              membershipStatus,
+              membershipStatus
             )
           ) {
             return res
@@ -1754,7 +1753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Log promo code information if available
           if (promoCode && discount) {
             console.log(
-              `Applying promo code ${promoCode} with ${discount}% discount for user ${userId}`,
+              `Applying promo code ${promoCode} with ${discount}% discount for user ${userId}`
             );
           }
 
@@ -1792,7 +1791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: error.message || "Failed to update membership status",
           });
         }
-      },
+      }
     );
   }
 
@@ -1830,7 +1829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if review already exists for this booking
         const existingReviews = await storage.getReviewsByBookingId(
-          reviewData.bookingId,
+          reviewData.bookingId
         );
         if (existingReviews.length > 0) {
           return res
@@ -1845,7 +1844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to create review" });
       }
-    },
+    }
   );
 
   // Get reviews for a specific booking
@@ -1862,7 +1861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get reviews" });
       }
-    },
+    }
   );
 
   // Get reviews for a specific parent (for admin view)
@@ -1888,7 +1887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get reviews" });
       }
-    },
+    }
   );
 
   // Get all reviews (for admin dashboard)
@@ -1940,7 +1939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 : null,
             };
-          }),
+          })
         );
 
         res.json(reviewsWithUserInfo);
@@ -1949,7 +1948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get reviews" });
       }
-    },
+    }
   );
 
   // Parent Review endpoints
@@ -1986,7 +1985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if review already exists for this booking
         const existingReviews = await storage.getParentReviewsByBookingId(
-          reviewData.bookingId,
+          reviewData.bookingId
         );
         if (existingReviews.length > 0) {
           return res
@@ -2001,7 +2000,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to create review" });
       }
-    },
+    }
   );
 
   // Get parent reviews for a specific booking
@@ -2018,7 +2017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get reviews" });
       }
-    },
+    }
   );
 
   // Get all parent reviews (for admin dashboard)
@@ -2070,7 +2069,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 : null,
             };
-          }),
+          })
         );
 
         res.json(reviewsWithUserInfo);
@@ -2079,7 +2078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .status(500)
           .json({ message: error.message || "Failed to get reviews" });
       }
-    },
+    }
   );
 
   // for send massage using twilio ( new code )
@@ -2092,7 +2091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await client.messages.create({
         body: message,
         from: twilioPhoneNumber,
-        to:receiver_phone,
+        to: receiver_phone,
       });
 
       // 2. Save in Supabase
@@ -2169,12 +2168,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // for get all messages 
+  // for get all messages
   app.get("/api/conversation", async (req: Request, res: Response) => {
-    const {  sender_id, receiver_id  } = req.query;
+    const { sender_id, receiver_id } = req.query;
 
     if (!sender_id || !receiver_id) {
-      return res.status(400).json({ error: "Missing sender_id or receiver_id" });
+      return res
+        .status(400)
+        .json({ error: "Missing sender_id or receiver_id" });
     }
 
     const { data, error } = await supabase
@@ -2192,6 +2193,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     res.status(200).json(data);
   });
+
+  //delete user by admin
+  app.delete("/api/delete-user", async (req: Request, res: Response) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  try {
+    // 1. Delete from babySitterProfile table
+    const { error: deleteProfileError } = await supabase
+      .from("babySitterProfile")
+      .delete()
+      .eq("user_id", userId);
+
+    if (deleteProfileError) {
+      console.error("Error deleting profile:", deleteProfileError.message);
+      return res.status(500).json({ error: "Failed to delete babysitter profile" });
+    }
+
+    // 2. Delete from Supabase Auth
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (deleteAuthError) {
+      console.error("Error deleting user from auth:", deleteAuthError.message);
+      return res.status(500).json({ error: "Failed to delete user from auth" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
   const httpServer = createServer(app);
 

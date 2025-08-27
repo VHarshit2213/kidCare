@@ -972,7 +972,8 @@ export default function InstantCareModal({
     const babysitterRes = await supabase
       .from("babySitterProfile")
       .select("*")
-      .eq("isApproved", true);
+      .eq("isApproved", true)
+      .eq("isAvailable",true)
 
     if (babysitterRes.error) {
       console.error("Error fetching babysitter profiles:", babysitterRes.error);
@@ -1040,7 +1041,7 @@ export default function InstantCareModal({
 
   useEffect(() => {
     const result = findNearbySitters(babySitterProfiles, 8);
-    setNearbySitters(result);
+    setNearbySitters(result.slice(0, 3));
   }, [babySitterProfiles, parentLocation]);
 
   useEffect(() => {

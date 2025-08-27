@@ -148,7 +148,6 @@ export default function Messages() {
   const [userRole, setUserRole] = useState<"parent" | "babysitter" | null>(
     null
   );
-  const [chatProps, setChatProps] = useState(null);
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const { getSignedUrl } = useSignedUrl();
 
@@ -269,10 +268,6 @@ export default function Messages() {
       .toUpperCase();
   };
 
-  const openChatDialog = (props) => {
-    setChatProps(props);
-  };
-
   useEffect(() => {
     fetchUserRole();
   }, [fetchUserRole]);
@@ -323,56 +318,58 @@ export default function Messages() {
               );
 
               return (
-                <div
-                  key={partnerId}
-                  className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() =>
-                    openChatDialog({
-                      currentUserId: currentUserProfile?.user_id,
-                      otherUserId: partner?.user_id,
-                      currentUserPhone: currentUserProfile?.phoneNumber,
-                      otherUserPhone: partner?.phoneNumber,
-                      otherUserName: partner?.fullName,
-                    })
-                  }
-                >
-                  <div className="flex items-center">
-                    <Avatar className="h-10 w-10 mr-3">
-                      {partner?.profileImageUrl ? (
-                        <AvatarImage
-                          src={partner.profileImageUrl}
-                          alt={partner?.fullName || "User"}
-                        />
-                      ) : (
-                        <AvatarFallback>
-                          {" "}
-                          {getInitials(partner?.fullName || "User")}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h3 className="text-sm font-medium text-neutral-800 capitalize">
-                          {partner?.fullName || "User"}
-                        </h3>
-                        {latestMessage && (
-                          <span className="text-xs text-neutral-500">
-                            {format(
-                              new Date(latestMessage.created_at),
-                              "dd-MM-yyyy"
+                <ChatDialog
+                  currentUserId={currentUserProfile?.user_id}
+                  otherUserId={partner?.user_id}
+                  currentUserPhone={currentUserProfile?.phoneNumber}
+                  otherUserPhone={partner?.phoneNumber}
+                  otherUserName={partner?.fullName}
+                  trigger={
+                    <div
+                      key={partnerId}
+                      className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <Avatar className="h-10 w-10 mr-3">
+                          {partner?.profileImageUrl ? (
+                            <AvatarImage
+                              src={partner.profileImageUrl}
+                              alt={partner?.fullName || "User"}
+                            />
+                          ) : (
+                            <AvatarFallback>
+                              {" "}
+                              {getInitials(partner?.fullName || "User")}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h3 className="text-sm font-medium text-neutral-800 capitalize">
+                              {partner?.fullName || "User"}
+                            </h3>
+                            {latestMessage && (
+                              <span className="text-xs text-neutral-500">
+                                {format(
+                                  new Date(latestMessage.created_at),
+                                  "dd-MM-yyyy"
+                                )}
+                              </span>
                             )}
-                          </span>
-                        )}
+                          </div>
+                          {latestMessage && (
+                            <p className="text-sm text-neutral-600 truncate">
+                              {latestMessage.sender_id === user?.id
+                                ? "You: "
+                                : ""}
+                              {latestMessage.message}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      {latestMessage && (
-                        <p className="text-sm text-neutral-600 truncate">
-                          {latestMessage.sender_id === user?.id ? "You: " : ""}
-                          {latestMessage.message}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </div>
@@ -385,16 +382,6 @@ export default function Messages() {
           </div>
         )}
       </div>
-
-      {chatProps && (
-        <ChatDialog
-          {...chatProps}
-          onClose={() => {
-            setChatProps(null);
-            fetchMessages();
-          }}
-        />
-      )}
     </Layout>
   );
 }

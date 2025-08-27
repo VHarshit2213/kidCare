@@ -328,7 +328,11 @@ import { User } from "@shared/schema";
 import { format } from "date-fns";
 import { Phone, MessageSquare } from "lucide-react";
 import MessageDialog from "./MessageDialog";
-import { babysitterProfile, ScheduledCareFormData } from "@/lib/types";
+import {
+  babysitterProfile,
+  ParentProfile,
+  ScheduledCareFormData,
+} from "@/lib/types";
 import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import BookingConfirmation from "./BookingConfirmation";
@@ -337,6 +341,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements } from "@stripe/react-stripe-js";
 import { apiRequest } from "@/lib/queryClient";
 import { BabysitterStripeCheckout } from "./BabysitterStripeCheckout";
+import ChatDialog from "./ChatDialog";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 interface AvailableScheduledSittersProps {
@@ -352,6 +357,7 @@ interface AvailableScheduledSittersProps {
   bookingDetails: ScheduledCareFormData;
   nearbySitters: babysitterProfile &
     { distance: number; userType: "babysitter" }[];
+  currentUser: ParentProfile;
 }
 
 export default function AvailableScheduledSitters({
@@ -366,6 +372,7 @@ export default function AvailableScheduledSitters({
   bookingStatus = {},
   nearbySitters,
   bookingDetails,
+  currentUser,
 }: AvailableScheduledSittersProps) {
   const { toast } = useToast();
   const [selectedSitter, setSelectedSitter] = useState<string | null>(null);
@@ -518,7 +525,7 @@ export default function AvailableScheduledSitters({
           </DialogHeader>
 
           <div className="mt-4 space-y-6">
-            {nearbySitters.map((sitter) => (
+            {nearbySitters.map((sitter: any) => (
               <Card key={sitter.user_id} className="p-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-shrink-0">
@@ -707,13 +714,34 @@ export default function AvailableScheduledSitters({
 
                     {/* new code  */}
                     <div className="mt-3 flex justify-end gap-2">
+                      <ChatDialog
+                        currentUserId={currentUser?.user_id}
+                        otherUserId={sitter?.user_id}
+                        currentUserPhone={currentUser?.phoneNumber}
+                        otherUserPhone={sitter?.phoneNumber}
+                        otherUserName={sitter?.fullName}
+                        trigger={
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-[#3c5679] text-[#3c5679]"
+                          >
+                            Schedule a Play and Greet
+                          </Button>
+                        }
+                      />
                       <UserDetailsDialog
                         user={sitter}
                         trigger={
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-[#3c5679] text-[#3c5679]"
+                          >
                             View Profile
                           </Button>
                         }
+                        fieldsToShow={false}
                       />
                       <Button
                         size="sm"

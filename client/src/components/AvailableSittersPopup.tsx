@@ -372,10 +372,11 @@ export default function AvailableSittersPopup({
                           <UserDetailsDialog
                             user={sitter}
                             trigger={
-                              <Button variant="outline" size="sm">
+                              <Button variant="outline" size="sm" className="border-[#3c5679] text-[#3c5679]">
                                 View Profile
                               </Button>
                             }
+                            fieldsToShow={false}
                           />
                           <Button
                             size="sm"

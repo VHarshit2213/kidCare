@@ -552,7 +552,12 @@ import {
   MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { babysitterProfile, Child, ScheduledCareFormData } from "@/lib/types";
+import {
+  babysitterProfile,
+  Child,
+  ParentProfile,
+  ScheduledCareFormData,
+} from "@/lib/types";
 import { format, addDays } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -620,7 +625,7 @@ export default function ScheduledCareModal({
     babysitterProfile[]
   >([]);
   const [nearbySitters, setNearbySitters] = useState([]);
-  const [childOptions, setChildOptions] = useState<Child[]>([]);
+  const [parentProfile, setParentProfile] = useState<ParentProfile[]>([]);
   const [childrenPopoverOpen, setChildrenPopoverOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [AddressLoading, setAddressLoading] = useState(false);
@@ -770,8 +775,7 @@ export default function ScheduledCareModal({
 
   const loadProfile = async () => {
     const data = await fetchParentProfile(user?.id);
-    const { children } = data?.[0];
-    setChildOptions(children);
+    setParentProfile(data?.[0]);
   };
 
   // fetch babysitters profile
@@ -779,7 +783,8 @@ export default function ScheduledCareModal({
     const babysitterRes = await supabase
       .from("babySitterProfile")
       .select("*")
-      .eq("isApproved", true);
+      .eq("isApproved", true)
+      .eq("isAvailable", true);
 
     if (babysitterRes.error) {
       console.error("Error fetching babysitter profiles:", babysitterRes.error);
@@ -847,7 +852,7 @@ export default function ScheduledCareModal({
 
   useEffect(() => {
     const result = findNearbySitters(babySitterProfiles, 8);
-    setNearbySitters(result);
+    setNearbySitters(result.slice(0, 3));
   }, [babySitterProfiles, parentLocation]);
 
   useEffect(() => {
@@ -886,6 +891,7 @@ export default function ScheduledCareModal({
         playAndGreetStatus={playAndGreetStatus}
         bookingStatus={bookingStatus}
         nearbySitters={nearbySitters}
+        currentUser={parentProfile}
         bookingDetails={bookingDetails}
       />
 
@@ -992,7 +998,7 @@ export default function ScheduledCareModal({
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
+                              !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
@@ -1036,7 +1042,9 @@ export default function ScheduledCareModal({
                       className="w-full justify-between"
                     >
                       {hoursNeeded
-                        ? `${hoursNeeded} ${hoursNeeded === 1 ? "hour" : "hours"}`
+                        ? `${hoursNeeded} ${
+                            hoursNeeded === 1 ? "hour" : "hours"
+                          }`
                         : "Select hours..."}
                     </Button>
                   </PopoverTrigger>
@@ -1181,7 +1189,7 @@ export default function ScheduledCareModal({
                             role="combobox"
                             className={cn(
                               "w-full justify-between",
-                              !field.value?.length && "text-muted-foreground",
+                              !field.value?.length && "text-muted-foreground"
                             )}
                           >
                             {field.value?.length > 0
@@ -1191,10 +1199,9 @@ export default function ScheduledCareModal({
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-0">
                           <div className="p-4 space-y-2">
-                            {childOptions.map((child) => {
+                            {parentProfile?.children?.map((child) => {
                               const isSelected = field.value?.some(
-                                (selectedChild) =>
-                                  selectedChild.id === child.id,
+                                (selectedChild) => selectedChild.id === child.id
                               );
                               return (
                                 <div
@@ -1204,7 +1211,7 @@ export default function ScheduledCareModal({
                                     const newValue = isSelected
                                       ? field.value.filter(
                                           (selectedChild) =>
-                                            selectedChild.id !== child.id,
+                                            selectedChild.id !== child.id
                                         )
                                       : [...(field.value || []), child];
                                     field.onChange(newValue);
@@ -1250,8 +1257,8 @@ export default function ScheduledCareModal({
                               field.onChange(
                                 field.value.filter(
                                   (selectedChild) =>
-                                    selectedChild.id !== child.id,
-                                ),
+                                    selectedChild.id !== child.id
+                                )
                               );
                             }}
                           />
@@ -1291,8 +1298,8 @@ export default function ScheduledCareModal({
                 {!isPaymentSuccess
                   ? "Membership Required"
                   : !hasCompletedProfile
-                    ? "Complete Profile First"
-                    : "Schedule Sitter"}
+                  ? "Complete Profile First"
+                  : "Schedule Sitter"}
               </Button>
             </form>
           </Form>

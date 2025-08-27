@@ -20,16 +20,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { format } from "date-fns";
 
 type SafeUser = Omit<User, "password">;
 
 interface UserDetailsProps {
   user: SafeUser;
   trigger: React.ReactNode;
+  fieldsToShow: boolean;
 }
 
-export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
-  const [activeTab, setActiveTab] = useState("overview");
+export default function UserDetailsDialog({
+  user,
+  trigger,
+  fieldsToShow = true,
+}: UserDetailsProps) {
+  const [activeTab, setActiveTab] = useState(
+    fieldsToShow ? "overview" : "profile"
+  );
 
   const getInitials = (name: string) => {
     return name
@@ -95,16 +103,16 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                           user.reviewStatus === "approved"
                             ? "success"
                             : user.reviewStatus === "rejected"
-                              ? "destructive"
-                              : "outline"
+                            ? "destructive"
+                            : "outline"
                         }
                         className="ml-2"
                       >
                         {user.reviewStatus === "approved"
                           ? "Approved"
                           : user.reviewStatus === "rejected"
-                            ? "Rejected"
-                            : "Pending Review"}
+                          ? "Rejected"
+                          : "Pending Review"}
                       </Badge>
                     )}
                   </div>
@@ -122,27 +130,37 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                     <h4 className="text-sm font-medium text-gray-500">
                       Member Since
                     </h4>
-                    <p className="mt-1">April 2025</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500">
-                      Location
-                    </h4>
                     <p className="mt-1">
-                      {user.floor_number +
-                        " " +
-                        user.street_name +
-                        " " +
-                        user.address || "Not specified"}
+                      {format(new Date(user.created_at), "dd MMM yyyy")}
                     </p>
                   </div>
+                  {fieldsToShow && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">
+                        Location
+                      </h4>
+                      <p className="mt-1">
+                        {(
+                          user.floor_number +
+                          " " +
+                          user.street_name +
+                          " " +
+                          user.address
+                        ).trim() || "Not specified"}
+                      </p>
+                    </div>
+                  )}
                   {user.userType === "babysitter" && (
                     <>
                       <div>
                         <h4 className="text-sm font-medium text-gray-500">
                           Hourly Rate
                         </h4>
-                        <p className="mt-1">${user.horulyRate}/hour</p>
+                        <p className="mt-1">
+                          {user.horulyRate
+                            ? `${user.horulyRate}/hour`
+                            : "Not specified"}
+                        </p>
                       </div>
                     </>
                   )}
@@ -158,7 +176,9 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
               className="w-full"
             >
               <TabsList className="w-full grid grid-cols-3">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+                {fieldsToShow && (
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                )}
                 <TabsTrigger value="profile">Profile Details</TabsTrigger>
                 {user.userType === "parent" && (
                   <TabsTrigger value="children">Children</TabsTrigger>
@@ -168,44 +188,42 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                 )}
               </TabsList>
 
-              <TabsContent value="overview" className="mt-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle>User Overview</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium">Account Type</h4>
-                        <p className="text-gray-600">
-                          {user.userType === "babysitter"
-                            ? "Babysitter"
-                            : "Parent"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Profile Status</h4>
-                        <p className="text-gray-600">
-                          {user.isProfileCompleted ? "Completed" : "Incomplete"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Contact Information</h4>
-                        <p className="text-gray-600">
-                          Email: {user.email}
-                          <br />
-                          Phone: {user.phoneNumber || "Not provided"}
-                        </p>
-                      </div>
-                      {user.userType === "babysitter" && (
-                        <>
-                          <div>
-                            <h4 className="font-medium">Brief Bio</h4>
-                            <p className="text-gray-600">
-                              {user.shortBio || "No bio provided"}
-                            </p>
-                          </div>
-                          {/* <div>
+              {fieldsToShow && (
+                <TabsContent value="overview" className="mt-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle>User Overview</CardTitle>
+                    </CardHeader>
+
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="font-medium">Account Type</h4>
+                          <p className="text-gray-600">
+                            {user.userType === "babysitter"
+                              ? "Babysitter"
+                              : "Parent"}
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Profile Status</h4>
+                          <p className="text-gray-600">
+                            {user.isProfileCompleted
+                              ? "Completed"
+                              : "Incomplete"}
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Contact Information</h4>
+                          <p className="text-gray-600">
+                            Email: {user.email || "Not provided"}
+                            <br />
+                            Phone: {user.phoneNumber || "Not provided"}
+                          </p>
+                        </div>
+                        {user.userType === "babysitter" && (
+                          <>
+                            {/* <div>
                             <h4 className="font-medium">Review Status</h4>
                             <p className="text-gray-600">
                               {user.reviewStatus === "approved"
@@ -217,20 +235,21 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                     : "Not submitted for review"}
                             </p>
                           </div> */}
-                        </>
-                      )}
-                      {user.userType === "parent" && (
-                        <div>
-                          <h4 className="font-medium">Family Description</h4>
-                          <p className="text-gray-600">
-                            {user.familyDesc || "No description provided"}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                          </>
+                        )}
+                        {user.userType === "parent" && (
+                          <div>
+                            <h4 className="font-medium">Family Description</h4>
+                            <p className="text-gray-600">
+                              {user.familyDesc || "No description provided"}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
 
               <TabsContent value="profile" className="mt-4">
                 {user.userType === "parent" ? (
@@ -316,7 +335,7 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                     relationship: string;
                                     phoneNumber: string;
                                   },
-                                  index: number,
+                                  index: number
                                 ) => (
                                   <div
                                     key={index}
@@ -332,7 +351,7 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                       {contact.phoneNumber}
                                     </p>
                                   </div>
-                                ),
+                                )
                               )}
                             </div>
                           ) : (
@@ -464,7 +483,7 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                 personality?: string;
                                 specialCare?: string;
                               },
-                              index: number,
+                              index: number
                             ) => (
                               <div
                                 key={child.id || index}
@@ -476,7 +495,7 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                 <p className="text-sm text-gray-600">
                                   Date of Birth:{" "}
                                   {new Date(
-                                    child.dateOfBirth,
+                                    child.dateOfBirth
                                   ).toLocaleDateString()}
                                 </p>
                                 {child.personality && (
@@ -496,7 +515,7 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                                   </p>
                                 )}
                               </div>
-                            ),
+                            )
                           )}
                         </div>
                       ) : (
@@ -526,7 +545,25 @@ export default function UserDetailsDialog({ user, trigger }: UserDetailsProps) {
                               {user.parentSkill.map(
                                 (skill: string, index: number) => (
                                   <Skill key={index} name={skill} />
-                                ),
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-gray-600">No skills specified</p>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium">
+                            Most Experienced Age Range
+                          </h4>
+                          {user.mostExperience &&
+                          Array.isArray(user.mostExperience) &&
+                          user.mostExperience.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {user.mostExperience.map(
+                                (experience: string, index: number) => (
+                                  <Skill key={index} name={experience} />
+                                )
                               )}
                             </div>
                           ) : (

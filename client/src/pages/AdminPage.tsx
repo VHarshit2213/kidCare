@@ -463,6 +463,7 @@ import {
   TransactionsData,
 } from "@/lib/types";
 import supabase from "@/config/supabaseClient";
+import { MdDeleteForever } from "react-icons/md";
 
 type SafeUser = Omit<User, "password">;
 
@@ -481,6 +482,7 @@ export default function AdminPage() {
   const [parents, setParents] = useState<ParentWithType[]>([]);
   const [transactions, setTransactions] = useState<TransactionsData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Mutation for approving babysitter profiles
   const approveMutation = useMutation({
@@ -601,6 +603,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleDelete = async (userId: string) => {
+    try {
+      setDeletingId(userId);
+
+      await apiRequest("DELETE", "/api/delete-user", { userId });
+
+      toast({
+        title: "Babysitter deleted",
+        description: `Babysitter has been deleted successfully`,
+      });
+      await fetchProfiles();
+    } catch (error: any) {
+      toast({
+        title: "Delete failed",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const renderUserTable = (userList: CombinedUser[]) => {
     return (
       <Table>
@@ -613,7 +637,7 @@ export default function AdminPage() {
             <TableHead>Email</TableHead>
             <TableHead>Profile Status</TableHead>
             <TableHead>Approved Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -627,9 +651,9 @@ export default function AdminPage() {
             userList.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.user_id}</TableCell>
-                <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell>{user.phoneNumber}</TableCell>
-                <TableCell>{user.email}</TableCell>
+                <TableCell className="font-medium">{user.fullName || "undefined"}</TableCell>
+                <TableCell>{user.phoneNumber || "undefined"}</TableCell>
+                <TableCell>{user.email || "undefined"}</TableCell>
                 <TableCell>
                   <Badge
                     variant={user.isProfileCompleted ? "success" : "outline"}
@@ -650,7 +674,7 @@ export default function AdminPage() {
                     <option value="approved">Approved</option>
                   </select>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className=" flex gap-2">
                   <UserDetailsDialog
                     user={user}
                     trigger={
@@ -659,6 +683,26 @@ export default function AdminPage() {
                       </Button>
                     }
                   />
+                  {activeTab === "babysitters" && (
+                    <Button
+                      size="sm"
+                      className="bg-red-600 hover:bg-red-500"
+                      onClick={() => handleDelete(user.user_id)}
+                      disabled={deletingId === user.user_id}
+                    >
+                      {deletingId === user.user_id ? (
+                        <>
+                          <Loader2 className="animate-spin mr-2" size={18} />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <MdDeleteForever size={18} className="mr-1" />
+                          Delete
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))
