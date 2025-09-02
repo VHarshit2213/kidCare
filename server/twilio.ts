@@ -1,5 +1,7 @@
-import twilio from 'twilio';
-import { Booking, User } from '@shared/schema';
+import twilio from "twilio";
+import dotenv from "dotenv";
+import { Booking, User } from "@shared/schema";
+dotenv.config();
 
 // Initialize Twilio client with environment variables
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -8,13 +10,13 @@ const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 // Check if all required environment variables are present
 if (!accountSid || !authToken || !twilioPhoneNumber) {
-  console.warn('Twilio credentials not fully configured. SMS and calling features will not work.');
+  console.warn(
+    "Twilio credentials not fully configured. SMS and calling features will not work."
+  );
 }
 
 // Initialize the Twilio client only if we have all credentials
-const client = accountSid && authToken 
-  ? twilio(accountSid, authToken) 
-  : null;
+const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 /**
  * Send an SMS notification about a booking confirmation
@@ -25,48 +27,64 @@ export async function sendBookingConfirmationSMS(
   babysitter: User
 ): Promise<boolean> {
   if (!client || !twilioPhoneNumber) {
-    console.error('Twilio client not initialized. Cannot send SMS.');
+    console.error("Twilio client not initialized. Cannot send SMS.");
     return false;
   }
 
   if (!parent.phoneNumber) {
-    console.error('Parent has no phone number. Cannot send SMS.');
+    console.error("Parent has no phone number. Cannot send SMS.");
     return false;
   }
 
   try {
     // Format booking time nicely
-    const startTime = new Date(booking.startTime);
-    const endTime = new Date(booking.endTime);
-    const dateStr = startTime.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    const hasDate = booking.date;
+
+    const startTime = hasDate
+      ? new Date(`${booking.date} ${booking.start_time}`)
+      : new Date(booking.start_time);
+
+    const endTime = hasDate
+      ? new Date(`${booking.date} ${booking.end_time}`)
+      : new Date(booking.end_time);
+
+    const dateStr = startTime.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
-    const startTimeStr = startTime.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+
+    const startTimeStr = startTime.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
     });
-    const endTimeStr = endTime.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+
+    const endTimeStr = endTime.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
     });
 
     // Determine if there are multiple children by checking for commas
-    const hasMultipleChildren = booking.childName.includes(',');
-    
+    const hasMultipleChildren = booking.children?.length > 1;
+    const fullName =
+      booking.children?.[0]?.firstName + " " + booking.children?.[0]?.lastName;
+
     // Parent message
     const parentMessage = `
 The Enchanted Co.: Your booking has been confirmed! 
-${babysitter.fullName} will be taking care of ${hasMultipleChildren ? 'your children' : booking.childName} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
-You can contact your sitter at: ${babysitter.phoneNumber || 'Not available'}
+${babysitter.fullName} will be taking care of ${
+      hasMultipleChildren ? "your children" : fullName
+    } on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
+You can contact your sitter at: ${babysitter.phoneNumber || "Not available"}
 `;
 
     // Babysitter message
     const babysitterMessage = `
 The Enchanted Co.: You have a new booking! 
-You are scheduled to take care of ${hasMultipleChildren ? parent.fullName + '\'s children' : booking.childName} on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
-Care instructions: ${booking.careInstructions || 'None provided'}
+You are scheduled to take care of ${
+      hasMultipleChildren ? parent.fullName + "'s children" : fullName
+    } on ${dateStr} from ${startTimeStr} to ${endTimeStr}.
+Care instructions: ${booking.careInstructions || "None provided"}
 Parent contact: ${parent.phoneNumber}
 `;
 
@@ -74,7 +92,7 @@ Parent contact: ${parent.phoneNumber}
     const parentSmsResult = await client.messages.create({
       body: parentMessage,
       from: twilioPhoneNumber,
-      to: parent.phoneNumber
+      to: parent.phoneNumber,
     });
     console.log(`SMS sent to parent: ${parentSmsResult.sid}`);
 
@@ -83,16 +101,18 @@ Parent contact: ${parent.phoneNumber}
       const sitterSmsResult = await client.messages.create({
         body: babysitterMessage,
         from: twilioPhoneNumber,
-        to: babysitter.phoneNumber
+        to: babysitter.phoneNumber,
       });
       console.log(`SMS sent to babysitter: ${sitterSmsResult.sid}`);
     } else {
-      console.log('Babysitter has no phone number. SMS not sent to babysitter.');
+      console.log(
+        "Babysitter has no phone number. SMS not sent to babysitter."
+      );
     }
 
     return true;
   } catch (error) {
-    console.error('Error sending SMS via Twilio:', error);
+    console.error("Error sending SMS via Twilio:", error);
     return false;
   }
 }
@@ -106,26 +126,26 @@ export async function makeBookingConfirmationCall(
   isParent: boolean
 ): Promise<boolean> {
   if (!client || !twilioPhoneNumber) {
-    console.error('Twilio client not initialized. Cannot make call.');
+    console.error("Twilio client not initialized. Cannot make call.");
     return false;
   }
 
   if (!recipient.phoneNumber) {
-    console.error('Recipient has no phone number. Cannot make call.');
+    console.error("Recipient has no phone number. Cannot make call.");
     return false;
   }
 
   try {
     // Create the TwiML for the call
     const startTime = new Date(booking.startTime);
-    const dateStr = startTime.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    const dateStr = startTime.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
-    const timeStr = startTime.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+    const timeStr = startTime.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
     });
 
     // Build a simple TwiML response for the call
@@ -147,13 +167,15 @@ export async function makeBookingConfirmationCall(
     const call = await client.calls.create({
       twiml: twimlMessage,
       from: twilioPhoneNumber,
-      to: recipient.phoneNumber
+      to: recipient.phoneNumber,
     });
 
-    console.log(`Call initiated to ${isParent ? 'parent' : 'babysitter'}: ${call.sid}`);
+    console.log(
+      `Call initiated to ${isParent ? "parent" : "babysitter"}: ${call.sid}`
+    );
     return true;
   } catch (error) {
-    console.error('Error making call via Twilio:', error);
+    console.error("Error making call via Twilio:", error);
     return false;
   }
 }

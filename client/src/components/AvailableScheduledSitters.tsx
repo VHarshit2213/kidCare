@@ -384,6 +384,7 @@ export default function AvailableScheduledSitters({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   const options = {
     clientSecret: stripeClientSecret,
@@ -402,7 +403,8 @@ export default function AvailableScheduledSitters({
     setSelectedSitter(sitterId);
     // Find the selected sitter from the filtered list
     const sitter = nearbySitters.find((sitter) => sitter.user_id === sitterId);
-
+    const formattedDate = bookingDetails?.date.toLocaleDateString("en-CA");
+    
     if (!sitter) return;
     // Store the booked sitter
     const payload = {
@@ -418,7 +420,7 @@ export default function AvailableScheduledSitters({
       address: bookingDetails.address,
       children: bookingDetails.children,
       careInstructions: bookingDetails.careInstructions,
-      date: bookingDetails.date,
+      date: formattedDate,
       status: "Booked",
     };
 
@@ -440,6 +442,7 @@ export default function AvailableScheduledSitters({
     }
 
     const bookingId = data.id;
+    setBookingId(bookingId);
 
     toast({
       title: "Booking Confirmed",
@@ -788,6 +791,8 @@ export default function AvailableScheduledSitters({
               setShowStripeModal(false);
               setSelectedSitter(null);
             }}
+            bookingType="scheduled"
+            bookingId={bookingId!}
           />
         </Elements>
       )}

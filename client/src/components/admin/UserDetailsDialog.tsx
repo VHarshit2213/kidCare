@@ -408,40 +408,46 @@ export default function UserDetailsDialog({
                             </p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-medium">First Aid Certified</h4>
-                            <p className="text-gray-600">
-                              {user.certified ? "Yes" : "No"}
-                            </p>
-                            {user.certificateUrl && (
-                              <a
-                                href={user.certificateUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 underline"
-                              >
-                                View Aid Certificate
-                              </a>
-                            )}
+                        {fieldsToShow && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-medium">
+                                First Aid Certified
+                              </h4>
+                              <p className="text-gray-600">
+                                {user.certified ? "Yes" : "No"}
+                              </p>
+                              {user.certificateUrl && (
+                                <a
+                                  href={user.certificateUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 underline"
+                                >
+                                  View Aid Certificate
+                                </a>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium">
+                                Has Transportation
+                              </h4>
+                              <p className="text-gray-600">
+                                {user.transportation ? "Yes" : "No"}
+                              </p>
+                              {user.transportationUrl && (
+                                <a
+                                  href={user.transportationUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 underline"
+                                >
+                                  View driver's license Certificate
+                                </a>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-medium">Has Transportation</h4>
-                            <p className="text-gray-600">
-                              {user.transportation ? "Yes" : "No"}
-                            </p>
-                            {user.transportationUrl && (
-                              <a
-                                href={user.transportationUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 underline"
-                              >
-                                View driver's license Certificate
-                              </a>
-                            )}
-                          </div>
-                        </div>
+                        )}
                         <div>
                           <h4 className="font-medium">Introduction Video</h4>
                           <p className="text-gray-600">

@@ -7,17 +7,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface BabysitterStripeCheckoutProps {
   clientSecret: string;
   amount?: number;
   onSuccess: () => void;
   onClose: () => void;
+  bookingType: string;
+  bookingId: string;
 }
 
 export const BabysitterStripeCheckout: React.FC<
   BabysitterStripeCheckoutProps
-> = ({ clientSecret, amount, onSuccess, onClose }) => {
+> = ({ clientSecret, amount, onSuccess, onClose, bookingType, bookingId }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -50,6 +53,12 @@ export const BabysitterStripeCheckout: React.FC<
         title: "Payment Successful",
         description: "Your babysitter has been successfully booked!",
       });
+      
+      await apiRequest("POST", `/api/send-confirmation-sms`, {
+        bookingId,
+        bookingType,
+      });
+
       onSuccess();
     }
   };

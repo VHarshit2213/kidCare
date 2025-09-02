@@ -61,6 +61,7 @@ export default function AvailableSittersPopup({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   const options = {
     clientSecret: stripeClientSecret,
@@ -178,6 +179,7 @@ export default function AvailableSittersPopup({
       }
 
       const bookingId = data.id;
+      setBookingId(bookingId);
 
       toast({
         title: "Booking Confirmed",
@@ -279,7 +281,7 @@ export default function AvailableSittersPopup({
               </div>
             ) : (
               <div className="space-y-4 py-2">
-                {nearbySitters.map((sitter) => (
+                {nearbySitters.map((sitter: any) => (
                   <Card key={sitter.user_id} className="p-4">
                     <div className="flex items-start gap-4">
                       <Avatar className="h-12 w-12 border">
@@ -372,7 +374,11 @@ export default function AvailableSittersPopup({
                           <UserDetailsDialog
                             user={sitter}
                             trigger={
-                              <Button variant="outline" size="sm" className="border-[#3c5679] text-[#3c5679]">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[#3c5679] text-[#3c5679]"
+                              >
                                 View Profile
                               </Button>
                             }
@@ -415,6 +421,8 @@ export default function AvailableSittersPopup({
               setSelectedSitter(null);
               setShowStripeModal(false);
             }}
+            bookingType="instant"
+            bookingId={bookingId!}
           />
         </Elements>
       )}

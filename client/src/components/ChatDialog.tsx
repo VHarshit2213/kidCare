@@ -32,6 +32,7 @@ const ChatDialog = ({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [sending, setSending] = useState(false);
 
   //  Fetch chat history
   useEffect(() => {
@@ -64,31 +65,39 @@ const ChatDialog = ({
     // Optional: polling every 5s or use Supabase real-time
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, [currentUserId, otherUserId,isOpen]);
+  }, [currentUserId, otherUserId, isOpen]);
 
   //  Send message
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || sending) return;
 
-    await apiRequest("POST", "/api/send-message", {
-      sender_phone: currentUserPhone,
-      receiver_phone: otherUserPhone,
-      message: input,
-      sender_id: currentUserId,
-      receiver_id: otherUserId,
-    });
+    setSending(true);
 
-    setMessages((prev) => [
-      ...prev,
-      {
+    try {
+      await apiRequest("POST", "/api/send-message", {
+        sender_phone: currentUserPhone,
+        receiver_phone: otherUserPhone,
+        message: input,
         sender_id: currentUserId,
         receiver_id: otherUserId,
-        message: input,
-        direction: "outbound",
-        created_at: new Date().toISOString(),
-      },
-    ]);
-    setInput("");
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender_id: currentUserId,
+          receiver_id: otherUserId,
+          message: input,
+          direction: "outbound",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setInput("");
+    } catch (error) {
+      console.error("Send message error:", error);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -171,11 +180,20 @@ const ChatDialog = ({
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || sending}
             className={`px-4 py-2 bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
           >
-            <IoIosSend />
-            Send
+            {sending ? (
+              <>
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                sending...
+              </>
+            ) : (
+              <>
+                <IoIosSend />
+                Send
+              </>
+            )}
           </button>
         </div>
       </DialogContent>

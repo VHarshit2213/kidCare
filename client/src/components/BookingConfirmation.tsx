@@ -277,7 +277,7 @@ export default function BookingConfirmation({
               <p>
                 <span className="font-medium text-foreground">Time:</span>{" "}
                 {format(bookingDetails?.date, "MMM d, yyyy")} (
-                {bookingDetails.startTime || bookingDetails.start_time} -{bookingDetails.endTime || bookingDetails.end_time})
+                {bookingDetails.startTime || bookingDetails.start_time} - {bookingDetails.endTime || bookingDetails.end_time})
               </p>
             ) : (
               <>

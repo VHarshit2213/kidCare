@@ -26,17 +26,17 @@ import {
 import { sendPasswordResetEmail } from "./email-service";
 import { randomBytes } from "crypto";
 import { createClient } from "@supabase/supabase-js";
-import twilio from 'twilio';
+import twilio from "twilio";
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey =process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 // Initialize Stripe with secret key
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn(
-    "Missing Stripe secret key. Stripe payment features will not work.",
+    "Missing Stripe secret key. Stripe payment features will not work."
   );
 }
 
@@ -51,13 +51,13 @@ const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 // Check if all required environment variables are present
 if (!accountSid || !authToken || !twilioPhoneNumber) {
-  console.warn('Twilio credentials not fully configured. Masked communication features will not work.');
+  console.warn(
+    "Twilio credentials not fully configured. Masked communication features will not work."
+  );
 }
 
 // Initialize the Twilio client only if we have all credentials
-const client = accountSid && authToken 
-  ? twilio(accountSid, authToken) 
-  : null;
+const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -2196,38 +2196,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   //delete user by admin
   app.delete("/api/delete-user", async (req: Request, res: Response) => {
-  const { userId } = req.body;
+    const { userId } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({ error: "Missing userId" });
-  }
-
-  try {
-    // 1. Delete from babySitterProfile table
-    const { error: deleteProfileError } = await supabase
-      .from("babySitterProfile")
-      .delete()
-      .eq("user_id", userId);
-
-    if (deleteProfileError) {
-      console.error("Error deleting profile:", deleteProfileError.message);
-      return res.status(500).json({ error: "Failed to delete babysitter profile" });
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
     }
 
-    // 2. Delete from Supabase Auth
-    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
+    try {
+      // 1. Delete from babySitterProfile table
+      const { error: deleteProfileError } = await supabase
+        .from("babySitterProfile")
+        .delete()
+        .eq("user_id", userId);
 
-    if (deleteAuthError) {
-      console.error("Error deleting user from auth:", deleteAuthError.message);
-      return res.status(500).json({ error: "Failed to delete user from auth" });
+      if (deleteProfileError) {
+        console.error("Error deleting profile:", deleteProfileError.message);
+        return res
+          .status(500)
+          .json({ error: "Failed to delete babysitter profile" });
+      }
+
+      // 2. Delete from Supabase Auth
+      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
+        userId
+      );
+
+      if (deleteAuthError) {
+        console.error(
+          "Error deleting user from auth:",
+          deleteAuthError.message
+        );
+        return res
+          .status(500)
+          .json({ error: "Failed to delete user from auth" });
+      }
+
+      res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
+  });
 
-    res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
+  //send booking confirmation message
+  app.post(
+    "/api/send-confirmation-sms",
+    async (req: Request, res: Response) => {
+      try {
+        const { bookingId, bookingType } = req.body;
+
+        if (!bookingId || !bookingType) {
+          return res
+            .status(400)
+            .json({ error: "bookingId and bookingType are required" });
+        }
+
+        // Fetch booking details
+        const table =
+          bookingType === "scheduled" ? "scheduledCare" : "InstantCare";
+
+        const { data: booking, error } = await supabase
+          .from(table)
+          .select("*")
+          .eq("id", bookingId)
+          .single();
+
+        if (!booking) {
+          return res.status(404).json({ error: "Booking not found" });
+        }
+
+        // Fetch parent
+        const { data: parent } = await supabase
+          .from("parentprofile")
+          .select("*")
+          .eq("user_id", booking.parent_id)
+          .single();
+
+        // Fetch babysitter
+        const { data: babysitter } = await supabase
+          .from("babySitterProfile")
+          .select("*")
+          .eq("user_id", booking.sitter_id)
+          .single();
+
+        if (!parent || !babysitter) {
+          return res
+            .status(404)
+            .json({ error: "Parent or Babysitter not found" });
+        }
+
+        const success = await sendBookingConfirmationSMS(
+          booking,
+          parent,
+          babysitter
+        );
+
+        if (!success) {
+          return res
+            .status(500)
+            .json({ error: "Failed to send SMS notification" });
+        }
+
+        res.json({ message: "Notification sent successfully" });
+      } catch (error) {
+        console.error("Error in notify-booking:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    }
+  );
 
   const httpServer = createServer(app);
 

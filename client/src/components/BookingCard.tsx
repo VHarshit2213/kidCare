@@ -259,9 +259,10 @@ export default function BookingCard({
                 <div className={"w-full"}>
                   <h3 className="text-lg font-medium text-neutral-800">
                     {babysitter.fullName} with{" "}
-                    {booking.children.map(
-                      (child) => child.firstName + " " + child.lastName
-                    )}
+                    {booking.children
+                      .map((child) => `${child.firstName} ${child.lastName}`)
+                      .join(", ")
+                      .replace(/, ([^,]*)$/, " and $1")}
                   </h3>
                   <p className="font-bold">
                     Address :{" "}
