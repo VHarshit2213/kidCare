@@ -1584,6 +1584,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     );
+
+    // create PaymentIntent for Booking - 15% platform commission ( new code )
+    app.post(
+      "/api/payments/create-booking-intent",
+      authenticate,
+      async (req: Request, res: Response) => {
+        try {
+          const { totalAmount, stripeAccountID } = req.body;
+
+          const totalAmountCents = Math.round(totalAmount * 100);
+          const platformFeeCents = Math.round(totalAmountCents * 0.15);
+          const babysitterAmountCents = totalAmountCents - platformFeeCents;
+
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: totalAmountCents,
+            currency: "usd",
+            payment_method_types: ["card"],
+            transfer_data: {
+              destination: stripeAccountID,
+              amount: babysitterAmountCents,
+            },
+            description: `Childcare booking transaction`,
+            metadata: {
+              platformFee: (platformFeeCents / 100).toFixed(2),
+              babysitterAmount: (babysitterAmountCents / 100).toFixed(2),
+            },
+          });
+
+          res.json({
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+          });
+        } catch (err: any) {
+          console.error("Error creating payment intent:", err);
+          res
+            .status(500)
+            .json({ message: err.message || "Failed to create payment" });
+        }
+      }
+    );
+
+    // Create booking + transaction after payment success ( new code)
+    app.post(
+      "/api/create-booking",
+      authenticate,
+      async (req: Request, res: Response) => {
+        try {
+          const {
+            bookingType,
+            bookedSitter,
+            bookingDetails,
+            parentName,
+            parentId,
+            paymentIntentId,
+          } = req.body;
+
+          // Verify payment first
+          const paymentIntent = await stripe.paymentIntents.retrieve(
+            paymentIntentId
+          );
+
+          if (paymentIntent.status !== "succeeded") {
+            return res.status(400).json({ message: "Payment not completed" });
+          }
+
+          // Insert booking into correct table
+          const table =
+            bookingType === "scheduled" ? "scheduledCare" : "InstantCare";
+
+          const formattedDate = bookingDetails?.date
+            ? new Date(bookingDetails.date).toLocaleDateString("en-CA")
+            : null;
+
+          const payload = {
+            parent_id: parentId,
+            sitter_id: bookedSitter.user_id,
+            hours: bookingDetails.hoursNeeded,
+            start_time: bookingDetails.startTime,
+            end_time: bookingDetails.endTime,
+            location: {
+              latitude: bookingDetails.latitude,
+              longitude: bookingDetails.longitude,
+            },
+            address: bookingDetails.address,
+            children: bookingDetails.children,
+            careInstructions: bookingDetails.careInstructions,
+            status: "Booked",
+            ...(table === "scheduledCare" && { date: formattedDate }),
+          };
+
+          const { data: booking, error } = await supabase
+            .from(table)
+            .insert([payload])
+            .select()
+            .single();
+
+          if (error || !booking) throw error;
+
+          // Save transaction
+          const totalAmount = (paymentIntent.amount / 100).toFixed(2);
+
+          const babySitterAmount = (
+            (paymentIntent.transfer_data?.amount || 0) / 100
+          ).toFixed(2);
+
+          const platformFee = (
+            parseFloat(totalAmount) - parseFloat(babySitterAmount)
+          ).toFixed(2);
+
+          const { data, error: transactionErr } = await supabase
+            .from("transaction")
+            .insert([
+              {
+                babySitterName: bookedSitter.fullName,
+                parentName,
+                totalAmount,
+                babySitterAmount,
+                platformFee,
+              },
+            ]);
+
+          if (transactionErr) {
+            console.error("Transaction insert error:", transactionErr);
+          } else {
+            console.log("Transaction saved:");
+          }
+
+          res.json({ booking });
+        } catch (err: any) {
+          console.error("Error creating booking:", err);
+          res.status(500).json({ message: err.message });
+        }
+      }
+    );
   }
 
   // Membership Payment Routes

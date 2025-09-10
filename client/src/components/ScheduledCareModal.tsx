@@ -990,7 +990,7 @@ export default function ScheduledCareModal({
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -1033,7 +1033,7 @@ export default function ScheduledCareModal({
               />
 
               <div className="mb-4">
-                <FormLabel>Hours Needed</FormLabel>
+                <FormLabel>Hours Needed  <span className="text-red-500">*</span></FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -1118,7 +1118,7 @@ export default function ScheduledCareModal({
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time</FormLabel>
+                      <FormLabel>Start Time  <span className="text-red-500">*</span></FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -1147,7 +1147,7 @@ export default function ScheduledCareModal({
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time</FormLabel>
+                      <FormLabel>End Time  <span className="text-red-500">*</span></FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -1177,7 +1177,7 @@ export default function ScheduledCareModal({
                 name="children"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Children</FormLabel>
+                    <FormLabel>Select Children  <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Popover
                         open={childrenPopoverOpen}

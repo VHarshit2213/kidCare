@@ -15,7 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Booking } from "@/lib/types";
 import { Spinner } from "./ui/spinner";
 import BookingConfirmation from "./BookingConfirmation";
-import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import UserDetailsDialog from "./admin/UserDetailsDialog";
 import { apiRequest } from "@/lib/queryClient";
@@ -61,21 +60,13 @@ export default function AvailableSittersPopup({
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
-  const [bookingId, setBookingId] = useState<string | null>(null);
-
+  
   const options = {
     clientSecret: stripeClientSecret,
     appearance: {
       theme: "stripe" as const,
     },
   };
-
-  const parentData = JSON.parse(
-    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}"
-  );
-
-  const parentId = parentData.user?.id;
-  const parentName = parentData.user?.user_metadata?.fullName;  
 
   // ------------------old code for reference------------
 
@@ -141,70 +132,20 @@ export default function AvailableSittersPopup({
 
     // Find the selected sitter from the filtered list
     const sitter = nearbySitters.find((sitter) => sitter.user_id === sitterId);
+    
     if (!sitter) return;
-
-    // Store the booked sitter
+   
     if (sitter) {
-      const payload = {
-        parent_id: parentId,
-        sitter_id: sitter.user_id,
-        hours: bookingDetails.hoursNeeded,
-        start_time: bookingDetails.startTime,
-        end_time: bookingDetails.endTime,
-        location: {
-          latitude: bookingDetails.latitude,
-          longitude: bookingDetails.longitude,
-        },
-        address: bookingDetails.address,
-        children: bookingDetails.children,
-        careInstructions: bookingDetails.careInstructions,
-        status: "Booked",
-      };
-
-      // Insert into Supabase and get the new booking ID
-      const { data, error } = await supabase
-        .from("InstantCare")
-        .insert([payload])
-        .select()
-        .single();
-
-      if (error || !data) {
-        toast({
-          title: "Booking Failed",
-          description: error?.message || "Please try again later.",
-          variant: "destructive",
-        });
-        setSelectedSitter(null);
-        return;
-      }
-
-      const bookingId = data.id;
-      setBookingId(bookingId);
-
-      toast({
-        title: "Booking Confirmed",
-        description: "Proceeding to payment...",
-      });
-
       // Calculate total amount (e.g. hourly rate × hours)
       const totalAmount = sitter.horulyRate * bookingDetails.hoursNeeded;
       setTotalAmount(totalAmount);
 
       const stripeAccountID = sitter.stripeAccountID;
-      const babySitterName = sitter.fullName;
 
-      // create payment intent
-      const response = await apiRequest(
-        "POST",
-        `/api/bookings/${bookingId}/create-payment`,
-        {
-          totalAmount,
-          bookingType: "instant",
-          stripeAccountID,
-          parentName,
-          babySitterName
-        }
-      );
+      const response = await apiRequest("POST", "/api/payments/create-booking-intent", {
+        totalAmount,
+        stripeAccountID
+      });
 
       const payment = await response.json();
 
@@ -422,7 +363,8 @@ export default function AvailableSittersPopup({
               setShowStripeModal(false);
             }}
             bookingType="instant"
-            bookingId={bookingId!}
+            bookedSitter={bookedSitter}
+            bookingDetails={bookingDetails}
           />
         </Elements>
       )}

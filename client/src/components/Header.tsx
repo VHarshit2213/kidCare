@@ -177,6 +177,10 @@ export default function Header() {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
                             setLocation("/membership");
+                          } else if (!profile) {
+                            window.dispatchEvent(
+                              new CustomEvent("open-sitter-request")
+                            );
                           } else if (!profile?.isApproved) {
                             toast({
                               title: "Access Denied",
@@ -215,7 +219,11 @@ export default function Header() {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
                             setLocation("/membership");
-                          } else if (!profile.isApproved) {
+                          } else if (!profile) {
+                            window.dispatchEvent(
+                              new CustomEvent("open-scheduled-care")
+                            );
+                          } else if (!profile?.isApproved) {
                             toast({
                               title: "Access Denied",
                               description:
@@ -288,7 +296,7 @@ export default function Header() {
             </nav>
           </div>
           <div>
-            {isAuthenticated && profile?.isApproved === false && (
+            {isAuthenticated && profile?.isApproved === false && profile?.isProfileCompleted === true && (
               <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600">
                 Your Profile is Under Review
               </Badge>

@@ -725,7 +725,7 @@ export default function BabysitterProfileForm() {
                   name="profileImage"
                   render={() => (
                     <FormItem className="text-center">
-                      <FormLabel>Profile Photo</FormLabel>
+                      <FormLabel>Profile Photo <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <div className="relative w-24 h-24 mb-3">
                           {uploadedImg ? (
@@ -801,7 +801,7 @@ export default function BabysitterProfileForm() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -818,7 +818,7 @@ export default function BabysitterProfileForm() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -899,7 +899,7 @@ export default function BabysitterProfileForm() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                           <PhoneInput
                             defaultCountry="in"
@@ -920,7 +920,7 @@ export default function BabysitterProfileForm() {
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Short Bio</FormLabel>
+                      <FormLabel>Short Bio <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
@@ -948,7 +948,7 @@ export default function BabysitterProfileForm() {
                 name="experienceYears"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>How long have you been a babysitter?</FormLabel>
+                    <FormLabel>How long have you been a babysitter? <span className="text-red-500">*</span></FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       /* defaultValue={field.value} */
@@ -979,7 +979,7 @@ export default function BabysitterProfileForm() {
                   <FormItem className="mt-4">
                     <div className="mb-4">
                       <FormLabel>
-                        What age ranges do you have the most experience with?
+                        What age ranges do you have the most experience with? <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormDescription>Select all that apply</FormDescription>
                     </div>
@@ -1033,7 +1033,7 @@ export default function BabysitterProfileForm() {
                   <FormItem className="mt-4">
                     <div className="mb-4">
                       <FormLabel>
-                        What skills do you have that parents might value?
+                        What skills do you have that parents might value? <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormDescription>Select all that apply</FormDescription>
                     </div>
@@ -1087,7 +1087,7 @@ export default function BabysitterProfileForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        What do you enjoy most about working with children?
+                        What do you enjoy most about working with children? <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -1107,7 +1107,7 @@ export default function BabysitterProfileForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        How would you describe your caregiving style?
+                        How would you describe your caregiving style? <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -1134,7 +1134,7 @@ export default function BabysitterProfileForm() {
                 name="hourlyRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>What is your hourly rate? ($35-$50)</FormLabel>
+                    <FormLabel>What is your hourly rate? ($35-$50) <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <div className="relative">
                         <span className="absolute left-3 top-2.5">$</span>

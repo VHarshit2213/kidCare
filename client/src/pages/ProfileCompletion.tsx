@@ -109,7 +109,7 @@ export default function ProfileCompletion() {
           Complete Your Profile
         </h1>
         <p className="text-center text-muted-foreground mb-8">
-          {user.userType === "parent"
+          {user?.user_metadata?.userType === "parent"
             ? "Help us personalize your experience by providing more information about you and your family."
             : "Share your experience and caregiving style to help parents find the perfect match for their family."}
         </p>

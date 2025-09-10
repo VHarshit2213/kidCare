@@ -39,16 +39,18 @@ import supabase from "@/config/supabaseClient";
 // Define form schemas
 const loginSchema = z.object({
   // username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().nonempty("Email is required").email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const registerSchema = z.object({
-  userName: z.string().min(3, "Username must be at least 3 characters"),
+  fullName: z
+    .string()
+    .nonempty("Full name is required")
+    .min(2, "Full name must be at least 2 characters"),
+  // userName: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  // We'll treat the username as the email, but keep basic validation
-  email: z.string().email("Invalid email address"),
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().nonempty("Email is required").email("Please enter a valid email address"),
   userType: z.enum(["parent", "babysitter"], {
     required_error: "Please select a user type",
   }),
@@ -127,10 +129,10 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      userName: "",
+      // userName: "",
       password: "",
       email: "",
-      // fullName: "",
+      fullName: "",
       userType: "parent",
     },
   });
@@ -352,10 +354,10 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Choose a username (will also be your email)"
+                                placeholder="Enter your email"
                                 {...field}
                               />
                             </FormControl>
@@ -370,7 +372,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input
                                 type="password"
@@ -453,79 +455,13 @@ export default function AuthPage() {
                       onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                       className="space-y-4"
                     >
-                      <FormField
-                        control={registerForm.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter your full name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="userName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username/Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Choose a username (will also be your email)"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Set email to the same value as username
-                                  registerForm.setValue(
-                                    "email",
-                                    e.target.value,
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Hidden email field that automatically syncs with username */}
-                      <input
-                        type="hidden"
-                        {...registerForm.register("email")}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Choose a password"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
+                       <FormField
                         control={registerForm.control}
                         name="userType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>I am a</FormLabel>
-                            <div className="grid grid-cols-2 gap-3 pt-1">
+                            <FormLabel>I am a <span className="text-red-500">*</span></FormLabel>
+                            <div className="grid grid-cols-2 gap-3">
                               <Button
                                 type="button"
                                 variant={
@@ -568,6 +504,72 @@ export default function AuthPage() {
                                 Babysitter
                               </Button>
                             </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your full name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter your email"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Set email to the same value as username
+                                  registerForm.setValue(
+                                    "email",
+                                    e.target.value,
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Hidden email field that automatically syncs with username */}
+                      <input
+                        type="hidden"
+                        {...registerForm.register("email")}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Choose a password"
+                                {...field}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -671,11 +673,11 @@ export default function AuthPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
                                 <Input
                                   type="email"
-                                  placeholder="Enter your email address"
+                                  placeholder="Enter your email"
                                   {...field}
                                 />
                               </FormControl>

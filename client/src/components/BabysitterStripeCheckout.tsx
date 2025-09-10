@@ -15,51 +15,95 @@ interface BabysitterStripeCheckoutProps {
   onSuccess: () => void;
   onClose: () => void;
   bookingType: string;
-  bookingId: string;
+  bookedSitter: any;
+  bookingDetails: any;
 }
 
 export const BabysitterStripeCheckout: React.FC<
   BabysitterStripeCheckoutProps
-> = ({ clientSecret, amount, onSuccess, onClose, bookingType, bookingId }) => {
+> = ({
+  clientSecret,
+  amount,
+  onSuccess,
+  onClose,
+  bookingType,
+  bookedSitter,
+  bookingDetails,
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  const parentData = JSON.parse(
+    localStorage.getItem("sb-pkmghxgahplhoyxglryf-auth-token") || "{}"
+  );
+  const parentId = parentData.user?.id;
+  const parentName = parentData.user?.user_metadata?.fullName;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || !bookedSitter) return;
 
     setLoading(true);
 
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        // optional: add return_url if using redirects
-      },
-      redirect: "if_required", // prevent full page redirect
-    });
-
-    setLoading(false);
-
-    if (result.error) {
-      toast({
-        title: "Payment Failed",
-        description: result.error.message,
-        variant: "destructive",
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          // optional: add return_url if using redirects
+        },
+        redirect: "if_required", // prevent full page redirect
       });
-    } else {
+
+      if (error) {
+        toast({
+          title: "Payment Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!paymentIntent?.id) {
+        toast({
+          title: "Payment Error",
+          description: "Missing payment confirmation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const res = await apiRequest("POST", "/api/create-booking", {
+        bookingType,
+        bookedSitter,
+        bookingDetails,
+        parentName,
+        parentId,
+        paymentIntentId: paymentIntent.id,
+      });
+
+      const { booking } = await res.json();
+
+      await apiRequest("POST", `/api/send-confirmation-sms`, {
+        bookingId: booking.id,
+        bookingType,
+      });
+
       toast({
         title: "Payment Successful",
         description: "Your babysitter has been successfully booked!",
       });
-      
-      await apiRequest("POST", `/api/send-confirmation-sms`, {
-        bookingId,
-        bookingType,
-      });
 
       onSuccess();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

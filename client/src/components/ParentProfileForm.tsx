@@ -1499,7 +1499,7 @@ export default function ParentProfileForm() {
                     name="profileImage"
                     render={() => (
                       <FormItem className="text-center">
-                        <FormLabel>Profile Photo</FormLabel>
+                        <FormLabel>Profile Photo <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <div className="relative w-24 h-24 mb-3">
                             {uploadedImg ? (
@@ -1545,7 +1545,7 @@ export default function ParentProfileForm() {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -1562,7 +1562,7 @@ export default function ParentProfileForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -1654,7 +1654,7 @@ export default function ParentProfileForm() {
                       ) : (
                         <>
                           <MapPin className="inline-block mr-2" />
-                          Use My Current Location
+                          Use My Current Location 
                         </>
                       )}
                     </button>
@@ -1670,7 +1670,7 @@ export default function ParentProfileForm() {
                     name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <PhoneInput
                             defaultCountry="in"
@@ -1771,7 +1771,7 @@ export default function ParentProfileForm() {
               {/* Children Section */}
               <div>
                 <h3 className="text-lg font-medium mb-4 pb-2 border-b">
-                  Children
+                  Children <span className="text-red-500">*</span>
                 </h3>
                 <div className="space-y-4">
                   {childrens?.length > 0 ? (
@@ -1848,7 +1848,7 @@ export default function ParentProfileForm() {
 
                   {/* Add/Edit Child Dialog */}
                   <Dialog open={isAddingChild} onOpenChange={setIsAddingChild}>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>
                           {isEditingChild
@@ -1863,7 +1863,7 @@ export default function ParentProfileForm() {
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="childFirstName">First Name</Label>
+                            <Label htmlFor="childFirstName">First Name <span className="text-red-500">*</span></Label>
                             <Input
                               id="childFirstName"
                               value={childFormValues.firstName}
@@ -1876,7 +1876,7 @@ export default function ParentProfileForm() {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="childLastName">Last Name</Label>
+                            <Label htmlFor="childLastName">Last Name <span className="text-red-500">*</span></Label>
                             <Input
                               id="childLastName"
                               value={childFormValues.lastName}
@@ -1890,7 +1890,7 @@ export default function ParentProfileForm() {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="childDob">Date of Birth</Label>
+                          <Label htmlFor="childDob">Date of Birth <span className="text-red-500">*</span></Label>
                           <Input
                             id="childDob"
                             type="date"
@@ -1905,7 +1905,7 @@ export default function ParentProfileForm() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="childPersonality">
-                            Personality & Interests
+                            Personality & Interests <span className="text-red-500">*</span>
                           </Label>
                           <Textarea
                             id="childPersonality"
@@ -1977,7 +1977,7 @@ export default function ParentProfileForm() {
                     name="parentingStyle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parenting Style</FormLabel>
+                        <FormLabel>Parenting Style <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -1995,7 +1995,7 @@ export default function ParentProfileForm() {
                     name="familyDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Family Description</FormLabel>
+                        <FormLabel>Family Description <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2013,7 +2013,7 @@ export default function ParentProfileForm() {
                     name="familyActivities"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Family Activities</FormLabel>
+                        <FormLabel>Family Activities <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2031,7 +2031,7 @@ export default function ParentProfileForm() {
                     name="medicalDietaryRestrictions"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Medical/Dietary Restrictions</FormLabel>
+                        <FormLabel>Medical/Dietary Restrictions <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2082,7 +2082,7 @@ export default function ParentProfileForm() {
                           name={`emergencyContacts.${index}.name`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Name</FormLabel>
+                              <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -2098,7 +2098,7 @@ export default function ParentProfileForm() {
                           name={`emergencyContacts.${index}.relationship`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Relationship</FormLabel>
+                              <FormLabel>Relationship <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -2116,7 +2116,7 @@ export default function ParentProfileForm() {
                         name={`emergencyContacts.${index}.phoneNumber`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
+                            <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input
                                 {...field}

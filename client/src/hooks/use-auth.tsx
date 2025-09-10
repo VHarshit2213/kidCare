@@ -37,7 +37,7 @@ type LoginData = {
 };
 
 type RegisterData = {
-  userName: string;
+  // userName: string;
   password: string;
   email: string;
   fullName: string;
@@ -227,10 +227,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRegisterLoading(true);
     setError(null);
     try {
-      const { fullName, userName, password, userType } = userData;
+      const { fullName, email, password, userType } = userData;
 
       const { data, error } = await supabase.auth.signUp({
-        email: userName,
+        email,
         password,
         options: {
           data: {
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: userName,
+            email: email,
             user_id: data.session?.user.id,
             refresh_url: `${window.location.origin}/resume-onboarding`,
             return_url: `${window.location.origin}/profile-completion`,

@@ -1160,7 +1160,7 @@ export default function InstantCareModal({
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Hours Needed
+                    Hours Needed <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center space-x-2">
                     <Select
@@ -1190,7 +1190,7 @@ export default function InstantCareModal({
                   name="startTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time (Today)</FormLabel>
+                      <FormLabel>Start Time (Today) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1369,7 +1369,7 @@ export default function InstantCareModal({
                   name="endTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time (Today)</FormLabel>
+                      <FormLabel>End Time (Today) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1527,7 +1527,7 @@ export default function InstantCareModal({
                 name="children"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select Children</FormLabel>
+                    <FormLabel>Select Children <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Popover
                         open={childrenPopoverOpen}
