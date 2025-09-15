@@ -35,6 +35,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import supabase from "@/config/supabaseClient";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 
 // Define form schemas
 const loginSchema = z.object({
@@ -68,6 +69,8 @@ export default function AuthPage() {
   const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [adminMode, setAdminMode] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // const { user, loginMutation, registerMutation } = useAuth();
   const {
@@ -372,13 +375,31 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Password <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Enter your password"
-                                {...field}
-                              />
+                              <div className="relative">
+                                <Input
+                                  type={showLoginPassword ? "text" : "password"}
+                                  placeholder="Enter your password"
+                                  {...field}
+                                  className="pr-10"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowLoginPassword((prev) => !prev)
+                                  }
+                                  className="absolute top-1/2 -translate-y-1/2 right-3 text-[#6C7275] cursor-pointer"
+                                >
+                                  {showLoginPassword ? (
+                                    <FaRegEyeSlash size={16} />
+                                  ) : (
+                                    <FaRegEye size={16} />
+                                  )}
+                                </button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                             {/* <div className="text-right mt-1">
@@ -562,13 +583,31 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Password <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Choose a password"
-                                {...field}
-                              />
+                              <div className="relative">
+                                <Input
+                                  type={showPassword ? "text" : "password"}
+                                  placeholder="Choose a password"
+                                  {...field}
+                                  className="pr-10"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowPassword((prev) => !prev)
+                                  }
+                                  className="absolute top-1/2 -translate-y-1/2 right-3 text-[#6C7275] cursor-pointer"
+                                >
+                                  {showPassword ? (
+                                    <FaRegEyeSlash size={16} />
+                                  ) : (
+                                    <FaRegEye size={16} />
+                                  )}
+                                </button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
