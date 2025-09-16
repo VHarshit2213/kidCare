@@ -55,6 +55,8 @@ import "react-international-phone/style.css";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
+const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+
 // Schema for the babysitter profile form
 const profileFormSchema = z
   .object({
@@ -63,7 +65,7 @@ const profileFormSchema = z
     street_name: z.string().optional(),
     // firstName: z.string().min(1, 'First name is required'),
     // lastName: z.string().min(1, 'Last name is required'),
-    phoneNumber: z.string().min(1, "Phone number is required"),
+    phoneNumber: z.string().min(1, "Phone number is required").regex(phoneRegex, "Please enter a valid phone number"),
     email: z.string().email("Invalid email address"),
     bio: z
       .string()

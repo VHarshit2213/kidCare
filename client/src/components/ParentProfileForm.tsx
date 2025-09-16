@@ -842,6 +842,8 @@ import "react-international-phone/style.css";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
+const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+
 // Schema for emergency contacts
 const emergencyContactSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -869,7 +871,7 @@ const profileFormSchema = z
     // lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Please enter a valid email address"),
     // address: z.string().min(1, "Address is required"),
-    phoneNumber: z.string().min(1, "Phone number is required"),
+    phoneNumber: z.string().min(1, "Phone number is required").regex(phoneRegex, "Please enter a valid phone number"),
     hasSecondParent: z.boolean().default(false),
     secondParentFirstName: z.string().optional(),
     secondParentLastName: z.string().optional(),
