@@ -60,14 +60,14 @@ export default function ResetPasswordPage() {
 
   // Extract token from URL parameters
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get("type");
-    const accessToken = urlParams.get("access_token");
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get("type");
+    const accessToken = hashParams.get("access_token");
 
     if (type !== "recovery" || !accessToken) {
       setStatus("error");
       setErrorMessage(
-        "Invalid reset link. Please request a new password reset."
+        "Invalid reset link. Please request a new password reset.",
       );
       return;
     }
