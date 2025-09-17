@@ -36,6 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import supabase from "@/config/supabaseClient";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import logo from "../assets/enchanted-logo.png";
 
 // Define form schemas
 const loginSchema = z.object({
@@ -58,7 +59,7 @@ const registerSchema = z.object({
 });
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().nonempty("Email is required").email("Please enter a valid email address"),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -79,6 +80,8 @@ export default function AuthPage() {
     registerLoading,
     loginMutation,
     registerMutation,
+    forgetPassword,
+    forgotLoading,
   } = useAuth();
 
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState<
@@ -160,33 +163,47 @@ export default function AuthPage() {
     },
   });
 
+  /* ----------- old code ------------ */
   // Handle forgot password submission
+  // async function onForgotPasswordSubmit(values: ForgotPasswordValues) {
+  //   try {
+  //     setForgotPasswordStatus("sending");
+
+  //     // Make API call to request password reset
+  //     const response = await fetch("/api/forgot-password", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ email: values.email }),
+  //     });
+
+  //     if (!response.ok) {
+  //       const error = await response.json();
+  //       throw new Error(
+  //         error.message || "Failed to process password reset request"
+  //       );
+  //     }
+
+  //     setForgotPasswordStatus("sent");
+  //   } catch (error) {
+  //     console.error("Password reset error:", error);
+  //     setForgotPasswordStatus("error");
+  //   }
+  // }
+  /* ----------- old code ------------ */
+
+  /* ----------- new code ------------ */
   async function onForgotPasswordSubmit(values: ForgotPasswordValues) {
-    try {
-      setForgotPasswordStatus("sending");
+    const { error } = await forgetPassword(values.email);
 
-      // Make API call to request password reset
-      const response = await fetch("/api/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: values.email }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          error.message || "Failed to process password reset request",
-        );
-      }
-
-      setForgotPasswordStatus("sent");
-    } catch (error) {
-      console.error("Password reset error:", error);
-      setForgotPasswordStatus("error");
+    if (!error) {
+      setActiveTab("login");
+    } else {
+      console.error("Forgot password error", error);
     }
   }
+  /* ----------- new code ------------ */
 
   /* ----------- new code ------------ */
   const fetchParentProfile = async (userId: string) => {
@@ -224,7 +241,7 @@ export default function AuthPage() {
       id: user.id,
       userName: user.username,
       userType: user.userType,
-    });    
+    });
 
     if (user?.userType === "parent") {
       const data = await fetchParentProfile(user?.sub);
@@ -244,7 +261,7 @@ export default function AuthPage() {
       navigate("/");
     } else if (user?.userType === "babysitter") {
       const data = await fetchBabysitterProfile(user?.sub);
-      
+
       if (!data?.[0]?.isProfileCompleted && data?.[0]?.stripeAccountID) {
         console.log("No parent profile → redirect to /profile-completion");
         navigate("/profile-completion");
@@ -288,7 +305,7 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <img
-              src="/src/assets/enchanted-logo.png"
+              src={logo}
               alt="The Enchanted Co. Logo"
               className="h-20 w-auto mx-auto mb-2"
             />
@@ -302,7 +319,9 @@ export default function AuthPage() {
             onValueChange={setActiveTab}
           >
             <TabsList
-              className={`grid w-full  mb-6 ${!adminMode ? "grid-cols-3" : "grid-cols-1 justify-normal"} `}
+              className={`grid w-full  mb-6 ${
+                !adminMode ? "grid-cols-3" : "grid-cols-1 justify-normal"
+              } `}
             >
               <TabsTrigger value="login">Login</TabsTrigger>
               {!adminMode && (
@@ -357,7 +376,9 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Email <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter your email"
@@ -476,12 +497,14 @@ export default function AuthPage() {
                       onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                       className="space-y-4"
                     >
-                       <FormField
+                      <FormField
                         control={registerForm.control}
                         name="userType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>I am a <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              I am a <span className="text-red-500">*</span>
+                            </FormLabel>
                             <div className="grid grid-cols-2 gap-3">
                               <Button
                                 type="button"
@@ -517,7 +540,7 @@ export default function AuthPage() {
                                 onClick={() =>
                                   registerForm.setValue(
                                     "userType",
-                                    "babysitter",
+                                    "babysitter"
                                   )
                                 }
                                 className="w-full"
@@ -535,7 +558,9 @@ export default function AuthPage() {
                         name="fullName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Full Name <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter your full name"
@@ -552,7 +577,9 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Email <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter your email"
@@ -562,7 +589,7 @@ export default function AuthPage() {
                                   // Set email to the same value as username
                                   registerForm.setValue(
                                     "email",
-                                    e.target.value,
+                                    e.target.value
                                   );
                                 }}
                               />
@@ -703,7 +730,7 @@ export default function AuthPage() {
                     <Form {...forgotPasswordForm}>
                       <form
                         onSubmit={forgotPasswordForm.handleSubmit(
-                          onForgotPasswordSubmit,
+                          onForgotPasswordSubmit
                         )}
                         className="space-y-4"
                       >
@@ -712,7 +739,9 @@ export default function AuthPage() {
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel>
+                                Email <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="email"
@@ -732,9 +761,9 @@ export default function AuthPage() {
                           type="submit"
                           className="w-full"
                           style={{ backgroundColor: "#3c5679" }}
-                          disabled={forgotPasswordStatus === "sending"}
+                          disabled={forgotLoading}
                         >
-                          {forgotPasswordStatus === "sending" ? (
+                          {forgotLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : null}
                           Reset Password

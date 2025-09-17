@@ -28,6 +28,10 @@ type AuthContextType = {
   registerMutation: (userData: RegisterData) => Promise<void>;
   loginLoading: boolean;
   registerLoading: boolean;
+  forgotLoading: boolean;
+  resetLoading: boolean;
+  forgetPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (newPassword: string) => Promise<{ error: any }>;
 };
 
 type LoginData = {
@@ -52,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const navigate = useNavigate();
@@ -356,6 +362,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoginLoading(false);
     }
   };
+
+  const forgetPassword = async (email: string) => {
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast({
+        title: "Password reset link sent",
+        description: "Please check your email to reset your password.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error("forget Password Catch Error:", error);
+
+      toast({
+        title: "Reset Password Failed",
+        description: error.message || 'Something went wrong.',
+        variant: "destructive",
+      });
+
+      return { error };
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const resetPassword = async (newPassword: string) => {
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast({
+        title: "Password updated successfully",
+        description: "You can now log in with your new password.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      console.error("Reset Password Error:", error);
+
+      toast({
+        title: "Update Password Failed",
+        description: error.message || 'Something went wrong.',
+        variant: "destructive",
+      });
+
+      return { error };
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   // ----------- new code ------------
 
   // ----------- new code ------------
@@ -363,6 +434,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, [registerLoading, loginLoading]);
   // ----------- new code ------------
+
+  const value: AuthContextType = {
+    user,
+    isLoading: loginLoading || registerLoading,
+    error,
+    loginMutation,
+    registerMutation,
+    logoutMutation,
+    forgetPassword,
+    resetPassword,
+    loginLoading: loginLoading,
+    registerLoading: registerLoading,
+    forgotLoading: forgotLoading,
+    resetLoading: resetLoading,
+  };
 
   return (
     <AuthContext.Provider
@@ -377,18 +463,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }} */
       /* --------- old code for reference ------------ */
 
-      /* --------- new code ------------ */
-      value={{
-        user,
-        isLoading: loginLoading || registerLoading,
-        error,
-        loginMutation,
-        registerMutation,
-        logoutMutation,
-        loginLoading: loginLoading,
-        registerLoading: registerLoading,
-      }}
-      /* --------- new code ------------ */
+      value={value}
     >
       {children}
     </AuthContext.Provider>
