@@ -125,7 +125,7 @@ export default function Header() {
                 className="h-12 w-auto"
               />
             </Link>
-            <nav className="hidden sm:ml-12 sm:flex sm:space-x-10">
+            <nav className="hidden sm:ml-12 sm:flex sm:items-center sm:space-x-10">
               <Link
                 href="/"
                 className={`${

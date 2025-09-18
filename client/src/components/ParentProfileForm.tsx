@@ -848,7 +848,10 @@ const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
 const emergencyContactSchema = z.object({
   name: z.string().min(1, "Name is required"),
   relationship: z.string().min(1, "Relationship is required"),
-  phoneNumber: z.string().min(1, "Phone number is required"),
+  phoneNumber: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(phoneRegex, "Please enter a valid phone number"),
 });
 
 // Schema for child information
@@ -871,7 +874,10 @@ const profileFormSchema = z
     // lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Please enter a valid email address"),
     // address: z.string().min(1, "Address is required"),
-    phoneNumber: z.string().min(1, "Phone number is required").regex(phoneRegex, "Please enter a valid phone number"),
+    phoneNumber: z
+      .string()
+      .min(1, "Phone number is required")
+      .regex(phoneRegex, "Please enter a valid phone number"),
     hasSecondParent: z.boolean().default(false),
     secondParentFirstName: z.string().optional(),
     secondParentLastName: z.string().optional(),
@@ -883,19 +889,19 @@ const profileFormSchema = z
       .string()
       .min(
         10,
-        "Please provide a description of your family (min 10 characters)",
+        "Please provide a description of your family (min 10 characters)"
       ),
     familyActivities: z
       .string()
       .min(
         10,
-        "Please describe activities your family enjoys (min 10 characters)",
+        "Please describe activities your family enjoys (min 10 characters)"
       ),
     medicalDietaryRestrictions: z
       .string()
       .min(
         1,
-        'Please provide information about any restrictions or indicate "None"',
+        'Please provide information about any restrictions or indicate "None"'
       ),
     emergencyContacts: z
       .array(emergencyContactSchema)
@@ -923,6 +929,12 @@ const profileFormSchema = z
           code: z.ZodIssueCode.custom,
           path: ["secondParentPhone"],
           message: "Second parent phone number is required",
+        });
+      } else if (!phoneRegex.test(data.secondParentPhone)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["secondParentPhone"],
+          message: "Please enter a valid phone number",
         });
       }
     }
@@ -1127,7 +1139,7 @@ export default function ParentProfileForm() {
   const uploadImageToSupabase = async (
     file: File,
     userId: string,
-    existingPath: string | null,
+    existingPath: string | null
   ) => {
     const fileExt = file.name.split(".").pop();
     const fileName = `profile.${fileExt}`;
@@ -1201,7 +1213,7 @@ export default function ParentProfileForm() {
         profileImageUrl = await uploadImageToSupabase(
           imageFile,
           userId,
-          imagePath ?? null,
+          imagePath ?? null
         );
       }
 
@@ -1320,7 +1332,7 @@ export default function ParentProfileForm() {
   // Function to handle child form change
   const handleChildFormChange = (
     field: keyof ChildFormValues,
-    value: string,
+    value: string
   ) => {
     setChildFormValues((prev) => ({
       ...prev,
@@ -1414,7 +1426,7 @@ export default function ParentProfileForm() {
         setLongitude(longitude);
         try {
           const res = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`,
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
           );
           const data = await res.json();
           const placeName = data.features?.[0]?.place_name || "";
@@ -1433,7 +1445,7 @@ export default function ParentProfileForm() {
         enableHighAccuracy: true, // 📍 Request more precise location
         timeout: 10000,
         maximumAge: 0,
-      },
+      }
     );
   };
 
@@ -1501,7 +1513,9 @@ export default function ParentProfileForm() {
                     name="profileImage"
                     render={() => (
                       <FormItem className="text-center">
-                        <FormLabel>Profile Photo <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Profile Photo <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <div className="relative w-24 h-24 mb-3">
                             {uploadedImg ? (
@@ -1547,7 +1561,9 @@ export default function ParentProfileForm() {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Full Name <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -1564,7 +1580,9 @@ export default function ParentProfileForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Email <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -1656,7 +1674,7 @@ export default function ParentProfileForm() {
                       ) : (
                         <>
                           <MapPin className="inline-block mr-2" />
-                          Use My Current Location 
+                          Use My Current Location
                         </>
                       )}
                     </button>
@@ -1672,13 +1690,16 @@ export default function ParentProfileForm() {
                     name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Phone Number <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <PhoneInput
-                            defaultCountry="in"
+                            defaultCountry="US"
                             value={field.value}
                             onChange={field.onChange}
-                            inputClassName="w-full px-4 py-2 border border-gray-300 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className="rounded-md focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                            inputClassName="!h-10 w-full px-4 py-2"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1756,9 +1777,12 @@ export default function ParentProfileForm() {
                           <FormItem>
                             <FormLabel>Second Parent Phone Number</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Enter phone number"
+                              <PhoneInput
+                                defaultCountry="US"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="rounded-md focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                                inputClassName="!h-10 w-full px-4 py-2"
                               />
                             </FormControl>
                             <FormMessage />
@@ -1865,34 +1889,41 @@ export default function ParentProfileForm() {
                       <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="childFirstName">First Name <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="childFirstName">
+                              First Name <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               id="childFirstName"
                               value={childFormValues.firstName}
                               onChange={(e) =>
                                 handleChildFormChange(
                                   "firstName",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="childLastName">Last Name <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="childLastName">
+                              Last Name <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               id="childLastName"
                               value={childFormValues.lastName}
                               onChange={(e) =>
                                 handleChildFormChange(
                                   "lastName",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="childDob">Date of Birth <span className="text-red-500">*</span></Label>
+                          <Label htmlFor="childDob">
+                            Date of Birth{" "}
+                            <span className="text-red-500">*</span>
+                          </Label>
                           <Input
                             id="childDob"
                             type="date"
@@ -1900,14 +1931,15 @@ export default function ParentProfileForm() {
                             onChange={(e) =>
                               handleChildFormChange(
                                 "dateOfBirth",
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="childPersonality">
-                            Personality & Interests <span className="text-red-500">*</span>
+                            Personality & Interests{" "}
+                            <span className="text-red-500">*</span>
                           </Label>
                           <Textarea
                             id="childPersonality"
@@ -1915,7 +1947,7 @@ export default function ParentProfileForm() {
                             onChange={(e) =>
                               handleChildFormChange(
                                 "personality",
-                                e.target.value,
+                                e.target.value
                               )
                             }
                             placeholder="Describe your child's personality, what they enjoy, etc."
@@ -1931,7 +1963,7 @@ export default function ParentProfileForm() {
                             onChange={(e) =>
                               handleChildFormChange(
                                 "specialCare",
-                                e.target.value,
+                                e.target.value
                               )
                             }
                             placeholder="Any allergies, medications, or special instructions..."
@@ -1979,7 +2011,10 @@ export default function ParentProfileForm() {
                     name="parentingStyle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parenting Style <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Parenting Style{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -1997,7 +2032,10 @@ export default function ParentProfileForm() {
                     name="familyDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Family Description <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Family Description{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2015,7 +2053,10 @@ export default function ParentProfileForm() {
                     name="familyActivities"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Family Activities <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Family Activities{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2033,7 +2074,10 @@ export default function ParentProfileForm() {
                     name="medicalDietaryRestrictions"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Medical/Dietary Restrictions <span className="text-red-500">*</span></FormLabel>
+                        <FormLabel>
+                          Medical/Dietary Restrictions{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
@@ -2084,7 +2128,9 @@ export default function ParentProfileForm() {
                           name={`emergencyContacts.${index}.name`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel>
+                                Name <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -2100,7 +2146,10 @@ export default function ParentProfileForm() {
                           name={`emergencyContacts.${index}.relationship`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Relationship <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel>
+                                Relationship{" "}
+                                <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -2118,11 +2167,17 @@ export default function ParentProfileForm() {
                         name={`emergencyContacts.${index}.phoneNumber`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>
+                              Phone Number{" "}
+                              <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="Enter phone number"
+                              <PhoneInput
+                                defaultCountry="US"
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="rounded-md focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                                inputClassName="!h-10 w-full px-4 py-2"
                               />
                             </FormControl>
                             <FormMessage />

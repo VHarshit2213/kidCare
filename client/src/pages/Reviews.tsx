@@ -134,7 +134,7 @@ const Reviews = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : reviews.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600">No reviews yet.</p>
           </div>
         ) : (

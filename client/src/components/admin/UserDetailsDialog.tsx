@@ -53,11 +53,11 @@ export default function UserDetailsDialog({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {user === "parent" ? "Parent" : "Babysitter"} Details
+            {user?.userType === "parent" ? "Parent" : "Babysitter"} Details
           </DialogTitle>
           <DialogDescription>
             View detailed information about this{" "}
-            {user === "parent" ? "Parent" : "Babysitter"}
+            {user?.userType === "parent" ? "Parent" : "Babysitter"}
           </DialogDescription>
         </DialogHeader>
 
@@ -158,7 +158,7 @@ export default function UserDetailsDialog({
                         </h4>
                         <p className="mt-1">
                           {user.horulyRate
-                            ? `${user.horulyRate}/hour`
+                            ? `$${user.horulyRate}/hour`
                             : "Not specified"}
                         </p>
                       </div>

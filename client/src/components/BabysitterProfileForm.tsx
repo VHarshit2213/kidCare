@@ -65,7 +65,10 @@ const profileFormSchema = z
     street_name: z.string().optional(),
     // firstName: z.string().min(1, 'First name is required'),
     // lastName: z.string().min(1, 'Last name is required'),
-    phoneNumber: z.string().min(1, "Phone number is required").regex(phoneRegex, "Please enter a valid phone number"),
+    phoneNumber: z
+      .string()
+      .min(1, "Phone number is required")
+      .regex(phoneRegex, "Please enter a valid phone number"),
     email: z.string().email("Invalid email address"),
     bio: z
       .string()
@@ -173,7 +176,7 @@ export default function BabysitterProfileForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [licensePreviewUrl, setLicensePreviewUrl] = useState<string | null>(
-    null,
+    null
   );
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [certificatePreviewUrl, setCertificatePreviewUrl] = useState<
@@ -372,7 +375,7 @@ export default function BabysitterProfileForm() {
     file: File,
     userId: string,
     type: "profile" | "license" | "certification" | "video",
-    existingPath: string | null,
+    existingPath: string | null
   ) => {
     const fileExt = file.name.split(".").pop();
     let filePath = "";
@@ -431,11 +434,22 @@ export default function BabysitterProfileForm() {
       }
 
       if (!address) {
-        throw new Error("Please use your current location.");
+        toast({
+          title: "Address Required",
+          description: "Please use your current location.",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (!imageFile && !imagePath) {
-        throw new Error("Please upload a profile photo.");
+         toast({
+          title: "Missing Profile Photo",
+          description: "Please upload a profile photo.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
       }
 
       // ✅ Upload files conditionally
@@ -445,7 +459,7 @@ export default function BabysitterProfileForm() {
           imageFile,
           userId,
           "profile",
-          imagePath ?? null,
+          imagePath ?? null
         );
       }
 
@@ -455,7 +469,7 @@ export default function BabysitterProfileForm() {
           licenseFile,
           userId,
           "license",
-          profiles?.[0]?.transportation ?? null,
+          profiles?.[0]?.transportation ?? null
         );
       }
 
@@ -465,7 +479,7 @@ export default function BabysitterProfileForm() {
           certificationFile,
           userId,
           "certification",
-          profiles?.[0]?.certified ?? null,
+          profiles?.[0]?.certified ?? null
         );
       }
 
@@ -475,7 +489,7 @@ export default function BabysitterProfileForm() {
           videoFile,
           userId,
           "video",
-          profiles?.[0]?.instrucationVideo ?? null,
+          profiles?.[0]?.instrucationVideo ?? null
         );
       }
 
@@ -579,7 +593,7 @@ export default function BabysitterProfileForm() {
 
   // Function to handle certification document upload
   const handleCertificationUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -653,7 +667,7 @@ export default function BabysitterProfileForm() {
         setLongitude(longitude);
         try {
           const res = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`,
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
           );
           const data = await res.json();
           const placeName = data.features?.[0]?.place_name || "";
@@ -672,7 +686,7 @@ export default function BabysitterProfileForm() {
         enableHighAccuracy: true, // 📍 Request more precise location
         timeout: 10000,
         maximumAge: 0,
-      },
+      }
     );
   };
 
@@ -727,7 +741,9 @@ export default function BabysitterProfileForm() {
                   name="profileImage"
                   render={() => (
                     <FormItem className="text-center">
-                      <FormLabel>Profile Photo <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Profile Photo <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <div className="relative w-24 h-24 mb-3">
                           {uploadedImg ? (
@@ -803,7 +819,9 @@ export default function BabysitterProfileForm() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Full Name <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -820,7 +838,9 @@ export default function BabysitterProfileForm() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Email <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -901,14 +921,17 @@ export default function BabysitterProfileForm() {
                   name="phoneNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Phone Number <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
-                          <PhoneInput
-                            defaultCountry="in"
-                            value={field.value}
-                            onChange={field.onChange}
-                            inputClassName="w-full px-4 py-2 border border-gray-300 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          />
+                        <PhoneInput
+                          defaultCountry="US"
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="rounded-md focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                          inputClassName="!h-10 w-full px-4 py-2"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -922,7 +945,9 @@ export default function BabysitterProfileForm() {
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Short Bio <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>
+                        Short Bio <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
@@ -950,7 +975,10 @@ export default function BabysitterProfileForm() {
                 name="experienceYears"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>How long have you been a babysitter? <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      How long have you been a babysitter?{" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       /* defaultValue={field.value} */
@@ -981,7 +1009,8 @@ export default function BabysitterProfileForm() {
                   <FormItem className="mt-4">
                     <div className="mb-4">
                       <FormLabel>
-                        What age ranges do you have the most experience with? <span className="text-red-500">*</span>
+                        What age ranges do you have the most experience with?{" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormDescription>Select all that apply</FormDescription>
                     </div>
@@ -1008,8 +1037,8 @@ export default function BabysitterProfileForm() {
                                           ])
                                         : field.onChange(
                                             field.value?.filter(
-                                              (value) => value !== range.value,
-                                            ),
+                                              (value) => value !== range.value
+                                            )
                                           );
                                     }}
                                   />
@@ -1035,7 +1064,8 @@ export default function BabysitterProfileForm() {
                   <FormItem className="mt-4">
                     <div className="mb-4">
                       <FormLabel>
-                        What skills do you have that parents might value? <span className="text-red-500">*</span>
+                        What skills do you have that parents might value?{" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormDescription>Select all that apply</FormDescription>
                     </div>
@@ -1062,8 +1092,8 @@ export default function BabysitterProfileForm() {
                                           ])
                                         : field.onChange(
                                             field.value?.filter(
-                                              (value) => value !== skill,
-                                            ),
+                                              (value) => value !== skill
+                                            )
                                           );
                                     }}
                                   />
@@ -1089,7 +1119,8 @@ export default function BabysitterProfileForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        What do you enjoy most about working with children? <span className="text-red-500">*</span>
+                        What do you enjoy most about working with children?{" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -1109,7 +1140,8 @@ export default function BabysitterProfileForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        How would you describe your caregiving style? <span className="text-red-500">*</span>
+                        How would you describe your caregiving style?{" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -1136,7 +1168,10 @@ export default function BabysitterProfileForm() {
                 name="hourlyRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>What is your hourly rate? ($35-$50) <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      What is your hourly rate? ($35-$50){" "}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <span className="absolute left-3 top-2.5">$</span>

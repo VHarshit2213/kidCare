@@ -15,10 +15,14 @@ import { CalendarClock, Clock, ChevronDown } from "lucide-react";
 import InstantCareModal from "@/components/InstantCareModal";
 import ScheduledCareModal from "@/components/ScheduledCareModal";
 import supabase from "@/config/supabaseClient";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MyBookings() {
   const { user } = useAuth();
+   const { toast } = useToast();
   const isAuthenticated = !!user;
+   const [, navigate] = useLocation();
   const [instantCareOpen, setInstantCareOpen] = useState(false);
   const [scheduledCareOpen, setScheduledCareOpen] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -27,19 +31,51 @@ export default function MyBookings() {
     [],
   );
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+
+  const isPaymentSuccess = user?.user_metadata?.isPayment;
 
   // const { data: bookings, isLoading } = useQuery<Booking[]>({
   //   queryKey: ["/api/bookings/parent"],
   //   enabled: isAuthenticated && user?.userType === "parent",
   // });
 
-  // Function handlers for care options
-  const openInstantCare = () => {
-    setInstantCareOpen(true);
+  const handleInstantCareRequest = () => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    } else if (!isPaymentSuccess) {
+      navigate("/membership");
+    } else if (!profile) {
+      window.dispatchEvent(new CustomEvent("open-sitter-request"));
+    } else if (!profile?.isApproved) {
+      toast({
+        title: "Access Denied",
+        description:
+          "Your profile is under review you can not book babysitter.",
+        variant: "destructive",
+      });
+    } else {
+      window.dispatchEvent(new CustomEvent("open-sitter-request"));
+    }
   };
 
-  const openScheduledCare = () => {
-    setScheduledCareOpen(true);
+  const handleScheduledCareRequest = () => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    } else if (!isPaymentSuccess) {
+      navigate("/membership");
+    } else if (!profile) {
+      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
+    } else if (!profile?.isApproved) {
+      toast({
+        title: "Access Denied",
+        description:
+          "Your profile is under review you can not book babysitter.",
+        variant: "destructive",
+      });
+    } else {
+      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
+    }
   };
 
   const fetchBookings = async () => {
@@ -86,8 +122,31 @@ export default function MyBookings() {
     }
   };
 
+  const fetchParentProfile = async () => {
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from("parentprofile")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Fetch error:", error.message);
+      return null;
+    }
+
+    setProfile(data);
+  };
+
   useEffect(() => {
     fetchBookings();
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.id && user?.user_metadata?.userType === "parent") {
+      fetchParentProfile();
+    }
   }, [user]);
 
   return (
@@ -108,7 +167,7 @@ export default function MyBookings() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-4 animate-pulse"
+                className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 animate-pulse"
               >
                 <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -161,12 +220,12 @@ export default function MyBookings() {
             )}
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600 m-6">
               You don't have any bookings yet.
             </p>
 
-            {/* {user?.user_metadata?.userType === "parent" && (
+            {user?.user_metadata?.userType === "parent" && (
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-medium mb-3">
                   Create your first booking
@@ -175,7 +234,7 @@ export default function MyBookings() {
                 <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
                   <Button
                     className="bg-brand-blue hover:bg-brand-blue/90 flex items-center"
-                    onClick={openInstantCare}
+                    onClick={handleInstantCareRequest}
                   >
                     <Clock className="mr-2 h-4 w-4" />
                     Request a Sitter Now
@@ -184,27 +243,17 @@ export default function MyBookings() {
                   <Button
                     variant="outline"
                     className="flex items-center border-brand-blue text-brand-blue hover:bg-brand-blue/10"
-                    onClick={openScheduledCare}
+                    onClick={handleScheduledCareRequest}
                   >
                     <CalendarClock className="mr-2 h-4 w-4" />
                     Schedule Care
                   </Button>
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         )}
       </div>
-
-      {/* Modals for booking care */}
-      <InstantCareModal
-        isOpen={instantCareOpen}
-        onClose={() => setInstantCareOpen(false)}
-      />
-      <ScheduledCareModal
-        isOpen={scheduledCareOpen}
-        onClose={() => setScheduledCareOpen(false)}
-      />
     </Layout>
   );
 }
