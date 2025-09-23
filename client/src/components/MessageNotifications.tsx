@@ -3,7 +3,11 @@ import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import logo from "../assets/enchanted-logo.png";
 
-export default function MessageNotifications({ currentUserId }) {
+interface MessageNotificationsProps {
+  currentUserId: string; 
+}
+
+export default function MessageNotifications({ currentUserId }: MessageNotificationsProps) {
   const { toast } = useToast();
   
   useEffect(() => {
