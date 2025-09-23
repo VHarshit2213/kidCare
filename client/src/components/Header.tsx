@@ -293,6 +293,16 @@ export default function Header() {
                   Reviews
                 </Link>
               )}
+               <Link
+                  href="/booking-notification"
+                  className={`${
+                    isActive("/booking-notification")
+                      ? "text-[#3c5679] font-medium"
+                      : "text-neutral-700 hover:text-[#3c5679]"
+                  } px-1 pt-1 text-sm tracking-wide`}
+                >
+                  Notification
+                </Link>
             </nav>
           </div>
           <div>

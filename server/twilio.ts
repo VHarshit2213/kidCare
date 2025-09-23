@@ -1,7 +1,13 @@
 import twilio from "twilio";
 import dotenv from "dotenv";
 import { Booking, User } from "@shared/schema";
+import { createClient } from "@supabase/supabase-js";
 dotenv.config();
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
 // Initialize Twilio client with environment variables
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -94,7 +100,7 @@ Parent contact: ${parent.phoneNumber}
       from: twilioPhoneNumber,
       to: parent.phoneNumber,
     });
-    console.log(`SMS sent to parent: ${parentSmsResult.sid}`);
+    // console.log(`SMS sent to parent: ${parentSmsResult.sid}`);
 
     // Only send to babysitter if they have a phone number
     if (babysitter.phoneNumber) {
@@ -103,12 +109,28 @@ Parent contact: ${parent.phoneNumber}
         from: twilioPhoneNumber,
         to: babysitter.phoneNumber,
       });
-      console.log(`SMS sent to babysitter: ${sitterSmsResult.sid}`);
+      // console.log(`SMS sent to babysitter: ${sitterSmsResult.sid}`);
     } else {
       console.log(
         "Babysitter has no phone number. SMS not sent to babysitter."
       );
     }
+
+    // Store booking messages in Supabase table
+    await supabase.from("bookingNotification").insert([
+      {
+        // Babysitter gets notification
+        sender_id: parent.user_id,
+        receiver_id: babysitter.user_id,
+        message: babysitterMessage,
+      },
+      {
+        // Parent gets notification
+        sender_id: babysitter.user_id,
+        receiver_id: parent.user_id,
+        message: parentMessage,
+      },
+    ]);
 
     return true;
   } catch (error) {

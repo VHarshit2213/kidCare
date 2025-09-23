@@ -6,6 +6,7 @@ import MobileNav from "./MobileNav";
 import { useAuth } from "@/hooks/use-auth";
 import InstantCareModal from "./InstantCareModal";
 import ScheduledCareModal from "./ScheduledCareModal";
+import MessageNotifications from "./MessageNotifications";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
   const [, navigate] = useLocation();
   const [isInstantCareModalOpen, setIsInstantCareModalOpen] = useState(false);
   const [isScheduledCareModalOpen, setIsScheduledCareModalOpen] = useState(false);
+  const userId = user?.id;
 
   useEffect(() => {
     const handleOpenSitterRequest = () => {
@@ -47,6 +49,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex flex-col h-screen">
       <Header />
+      <MessageNotifications currentUserId={userId} />
       <main className="flex-1 relative z-0 overflow-y-auto bg-neutral-lighter">
         {children}
       </main>

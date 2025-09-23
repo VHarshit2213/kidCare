@@ -664,6 +664,7 @@ export default function AvailableScheduledSitters({
                     <div className="mt-3 flex justify-end gap-2">
                       <ChatDialog
                         currentUserId={currentUser?.user_id}
+                        currentUserName= {currentUser?.fullName}
                         otherUserId={sitter?.user_id}
                         currentUserPhone={currentUser?.phoneNumber}
                         otherUserPhone={sitter?.phoneNumber}

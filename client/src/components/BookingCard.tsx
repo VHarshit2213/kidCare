@@ -341,6 +341,7 @@ export default function BookingCard({
 
                   <ChatDialog
                     currentUserId={parent?.user_id}
+                    currentUserName= {parent?.fullName}
                     otherUserId={babysitter?.user_id}
                     currentUserPhone={parent?.phoneNumber}
                     otherUserPhone={babysitter?.phoneNumber}
@@ -471,6 +472,7 @@ export default function BookingCard({
                             </Button>
                             <ChatDialog
                               currentUserId={babysitter?.user_id}
+                              currentUserName={babysitter?.fullName}
                               otherUserId={parent?.user_id}
                               currentUserPhone={babysitter?.phoneNumber}
                               otherUserPhone={parent?.phoneNumber}

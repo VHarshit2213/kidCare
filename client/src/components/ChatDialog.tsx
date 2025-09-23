@@ -10,9 +10,11 @@ import {
   DialogTrigger,
   DialogContent,
 } from "./ui/dialog";
+import supabase from "@/config/supabaseClient";
 
 interface ChatDialogProps {
   currentUserId: string;
+  currentUserName: string;
   otherUserId: string;
   currentUserPhone: string;
   otherUserPhone: string;
@@ -22,6 +24,7 @@ interface ChatDialogProps {
 
 const ChatDialog = ({
   currentUserId,
+  currentUserName,
   otherUserId,
   currentUserPhone,
   otherUserPhone,
@@ -37,10 +40,9 @@ const ChatDialog = ({
   //  Fetch chat history
   useEffect(() => {
     if (!isOpen) return;
-    let initial = true;
 
     const fetchMessages = async () => {
-      if (initial) setLoading(true);
+      setLoading(true);
       try {
         const res = await fetch(
           `/api/conversation?sender_id=${currentUserId}&receiver_id=${otherUserId}`
@@ -53,18 +55,32 @@ const ChatDialog = ({
       } catch (error) {
         console.error("Fetch messages error:", error);
       } finally {
-        if (initial) {
-          setLoading(false);
-          initial = false;
-        }
+        setLoading(false);
       }
     };
 
     fetchMessages();
 
-    // Optional: polling every 5s or use Supabase real-time
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
+    // Subscribe to real-time messages
+    const channel = supabase
+      .channel("chat_messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${currentUserId},sender_id=eq.${otherUserId}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUserId, otherUserId, isOpen]);
 
   //  Send message
@@ -79,6 +95,7 @@ const ChatDialog = ({
         receiver_phone: otherUserPhone,
         message: input,
         sender_id: currentUserId,
+        sender_name: currentUserName,
         receiver_id: otherUserId,
       });
 

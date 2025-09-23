@@ -2217,7 +2217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // for send massage using twilio ( new code )
   app.post("/api/send-message", async (req: Request, res: Response) => {
-    const { sender_phone, receiver_phone, message, sender_id, receiver_id } =
+    const { sender_phone, receiver_phone, message, sender_id, sender_name, receiver_id } =
       req.body;
 
     try {
@@ -2231,6 +2231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 2. Save in Supabase
       const payload = {
         sender_id,
+        sender_name,
         receiver_id,
         sender_phone,
         receiver_phone,

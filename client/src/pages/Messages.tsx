@@ -320,6 +320,7 @@ export default function Messages() {
               return (
                 <ChatDialog
                   currentUserId={currentUserProfile?.user_id}
+                  currentUserName= {currentUserProfile?.fullName}
                   otherUserId={partner?.user_id}
                   currentUserPhone={currentUserProfile?.phoneNumber}
                   otherUserPhone={partner?.phoneNumber}
@@ -358,7 +359,7 @@ export default function Messages() {
                             )}
                           </div>
                           {latestMessage && (
-                            <p className="text-sm text-neutral-600 truncate">
+                            <p className="text-sm text-neutral-600 line-clamp-1">
                               {latestMessage.sender_id === user?.id
                                 ? "You: "
                                 : ""}

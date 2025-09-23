@@ -21,6 +21,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import { BrowserRouter } from "react-router-dom";
 import ResumeOnboarding from "@/components/ResumeOnboarding";
 import Reviews from "./pages/Reviews";
+import BookingNotification from "@/pages/BookingNotification";
 
 // Wrapper to ensure components never return null
 const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
@@ -46,6 +47,7 @@ function App() {
             <ProtectedRoute path="/bookings" component={MyBookings} />
             <ProtectedRoute path="/messages" component={Messages} />
             <ProtectedRoute path="/reviews" component={Reviews} />
+            <ProtectedRoute path="/booking-notification" component={BookingNotification} />
             <ProtectedRoute path="/profile" component={Profile} />
             <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
             <Route path="/admin" component={AdminPage} />
