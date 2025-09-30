@@ -70,10 +70,12 @@ const ChatDialog = ({
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `receiver_id=eq.${currentUserId},sender_id=eq.${otherUserId}`,
+          filter: `receiver_id=eq.${currentUserId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          if (payload.new.sender_id === otherUserId) {
+            setMessages((prev) => [...prev, payload.new]);
+          }
         }
       )
       .subscribe();

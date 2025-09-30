@@ -1241,11 +1241,13 @@ export default function ParentProfileForm() {
           longitude: longitude,
         },
         phoneNumber: values.phoneNumber,
-        secondParentGuardian: {
-          firstName: values.secondParentFirstName,
-          lastName: values.secondParentLastName,
-          phoneNumber: values.secondParentPhone,
-        },
+        secondParentGuardian: values.hasSecondParent
+          ? {
+              firstName: values.secondParentFirstName || "",
+              lastName: values.secondParentLastName || "",
+              phoneNumber: values.secondParentPhone || "",
+            }
+          : null,
         children: mappedChildren,
         parentingStyle: values.parentingStyle,
         familyDesc: values.familyDescription,

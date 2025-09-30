@@ -2217,16 +2217,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // for send massage using twilio ( new code )
   app.post("/api/send-message", async (req: Request, res: Response) => {
-    const { sender_phone, receiver_phone, message, sender_id, sender_name, receiver_id } =
-      req.body;
+    const {
+      sender_phone,
+      receiver_phone,
+      message,
+      sender_id,
+      sender_name,
+      receiver_id,
+    } = req.body;
 
     try {
+      let profile = await supabase
+        .from("babySitterProfile")
+        .select("sms_enabled")
+        .eq("user_id", receiver_id)
+        .single();
+
+      if (!profile.data) {
+        profile = await supabase
+          .from("parentprofile")
+          .select("sms_enabled")
+          .eq("user_id", receiver_id)
+          .single();
+      }
+
+      if (profile.error) throw profile.error;
+
+      const smsEnabled = profile.data?.sms_enabled ?? true;
+    
       // 1. Send SMS
-      await client.messages.create({
-        body: message,
-        from: twilioPhoneNumber,
-        to: receiver_phone,
-      });
+      if (smsEnabled) {
+        await client.messages.create({
+          body: message,
+          from: twilioPhoneNumber,
+          to: receiver_phone,
+        });
+      }
 
       // 2. Save in Supabase
       const payload = {

@@ -24,6 +24,23 @@ if (!accountSid || !authToken || !twilioPhoneNumber) {
 // Initialize the Twilio client only if we have all credentials
 const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
 
+// Fetch the SMS preference from Supabase before sending
+async function isSmsEnabled(userId: string, userType: "parent" | "babysitter") {
+  const tableName =
+    userType === "parent" ? "parentprofile" : "babySitterProfile";
+  const { data, error } = await supabase
+    .from(tableName)
+    .select("sms_enabled")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching SMS preference:", error.message);
+    return true;
+  }
+  return data?.sms_enabled ?? true;
+}
+
 /**
  * Send an SMS notification about a booking confirmation
  */
@@ -43,6 +60,13 @@ export async function sendBookingConfirmationSMS(
   }
 
   try {
+    // Check if parent allows SMS
+    const parentSmsEnabled = await isSmsEnabled(parent.user_id, "parent");
+    const babysitterSmsEnabled = await isSmsEnabled(
+      babysitter.user_id,
+      "babysitter"
+    );
+
     // Format booking time nicely
     const hasDate = booking.date;
 
@@ -94,16 +118,17 @@ Care instructions: ${booking.careInstructions || "None provided"}
 Parent contact: ${parent.phoneNumber}
 `;
 
-    // Send message to parent
-    const parentSmsResult = await client.messages.create({
-      body: parentMessage,
-      from: twilioPhoneNumber,
-      to: parent.phoneNumber,
-    });
+    // Send SMS only if allowed
+    if (parent.phoneNumber && parentSmsEnabled) {
+      await client.messages.create({
+        body: parentMessage,
+        from: twilioPhoneNumber,
+        to: parent.phoneNumber,
+      });
+    }
     // console.log(`SMS sent to parent: ${parentSmsResult.sid}`);
 
-    // Only send to babysitter if they have a phone number
-    if (babysitter.phoneNumber) {
+    if (babysitter.phoneNumber && babysitterSmsEnabled) {
       const sitterSmsResult = await client.messages.create({
         body: babysitterMessage,
         from: twilioPhoneNumber,

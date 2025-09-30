@@ -16,6 +16,7 @@ export default function Profile() {
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [smsEnabledForMobile, setSmsEnabledForMobile] = useState(true);
 
   const isAuthenticated = !!user;
 
@@ -57,7 +58,25 @@ export default function Profile() {
     }
 
     setProfile(data);
+    setSmsEnabledForMobile(data.sms_enabled ?? true);
     setLoading(false);
+  };
+
+  const handleToggle = async () => {
+    const newValue = !smsEnabledForMobile;
+    setSmsEnabledForMobile(newValue);
+
+    const tableName =
+      user?.user_metadata?.userType === "parent"
+        ? "parentprofile"
+        : "babySitterProfile";
+
+    const { error } = await supabase
+      .from(tableName)
+      .update({ sms_enabled: newValue })
+      .eq("user_id", user?.id);
+
+    if (error) console.error("Error updating SMS setting:", error.message);
   };
 
   useEffect(() => {
@@ -93,7 +112,34 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
+        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+          <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <h3 className="text-sm font-medium text-gray-800">
+                Allow SMS Notifications?
+              </h3>
+              <p className="text-xs text-gray-600">
+                Enable or disable SMS notifications to your mobile when you
+                receive new messages.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={smsEnabledForMobile}
+                onChange={handleToggle}
+                className="sr-only peer"
+              />
+              <div
+                className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500
+                      after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border 
+                      after:rounded-full after:h-5 after:w-5 after:transition-all 
+                      peer-checked:after:translate-x-full peer-checked:after:border-white"
+              ></div>
+            </label>
+          </div>
+        </div>
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200">
           <div className="p-6 sm:p-8">
             <div className="sm:flex sm:items-center sm:justify-between">
@@ -233,7 +279,7 @@ export default function Profile() {
                         {user.ageRangeExperience.map(
                           (age: string, index: number) => (
                             <Skill key={index} name={age} />
-                          ),
+                          )
                         )}
                       </div>
                     </div>
