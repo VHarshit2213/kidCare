@@ -2224,6 +2224,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sender_id,
       sender_name,
       receiver_id,
+      location,
+      map_url,
     } = req.body;
 
     try {
@@ -2244,18 +2246,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (profile.error) throw profile.error;
 
       const smsEnabled = profile.data?.sms_enabled ?? true;
-    
+
       // 1. Send SMS
       if (smsEnabled) {
-        await client.messages.create({
-          body: message,
+        let smsBody = message || "📍 Location shared";
+
+        if (location?.latitude && location?.longitude) {
+          const mapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+          smsBody += `\n\nView on map: ${mapsLink}`;
+        }
+
+        const twilioMsg: any = {
+          body: smsBody,
           from: twilioPhoneNumber,
           to: receiver_phone,
-        });
+        };
+
+        // if (map_url) {
+        //   twilioMsg.mediaUrl = [map_url];
+        // }
+
+        await client.messages.create(twilioMsg);
       }
 
       // 2. Save in Supabase
-      const payload = {
+      const payload: Record<string, any> = {
         sender_id,
         sender_name,
         receiver_id,
@@ -2264,6 +2279,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message,
         direction: "outbound",
       };
+
+      if (location) payload.location = location;
+      if (map_url) payload.map_url = map_url;
 
       const { error } = await supabase.from("messages").insert([payload]);
 

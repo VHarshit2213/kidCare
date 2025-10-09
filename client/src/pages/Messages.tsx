@@ -363,7 +363,7 @@ export default function Messages() {
                               {latestMessage.sender_id === user?.id
                                 ? "You: "
                                 : ""}
-                              {latestMessage.message}
+                              {latestMessage.message || "📍 location"}
                             </p>
                           )}
                         </div>
