@@ -149,6 +149,7 @@ export default function Messages() {
     null
   );
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const { getSignedUrl } = useSignedUrl();
 
   // Get current user role (parent / babysitter)
@@ -190,7 +191,19 @@ export default function Messages() {
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
-    if (!error) setMessages(data || []);
+    if (!error && data) {
+      setMessages(data);
+
+      // calculate unread counts
+      const counts: Record<string, number> = {};
+      data.forEach((msg) => {
+        if (msg.receiver_id === user.id && !msg.is_read) {
+          counts[msg.sender_id] = (counts[msg.sender_id] || 0) + 1;
+        }
+      });
+      setUnreadCounts(counts);
+    }
+
     setLoading((prev) => ({ ...prev, messages: false }));
   }, [isAuthenticated, user?.id]);
 
@@ -198,12 +211,12 @@ export default function Messages() {
   const conversationPartners = useMemo(() => {
     return messages.length
       ? [
-          ...new Set(
-            messages.map((msg) =>
-              msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
-            )
-          ),
-        ]
+        ...new Set(
+          messages.map((msg) =>
+            msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
+          )
+        ),
+      ]
       : [];
   }, [messages, user?.id]);
 
@@ -272,13 +285,139 @@ export default function Messages() {
     fetchUserRole();
   }, [fetchUserRole]);
 
-  useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
+ useEffect(() => {
+  if (!isAuthenticated || !user?.id) return;
 
-  useEffect(() => {
-    fetchPartners();
-  }, [fetchPartners]);
+  // Initial fetch
+  fetchMessages();
+
+  // Subscribe to realtime updates for messages
+  const channel = supabase.channel(`realtime_messages_${user.id}`);
+
+  // Listen for new messages where user is the RECEIVER
+  channel.on(
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "messages",
+      filter: `receiver_id=eq.${user.id}`,
+    },
+    (payload) => {
+      const newMsg = payload.new;
+
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === newMsg.id);
+        if (exists) return prev;
+        return [newMsg, ...prev];
+      });
+
+      // Increase unread count
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [newMsg.sender_id]: (prev[newMsg.sender_id] || 0) + 1,
+      }));
+
+      // Update partner’s latest message
+      const partnerId = newMsg.sender_id;
+      setPartners((prev) =>
+        prev.map((p) =>
+          p.user_id === partnerId
+            ? {
+                ...p,
+                last_message: newMsg.message,
+                last_message_at: newMsg.created_at,
+              }
+            : p
+        )
+      );
+    }
+  );
+
+  // 📨 Listen for new messages where user is the SENDER
+  channel.on(
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "messages",
+      filter: `sender_id=eq.${user.id}`,
+    },
+    (payload) => {
+      const newMsg = payload.new;
+
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === newMsg.id);
+        if (exists) return prev;
+        return [newMsg, ...prev];
+      });
+
+      // Update partner’s latest message
+      const partnerId = newMsg.receiver_id;
+      setPartners((prev) =>
+        prev.map((p) =>
+          p.user_id === partnerId
+            ? {
+                ...p,
+                last_message: newMsg.message,
+                last_message_at: newMsg.created_at,
+              }
+            : p
+        )
+      );
+    }
+  );
+
+  // 👁️ Listen for read-status updates
+  channel.on(
+    "postgres_changes",
+    {
+      event: "UPDATE",
+      schema: "public",
+      table: "messages",
+      filter: `receiver_id=eq.${user.id}`,
+    },
+    (payload) => {
+      const updatedMsg = payload.new;
+      const oldMsg = payload.old;
+
+      if (!oldMsg.is_read && updatedMsg.is_read) {
+        setUnreadCounts((prev) => {
+          const senderId = updatedMsg.sender_id;
+          const currentCount = prev[senderId] || 0;
+          return {
+            ...prev,
+            [senderId]: Math.max(currentCount - 1, 0),
+          };
+        });
+      }
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m))
+      );
+    }
+  );
+
+  // Subscribe all
+  channel.subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [isAuthenticated, user?.id, fetchMessages]);
+
+useEffect(() => {
+  if (
+    !isAuthenticated ||
+    !userRole ||
+    conversationPartners.length === 0 ||
+    partners.length === conversationPartners.length // ✅ prevents re-fetching
+  )
+    return;
+
+  fetchPartners();
+}, [isAuthenticated, userRole, conversationPartners]);
+
 
   return (
     <Layout>
@@ -320,7 +459,7 @@ export default function Messages() {
               return (
                 <ChatDialog
                   currentUserId={currentUserProfile?.user_id}
-                  currentUserName= {currentUserProfile?.fullName}
+                  currentUserName={currentUserProfile?.fullName}
                   otherUserId={partner?.user_id}
                   currentUserPhone={currentUserProfile?.phoneNumber}
                   otherUserPhone={partner?.phoneNumber}
@@ -349,14 +488,18 @@ export default function Messages() {
                             <h3 className="text-sm font-medium text-neutral-800 capitalize">
                               {partner?.fullName || "User"}
                             </h3>
-                            {latestMessage && (
-                              <span className="text-xs text-neutral-500">
-                                {format(
-                                  new Date(latestMessage.created_at),
-                                  "dd-MM-yyyy"
-                                )}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {unreadCounts[partnerId] > 0 && (
+                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                  {unreadCounts[partnerId]}
+                                </span>
+                              )}
+                              {latestMessage && (
+                                <span className="text-xs text-neutral-500">
+                                  {format(new Date(latestMessage.created_at), "dd-MM-yyyy")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {latestMessage && (
                             <p className="text-sm text-neutral-600 line-clamp-1">

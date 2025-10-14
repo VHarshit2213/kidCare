@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
 import Layout from "@/components/Layout";
@@ -9,31 +9,102 @@ const BookingNotification = () => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
-  const [notifications, setNotifications] = useState<any>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
+  const fetchAndMarkNotifications = useCallback(
+    async (showLoader = false) => {
+      if (!user?.id) return;
 
-    const fetchNotification = async () => {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
 
-      // Fetch booking notification for logged-in User
-      const { data: notification, error: notificationError } = await supabase
+      const { data: notificationsData, error } = await supabase
         .from("bookingNotification")
-        .select(`*`)
+        .select("*")
         .eq("receiver_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (notificationError)
-        console.error("Error fetching notification:", notificationError);
+      if (error) {
+        console.error(
+          "Error fetching booking notifications:",
+          error.message
+        );
 
-      setNotifications(notification);
-      setLoading(false);
+        if (showLoader) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      const notificationsList = notificationsData ?? [];
+      const unreadIds = notificationsList
+        .filter((notification) => !notification.is_read)
+        .map((notification) => notification.id);
+
+      if (unreadIds.length > 0) {
+        setNotifications(
+          notificationsList.map((notification) =>
+            unreadIds.includes(notification.id)
+              ? { ...notification, is_read: true }
+              : notification
+          )
+        );
+      } else {
+        setNotifications(notificationsList);
+      }
+
+      if (showLoader) {
+        setLoading(false);
+      }
+
+      if (unreadIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from("bookingNotification")
+          .update({ is_read: true })
+          .in("id", unreadIds);
+
+        if (updateError) {
+          console.error(
+            "Error marking notifications as read:",
+            updateError.message
+          );
+
+          // revert optimistic update to reflect server state
+          setNotifications(notificationsList);
+        }
+      }
+    },
+    [user?.id]
+  );
+
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchAndMarkNotifications(true);
+  }, [user?.id, fetchAndMarkNotifications]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`booking_notifications_${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "bookingNotification",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => fetchAndMarkNotifications()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    fetchNotification();
-  }, [user]);
+  }, [user?.id, fetchAndMarkNotifications]);
 
   return (
     <Layout>

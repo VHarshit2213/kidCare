@@ -53,14 +53,27 @@ const ChatDialog = ({
   const isBabySitter = user?.user_metadata?.userType === "babysitter";
 
   const scrollToBottom = (smooth = true) => {
-  messagesEndRef.current?.scrollIntoView({
-    behavior: smooth ? "smooth" : "auto",
-  });
-};
+    messagesEndRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+    });
+  };
 
   //  Fetch chat history
   useEffect(() => {
     if (!isOpen) return;
+
+    const markMessagesAsRead = async () => {
+      try {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("receiver_id", currentUserId)
+          .eq("sender_id", otherUserId)
+          .eq("is_read", false);
+      } catch (err) {
+        console.error("Error marking messages as read:", err);
+      }
+    };
 
     const fetchMessages = async () => {
       setLoading(true);
@@ -74,6 +87,7 @@ const ChatDialog = ({
         const data = await res.json();
         setMessages(data);
         scrollToBottom(false);
+        await markMessagesAsRead();
       } catch (error) {
         console.error("Fetch messages error:", error);
       } finally {
@@ -94,10 +108,15 @@ const ChatDialog = ({
           table: "messages",
           filter: `receiver_id=eq.${currentUserId}`,
         },
-        (payload) => {
+        async (payload) => {
           if (payload.new.sender_id === otherUserId) {
             setMessages((prev) => [...prev, payload.new]);
             scrollToBottom();
+
+            await supabase
+              .from("messages")
+              .update({ is_read: true })
+              .eq("id", payload.new.id);
           }
         }
       )

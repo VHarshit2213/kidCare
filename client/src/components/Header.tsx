@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,8 @@ export default function Header() {
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [bookingUnreadCount, setBookingUnreadCount] = useState(0);
 
   const isAuthenticated = !!user;
   const hasMembership =
@@ -33,6 +35,7 @@ export default function Header() {
   const isBabySitter = user?.user_metadata?.userType === "babysitter";
 
   const [isOnline, setIsOnline] = useState(true);
+  const userId = user?.id;
 
   const handleToggle = async () => {
     const newStatus = !isOnline;
@@ -109,9 +112,109 @@ export default function Header() {
     setLoading(false);
   };
 
+  const fetchUnreadCount = useCallback(async () => {
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("receiver_id", userId)
+      .eq("is_read", false);
+
+    if (error) {
+      console.error("Error fetching unread messages:", error.message);
+      setUnreadCount(0);
+      return;
+    }
+
+    setUnreadCount(count ?? 0);
+  }, [userId]);
+
+  const fetchBookingUnreadCount = useCallback(async () => {
+    if (!userId) {
+      setBookingUnreadCount(0);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("bookingNotification")
+      .select("id", { count: "exact", head: true })
+      .eq("receiver_id", userId)
+      .eq("is_read", false);
+
+    if (error) {
+      console.error(
+        "Error fetching unread booking notifications:",
+        error.message
+      );
+      setBookingUnreadCount(0);
+      return;
+    }
+
+    setBookingUnreadCount(count ?? 0);
+  }, [userId]);
+
   useEffect(() => {
     fetchProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (!userId) {
+      setUnreadCount(0);
+      setBookingUnreadCount(0);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    fetchUnreadCount();
+
+    const channel = supabase
+      .channel(`messages-unread-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${userId}`,
+        },
+        () => fetchUnreadCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, fetchUnreadCount]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    fetchBookingUnreadCount();
+
+    const channel = supabase
+      .channel(`booking-notification-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookingNotification",
+          filter: `receiver_id=eq.${userId}`,
+        },
+        () => fetchBookingUnreadCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, fetchBookingUnreadCount]);
 
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
@@ -277,9 +380,14 @@ export default function Header() {
                   isActive("/messages")
                     ? "text-[#3c5679] font-medium"
                     : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide`}
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
               >
-                Messages
+                <span>Messages</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
               {isBabySitter && (
                 <Link
@@ -293,16 +401,21 @@ export default function Header() {
                   Reviews
                 </Link>
               )}
-               <Link
-                  href="/booking-notification"
-                  className={`${
-                    isActive("/booking-notification")
-                      ? "text-[#3c5679] font-medium"
-                      : "text-neutral-700 hover:text-[#3c5679]"
-                  } px-1 pt-1 text-sm tracking-wide`}
-                >
-                  Notification
-                </Link>
+              <Link
+                href="/booking-notification"
+                className={`${
+                  isActive("/booking-notification")
+                    ? "text-[#3c5679] font-medium"
+                    : "text-neutral-700 hover:text-[#3c5679]"
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+              >
+                <span>Notification</span>
+                {bookingUnreadCount > 0 && (
+                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                    {bookingUnreadCount > 99 ? "99+" : bookingUnreadCount}
+                  </span>
+                )}
+              </Link>
             </nav>
           </div>
           <div>
