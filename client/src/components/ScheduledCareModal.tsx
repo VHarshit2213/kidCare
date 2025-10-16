@@ -711,14 +711,14 @@ export default function ScheduledCareModal({
     onClose();
   };
 
-  const handlePlayAndGreet = (sitterId: number) => {
+  const handlePlayAndGreet = (sitterId: string) => {
     setPlayAndGreetStatus((prev) => ({
       ...prev,
       [sitterId.toString()]: true,
     }));
   };
 
-  const handleBookNow = (sitterId: number) => {
+  const handleBookNow = (sitterId: string) => {
     setBookingStatus((prev) => ({
       ...prev,
       [sitterId.toString()]: true,
