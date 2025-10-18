@@ -416,6 +416,16 @@ export default function Header() {
                   </span>
                 )}
               </Link>
+                 <Link
+                  href="/play-and-greet"
+                  className={`${
+                    isActive("/play-and-greet")
+                      ? "text-[#3c5679] font-medium"
+                      : "text-neutral-700 hover:text-[#3c5679]"
+                  } px-1 pt-1 text-sm tracking-wide`}
+                >
+                  Play And Greet
+                </Link>
             </nav>
           </div>
           <div>

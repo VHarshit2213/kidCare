@@ -22,6 +22,7 @@ import { BrowserRouter } from "react-router-dom";
 import ResumeOnboarding from "@/components/ResumeOnboarding";
 import Reviews from "./pages/Reviews";
 import BookingNotification from "@/pages/BookingNotification";
+import PlayAndGreet from "./pages/PlayAndGreet";
 
 // Wrapper to ensure components never return null
 const EnsureRender = ({ Component }: { Component: () => React.ReactNode }) => {
@@ -48,6 +49,7 @@ function App() {
             <ProtectedRoute path="/messages" component={Messages} />
             <ProtectedRoute path="/reviews" component={Reviews} />
             <ProtectedRoute path="/booking-notification" component={BookingNotification} />
+            <ProtectedRoute path="/play-and-greet" component={PlayAndGreet} />
             <ProtectedRoute path="/profile" component={Profile} />
             <ProtectedRoute path="/sitter/:id" component={SitterProfile} />
             <Route path="/admin" component={AdminPage} />

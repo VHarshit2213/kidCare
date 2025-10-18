@@ -341,15 +341,18 @@ import { BabysitterStripeCheckout } from "./BabysitterStripeCheckout";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { AddressAutofill } from "@mapbox/search-js-react";
+import { useAuth } from "@/hooks/use-auth";
+import supabase from "@/config/supabaseClient";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 interface PlayAndGreetDialogProps {
   sitterId: string;
-  sitterName: string;
+  parentId: string;
+  sitter: babysitterProfile;
+  bookingDetails: ScheduledCareFormData
   trigger: ReactNode;
-  onSubmit: (values: any) => void;
 }
 
 type PlayAndGreetFormValues = {
@@ -370,10 +373,12 @@ const playAndGreetSchema = Yup.object({
 
 const PlayAndGreetDialog = ({
   sitterId,
-  sitterName,
+  parentId,
+  sitter,
+  bookingDetails,
   trigger,
-  onSubmit,
 }: PlayAndGreetDialogProps) => {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   
   const formik = useFormik<PlayAndGreetFormValues>({
@@ -386,12 +391,74 @@ const PlayAndGreetDialog = ({
     },
     validationSchema: playAndGreetSchema,
     validateOnMount: true,
-    onSubmit: (values, { resetForm }) => {
-      console.log("values", values);
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const startDateTime = new Date(`${values.date}T${values.startTime}`);
+        const endDateTime = new Date(`${values.date}T${values.endTime}`);
 
-      onSubmit({ sitterId, ...values });
-      resetForm();
-      setOpen(false);
+        if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+          throw new Error("Invalid time: Please select a valid start and end time.");
+        }
+
+        // Calculate total duration in hours
+        const durationMs = endDateTime.getTime() - startDateTime.getTime();
+        const durationHours = durationMs / (1000 * 60 * 60);
+        if (durationHours <= 0) {
+          throw new Error("Invalid duration: End time must be after start time.");
+        }
+
+        const hourlyRate = sitter?.horulyRate;
+        if (!hourlyRate) {
+          throw new Error("Missing rate: Hourly rate is missing or invalid.");
+        }
+
+        const totalPrice = parseFloat((hourlyRate * durationHours).toFixed(2));
+
+        const startTime12h = new Date(`1970-01-01T${values.startTime}`).toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+
+        const endTime12h = new Date(`1970-01-01T${values.endTime}`).toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+
+        const payload = {
+          parent_id: parentId,
+          sitter_id: sitterId,
+          date: values.date,
+          start_time: startTime12h,
+          end_time: endTime12h,
+          location: values.location,
+          address_details: values.addressDetails,
+          children: bookingDetails?.children || [],
+          price: totalPrice,
+          request_status: "pending",
+        };
+
+        const { error } = await supabase.from("playAndGreet").insert([payload]);
+
+        if (error) {
+          throw new Error(error.message || "Failed to insert record into playAndGreet.");
+        } else {
+          toast({
+            title: "Request Sent",
+            description: "Your Play & Greet request was sent successfully!",
+          });
+          resetForm();
+          setOpen(false);
+        }
+      } catch (error: any) {
+        console.error("Submission error:", error);
+        toast({
+          title: "Unexpected Error",
+          description: error?.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -422,7 +489,7 @@ const PlayAndGreetDialog = ({
         <DialogHeader>
           <DialogTitle>Schedule a Play and Greet</DialogTitle>
           <DialogDescription>
-            Share when and where you would like to meet {sitterName}.
+            Share when and where you would like to meet {sitter?.fullName}.
           </DialogDescription>
         </DialogHeader>
 
@@ -471,38 +538,35 @@ const PlayAndGreetDialog = ({
             )}
           </div>
           <div className="space-y-2">
-              <Label htmlFor={`play-location-${sitterId}`}>Location</Label>
-              <AddressAutofill
-                accessToken={MAPBOX_TOKEN}
-                onRetrieve={(res) => {
-                  const feature = res.features?.[0];
-                  const address =
-                    feature?.properties?.full_address ||
-                    feature?.place_name ||
-                    feature?.properties?.address_line1 ||
-                    "";
-                  if (address) setFieldValue("location", address, true);
-                }}
-              >
-                <Input
-                  id={`play-location-${sitterId}`}
-                  name="location"
-                  placeholder="Start typing address..."
-                  autoComplete="street-address"
-                  value={values.location}
-                  onChange={(e) => setFieldValue("location", e.target.value, true)}
-                  onBlur={handleBlur}
-                  className="mt-2"
-                />
-              </AddressAutofill>
-              {touched.location && errors.location && (
-                <p className="text-xs text-red-500">{errors.location}</p>
-              )}
+            <Label htmlFor={`play-location-${sitterId}`}>Location</Label>
+            <AddressAutofill
+              accessToken={MAPBOX_TOKEN}
+              onRetrieve={(res) => {
+                const feature = res.features?.[0];
+                const address =
+                  feature?.properties?.full_address ||
+                  feature?.place_name ||
+                  feature?.properties?.address_line1 ||
+                  "";
+                if (address) setFieldValue("location", address, true);
+              }}
+            >
+              <Input
+                id={`play-location-${sitterId}`}
+                name="location"
+                placeholder="Start typing address..."
+                autoComplete="street-address"
+                value={values.location}
+                onChange={(e) => setFieldValue("location", e.target.value, true)}
+                onBlur={handleBlur}
+                className="mt-2"
+              />
+            </AddressAutofill>
             {touched.location && errors.location && (
               <p className="text-xs text-red-500">{errors.location}</p>
             )}
           </div>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <Input
               type="text"
               name="addressDetails"
@@ -573,6 +637,7 @@ export default function AvailableScheduledSitters(
     nearbySitters,
     bookingDetails,
   } = props;
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedSitter, setSelectedSitter] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -582,6 +647,8 @@ export default function AvailableScheduledSitters(
   const [stripeClientSecret, setStripeClientSecret] = useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
+
+  const parentId = user?.id;
 
   const options = {
     clientSecret: stripeClientSecret,
@@ -864,36 +931,26 @@ export default function AvailableScheduledSitters(
                       </div>
                     )} */}
 
-                    {/* old  code for reference */}
+                      {/* old  code for reference */}
 
                       <div className="mt-3 flex flex-wrap justify-end gap-2">
-                          <PlayAndGreetDialog
-                            sitterId={sitterId}
-                            sitterName={sitter.fullName}
-                            trigger={
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-[#3c5679] text-[#3c5679]"
-                              >
-                                Schedule a Play and Greet
-                              </Button>
-                            }
-                            onSubmit={({
-                              sitterId,
-                              date,
-                              startTime,
-                              endTime,
-                              location,
-                            }) => {
-                              onPlayAndGreet(sitterId);
-                              toast({
-                                title: "Play and greet requested",
-                                description: `We'll let ${sitter.fullName} know about ${date} from ${startTime} to ${endTime} in ${location}.`,
-                              });
-                            }}
-                          />
-                       
+                        <PlayAndGreetDialog
+                          sitterId={sitterId}
+                          parentId={parentId}
+                          sitter={sitter}
+                          bookingDetails={bookingDetails}
+                          trigger={
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-[#3c5679] text-[#3c5679]"
+                            >
+                              Schedule a Play and Greet
+                            </Button>
+                          }
+
+                        />
+
 
                         <UserDetailsDialog
                           user={sitter}
