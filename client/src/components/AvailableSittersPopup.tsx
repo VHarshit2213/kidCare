@@ -142,9 +142,10 @@ export default function AvailableSittersPopup({
 
       const stripeAccountID = sitter.stripeAccountID;
 
-      const response = await apiRequest("POST", "/api/payments/create-booking-intent", {
+      const response = await apiRequest("POST", "/api/payments/create-payment-intent", {
         totalAmount,
-        stripeAccountID
+        stripeAccountID,
+        paymentType: "booking"
       });
 
       const payment = await response.json();
@@ -363,6 +364,7 @@ export default function AvailableSittersPopup({
               setShowStripeModal(false);
             }}
             bookingType="instant"
+            paymentType="booking"
             bookedSitter={bookedSitter}
             bookingDetails={bookingDetails}
           />

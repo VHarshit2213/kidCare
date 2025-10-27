@@ -63,12 +63,16 @@ export function formatBookingTimeRange(
 export function getStatusColor(status: string): string {
   switch (status?.toLowerCase()) {
     case "confirmed":
-    case "accepted":
-      return "text-blue-600 bg-blue-100";
     case "pending":
-      return "text-yellow-700 bg-yellow-100";
+      return "bg-yellow-100 text-yellow-800 border border-yellow-300";
+    case "accepted":
+      return "bg-green-100 text-green-800 border border-green-300";
+    case "rejected":
+      return "bg-red-100 text-red-800 border border-red-300";
     case "completed":
-      return "text-green-700 bg-green-100";
+      return "bg-blue-100 text-blue-800 border border-blue-300";
+    case "paid":
+      return "bg-green-100 text-green-800 border border-green-300";
     case "cancelled":
       return "text-red-600 bg-red-100";
     default:

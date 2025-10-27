@@ -681,10 +681,11 @@ export default function AvailableScheduledSitters(
     try {
       const response = await apiRequest(
         "POST",
-        "/api/payments/create-booking-intent",
+        "/api/payments/create-payment-intent",
         {
           totalAmount: calculatedTotal,
           stripeAccountID: sitter.stripeAccountID,
+          paymentType: "booking"
         },
       );
 
@@ -1013,6 +1014,7 @@ export default function AvailableScheduledSitters(
               setSelectedSitter(null);
             }}
             bookingType="scheduled"
+            paymentType="booking"
             bookedSitter={bookedSitter}
             bookingDetails={bookingDetails}
           />

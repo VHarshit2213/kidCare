@@ -79,9 +79,81 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
       )
       .subscribe();
 
+    // Subscribe to Play & Greet events for both parents and sitters
+    const channelName = `play-and-greet-${currentUserId}`;
+    const playAndGreetChannel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "playAndGreet",
+        },
+        (payload) => {
+          const next = payload.new;
+          const prev = payload.old;
+
+          // Only care about this user
+          if (!next || (next.parent_id !== currentUserId && next.sitter_id !== currentUserId)) {
+            return;
+          }
+
+          const isParent = next.parent_id === currentUserId;
+          const isSitter = next.sitter_id === currentUserId;
+
+          let title = "Play & Greet Update";
+          let body = "There is an update on your Play & Greet request.";
+
+          if (payload.eventType === "INSERT") {
+            if (!isSitter) return; // Only notify sitters for new requests
+            title = "New Play & Greet Request";
+            body = "You have received a new Play & Greet request.";
+          } else if (payload.eventType === "UPDATE") {
+            if (!prev || next.request_status === prev.request_status) return;
+
+            if (isParent) {
+              switch (next.request_status) {
+                case "accepted":
+                  title = "Play & Greet Accepted";
+                  body = "Your Play & Greet request has been accepted.";
+                  break;
+                case "rejected":
+                  title = "Play & Greet Declined";
+                  body = "Your Play & Greet request has been declined.";
+                  break;
+                case "paid":
+                  title = "Play & Greet Paid";
+                  body = "Payment for your Play & Greet session is confirmed.";
+                  break;
+              }
+            } else if (isSitter) {
+              switch (next.request_status) {
+                case "paid":
+                  title = "Play & Greet Confirmed";
+                  body = "Payment received for the Play & Greet session.";
+                  break;
+                // case "rejected":
+                //   title = "Play & Greet Canceled";
+                //   body = "The Play & Greet request was canceled.";
+                //   break;
+              }
+            }
+          }
+
+          if (Notification.permission === "granted") {
+            new Notification(title, { body, icon: logo });
+          } else {
+            toast({ title, description: body });
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(playAndGreetChannel);
     };
   }, [currentUserId]);
 

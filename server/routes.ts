@@ -1585,17 +1585,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     );
 
-    // create PaymentIntent for Booking - 15% platform commission ( new code )
+    // create Stripe PaymentIntent for Booking or Play & Greet - 15% platform commission ( new code )
     app.post(
-      "/api/payments/create-booking-intent",
+      "/api/payments/create-payment-intent",
       authenticate,
       async (req: Request, res: Response) => {
         try {
-          const { totalAmount, stripeAccountID } = req.body;
+          const { totalAmount, stripeAccountID, paymentType } = req.body;
+
+          if (!totalAmount || !stripeAccountID || !paymentType) {
+            return res.status(400).json({ message: "Missing required fields" });
+          }
 
           const totalAmountCents = Math.round(totalAmount * 100);
           const platformFeeCents = Math.round(totalAmountCents * 0.15);
           const babysitterAmountCents = totalAmountCents - platformFeeCents;
+
+          // Dynamic description based on payment type
+          let description = "";
+          if (paymentType === "booking") {
+            description = "Childcare booking transaction";
+          } else if (paymentType === "playAndGreet") {
+            description = "Play & Greet session payment";
+          } else {
+            description = "Babysitter service payment";
+          }
 
           const paymentIntent = await stripe.paymentIntents.create({
             amount: totalAmountCents,
@@ -1605,10 +1619,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               destination: stripeAccountID,
               amount: babysitterAmountCents,
             },
-            description: `Childcare booking transaction`,
+            description,
             metadata: {
               platformFee: (platformFeeCents / 100).toFixed(2),
               babysitterAmount: (babysitterAmountCents / 100).toFixed(2),
+              paymentType,
             },
           });
 
@@ -1714,6 +1729,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json({ booking });
         } catch (err: any) {
           console.error("Error creating booking:", err);
+          res.status(500).json({ message: err.message });
+        }
+      }
+    );
+
+    // Update Play & Greet request status after successful payment ( new code )
+    app.post(
+      "/api/play-greet/complete-payment",
+      authenticate,
+      async (req: Request, res: Response) => {
+        try {
+          const { requestId , paymentIntentId } = req.body;
+
+          // Verify payment first
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+          if (paymentIntent.status !== "succeeded") {
+            return res.status(400).json({ message: "Payment not completed" });
+          }
+
+          // Update Play & Greet request status to 'paid'
+          const { data: updatedRequest, error: updateError } = await supabase
+            .from("playAndGreet")
+            .update({ request_status: "paid" })
+            .eq("id", requestId)
+            .select()
+            .single();
+
+          if (updateError || !updatedRequest) throw updateError;
+
+          res.json({ message: "Payment successful and Play & Greet request updated", updatedRequest });
+        } catch (err: any) {
+          console.error("Error completing Play & Greet payment:", err);
           res.status(500).json({ message: err.message });
         }
       }
