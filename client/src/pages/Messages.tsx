@@ -458,6 +458,7 @@ useEffect(() => {
 
               return (
                 <ChatDialog
+                  key={partnerId}
                   currentUserId={currentUserProfile?.user_id}
                   currentUserName={currentUserProfile?.fullName}
                   otherUserId={partner?.user_id}
@@ -465,10 +466,7 @@ useEffect(() => {
                   otherUserPhone={partner?.phoneNumber}
                   otherUserName={partner?.fullName}
                   trigger={
-                    <div
-                      key={partnerId}
-                      className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 hover:bg-gray-50 cursor-pointer"
-                    >
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 hover:bg-gray-50 cursor-pointer">
                       <div className="flex items-center">
                         <Avatar className="h-10 w-10 mr-3">
                           {partner?.profileImageUrl ? (

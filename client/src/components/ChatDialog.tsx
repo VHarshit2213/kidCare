@@ -129,10 +129,17 @@ const ChatDialog = ({
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
+    if (isOpen && messages.length > 0) {
+      scrollToBottom(true);
     }
-  }, [messages]);
+  }, [messages, isOpen]);
+
+  // Ensure we scroll when opening the dialog with existing history
+  useEffect(() => {
+    if (isOpen && !loading) {
+      scrollToBottom(false);
+    }
+  }, [isOpen, loading, messages.length]);
 
   //  Send message
   const handleSend = async () => {
