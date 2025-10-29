@@ -1770,6 +1770,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Membership Payment Routes
   if (process.env.STRIPE_SECRET_KEY) {
+
+    // Promo code configuration
+    const PROMO_CODES: Record<
+      string,
+      { discount: number; start?: number; end?: number }
+    > = {
+      BLKFDEAL25: {
+        discount: 75,
+        start: Date.UTC(2025, 10, 28, 8, 0, 0), // Nov 28 2025, 12:00 AM PST
+        end: Date.UTC(2025, 10, 30, 7, 0, 0),   // Nov 29 2025, 11:00 PM PST
+      },
+      FAMILY24: { discount: 100 },
+      ECO125: { discount: 80 },
+      LACO1: { discount: 25 },
+    };
+
     // Create payment intent for membership payment
     app.post(
       "/api/create-membership-intent",
@@ -1797,11 +1813,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Apply discount if promo code is provided
           let amount = baseAmount;
+          let appliedCode = "";
+          let appliedDiscount = 0;
+
           if (promoCode && discount) {
+            const code = promoCode.trim().toUpperCase();
+            const promo = PROMO_CODES[code];
+            const now = Date.now();
+
+            if (!promo) {
+              return res.status(400).json({
+                message: "Invalid promo code.",
+              });
+            }
+
+            if (promo.start && now < promo.start) {
+              return res.status(400).json({
+                message: "Promo not active yet. Starts Nov 28, 2025 (PST).",
+              });
+            }
+
+            if (promo.end && now > promo.end) {
+              return res.status(400).json({
+                message: "Promo expired. Ended Nov 29, 2025, 11:00 PM PST.",
+              });
+            }
+
+            appliedCode = code;
+            appliedDiscount = promo.discount;
+
             // Apply the discount percentage
-            amount = Math.round((baseAmount * (100 - discount)) / 100);
+            amount = Math.round((baseAmount * (100 - promo.discount)) / 100);
             console.log(
-              `Applied promo code ${promoCode} with ${discount}% discount. Amount reduced from ${baseAmount} to ${amount}`
+              `✅ Applied promo ${code} (${promo.discount}% off): ${baseAmount} → ${amount}`
             );
           }
 
@@ -1820,8 +1864,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               paymentType,
               membershipType:
                 paymentType === "full" ? "full_payment" : "installment_1",
-              promoCode: promoCode || "",
-              discount: discount ? discount.toString() : "0",
+              promoCode: appliedCode,
+              discount: appliedDiscount.toString(),
             },
           });
 

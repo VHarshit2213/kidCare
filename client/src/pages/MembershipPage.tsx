@@ -19,6 +19,11 @@ import { Label } from "@/components/ui/label";
 import PaymentDialog from "@/components/PaymentDialog";
 import supabase from "@/config/supabaseClient";
 
+const BLACK_FRIDAY_PROMO_CODE = "BLKFDEAL25";
+const BLACK_FRIDAY_DISCOUNT = 75;
+const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
+const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 30, 7, 0, 0); // Nov 29, 2025 11:00 PM PST
+
 export default function MembershipPage() {
   console.log("MembershipPage: Component rendered");
   const [_, navigate] = useLocation();
@@ -65,7 +70,40 @@ export default function MembershipPage() {
       // Simulate API validation with a small delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (code === "FAMILY24") {
+      if (code === BLACK_FRIDAY_PROMO_CODE) {
+        const nowUtc = Date.now();
+
+        if (nowUtc < BLACK_FRIDAY_PROMO_START) {
+          setPromoApplied(false);
+          setDiscount(0);
+          toast({
+            title: "Promo Not Active Yet",
+            description:
+              "This Black Friday deal starts on November 28, 2025 (PST). Please try again then.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (nowUtc > BLACK_FRIDAY_PROMO_END) {
+          setPromoApplied(false);
+          setDiscount(0);
+          toast({
+            title: "Promo Code Expired",
+            description:
+              "This Black Friday deal ended on November 29, 2025 at 11:00 PM PST.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setDiscount(BLACK_FRIDAY_DISCOUNT);
+        setPromoApplied(true);
+        toast({
+          title: "Promo Code Applied!",
+          description: "Black Friday deal unlocked 75% off your membership!",
+        });
+      } else if (code === "FAMILY24") {
         setDiscount(100);
         setPromoApplied(true);
         toast({
@@ -88,6 +126,8 @@ export default function MembershipPage() {
           description: "You received 25% off your membership!",
         });
       } else {
+        setPromoApplied(false);
+        setDiscount(0);
         toast({
           title: "Invalid Promo Code",
           description: "This promo code is invalid or expired",
