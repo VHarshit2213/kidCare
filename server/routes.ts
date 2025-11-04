@@ -1779,7 +1779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       BLKFDEAL25: {
         discount: 75,
         start: Date.UTC(2025, 10, 28, 8, 0, 0), // Nov 28 2025, 12:00 AM PST
-        end: Date.UTC(2025, 10, 30, 7, 0, 0),   // Nov 29 2025, 11:00 PM PST
+        end: Date.UTC(2025, 10, 29, 22, 0, 0), // Nov 29, 2025 2:00 PM PST
       },
       FAMILY24: { discount: 100 },
       ECO125: { discount: 80 },
@@ -1835,7 +1835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (promo.end && now > promo.end) {
               return res.status(400).json({
-                message: "Promo expired. Ended Nov 29, 2025, 11:00 PM PST.",
+                message: "Promo expired. Ended Nov 29, 2025, 2:00 PM PST.",
               });
             }
 
