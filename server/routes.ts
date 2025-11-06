@@ -1752,7 +1752,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update Play & Greet request status to 'paid'
           const { data: updatedRequest, error: updateError } = await supabase
             .from("playAndGreet")
-            .update({ request_status: "paid" })
+            .update({
+              request_status: "paid",
+              parent_is_read: true,
+              sitter_is_read: false,
+            })
             .eq("id", requestId)
             .select()
             .single();

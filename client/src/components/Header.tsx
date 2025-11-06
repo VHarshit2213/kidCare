@@ -24,6 +24,7 @@ export default function Header() {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [bookingUnreadCount, setBookingUnreadCount] = useState(0);
+  const [playGreetUnreadCount, setPlayGreetUnreadCount] = useState(0);
 
   const isAuthenticated = !!user;
   const hasMembership =
@@ -133,6 +134,28 @@ export default function Header() {
     setUnreadCount(count ?? 0);
   }, [userId]);
 
+  const fetchPlayGreetUnreadCount = useCallback(async () => {
+    if (!userId) {
+      setPlayGreetUnreadCount(0);
+      return;
+    }
+
+    const { count, error } = await supabase
+      .from("playAndGreet")
+      .select("id", { count: "exact", head: true })
+      .or(
+        `and(parent_id.eq.${userId},parent_is_read.eq.false),and(sitter_id.eq.${userId},sitter_is_read.eq.false)`
+      );
+
+    if (error) {
+      console.error("Error fetching unread play & greet:", error.message);
+      setPlayGreetUnreadCount(0);
+      return;
+    }
+
+    setPlayGreetUnreadCount(count ?? 0);
+  }, [userId]);
+
   const fetchBookingUnreadCount = useCallback(async () => {
     if (!userId) {
       setBookingUnreadCount(0);
@@ -165,6 +188,7 @@ export default function Header() {
     if (!userId) {
       setUnreadCount(0);
       setBookingUnreadCount(0);
+      setPlayGreetUnreadCount(0);
     }
   }, [userId]);
 
@@ -215,6 +239,40 @@ export default function Header() {
       supabase.removeChannel(channel);
     };
   }, [userId, fetchBookingUnreadCount]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    fetchPlayGreetUnreadCount();
+
+    const channel = supabase
+      .channel(`play-greet-unread-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "playAndGreet",
+          filter: `parent_id=eq.${userId}`,
+        },
+        () => fetchPlayGreetUnreadCount()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "playAndGreet",
+          filter: `sitter_id=eq.${userId}`,
+        },
+        () => fetchPlayGreetUnreadCount()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, fetchPlayGreetUnreadCount]);
 
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
@@ -416,16 +474,21 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-                 <Link
-                  href="/play-and-greet"
-                  className={`${
-                    isActive("/play-and-greet")
-                      ? "text-[#3c5679] font-medium"
-                      : "text-neutral-700 hover:text-[#3c5679]"
-                  } px-1 pt-1 text-sm tracking-wide`}
-                >
-                  Play And Greet
-                </Link>
+              <Link
+                href="/play-and-greet"
+                className={`${
+                  isActive("/play-and-greet")
+                    ? "text-[#3c5679] font-medium"
+                    : "text-neutral-700 hover:text-[#3c5679]"
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+              >
+                <span>Play And Greet</span>
+                {playGreetUnreadCount > 0 && (
+                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                    {playGreetUnreadCount > 99 ? "99+" : playGreetUnreadCount}
+                  </span>
+                )}
+              </Link>
             </nav>
           </div>
           <div>

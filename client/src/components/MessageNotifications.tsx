@@ -110,6 +110,19 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
             title = "New Play & Greet Request";
             body = "You have received a new Play & Greet request.";
           } else if (payload.eventType === "UPDATE") {
+
+            const changedKeys = Object.keys(next).filter((key) => next[key] !== prev[key]);
+
+            const readFields = ["parent_is_read", "sitter_is_read"];
+
+            const nonReadChanges = changedKeys.filter((key) => !readFields.includes(key));
+
+            if (nonReadChanges.length === 0) {
+              // → means only read flags changed — skip notification
+              return;
+            }
+
+            // Also ignore updates where request_status didn't change
             if (!prev || next.request_status === prev.request_status) return;
 
             if (isParent) {
@@ -126,6 +139,8 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
                   title = "Play & Greet Paid";
                   body = "Payment for your Play & Greet session is confirmed.";
                   break;
+                default:
+                  return;
               }
             } else if (isSitter) {
               switch (next.request_status) {
@@ -137,6 +152,8 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
                 //   title = "Play & Greet Canceled";
                 //   body = "The Play & Greet request was canceled.";
                 //   break;
+                default:
+                  return;
               }
             }
           }

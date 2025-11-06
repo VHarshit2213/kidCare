@@ -437,6 +437,8 @@ const PlayAndGreetDialog = ({
           children: bookingDetails?.children || [],
           price: totalPrice,
           request_status: "pending",
+          parent_is_read: true,
+          sitter_is_read: false,
         };
 
         const { error } = await supabase.from("playAndGreet").insert([payload]);

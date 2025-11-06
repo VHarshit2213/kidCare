@@ -31,6 +31,8 @@ type PlayAndGreetType = {
   parent_name?: string;
   sitter_stripeID?: string;
   created_at?: string;
+  parent_is_read?: boolean;
+  sitter_is_read?: boolean;
 };
 
 const getStatusMessage = (status: RequestStatus, role: "parent" | "sitter") => {
@@ -77,6 +79,57 @@ const PlayAndGreet = () => {
       theme: "stripe" as const,
     },
   };
+
+  const markRequestsAsRead = useCallback(
+    async (records: PlayAndGreetType[]) => {
+      if (!user?.id || !records.length) return;
+
+      const parentUnreadIds = records
+        .filter(
+          (r) =>
+            r.parent_id === user.id &&
+            (r.parent_is_read === false || r.parent_is_read === undefined)
+        )
+        .map((r) => r.id);
+
+      const sitterUnreadIds = records
+        .filter(
+          (r) =>
+            r.sitter_id === user.id &&
+            (r.sitter_is_read === false || r.sitter_is_read === undefined)
+        )
+        .map((r) => r.id);
+
+      const updates: Promise<any>[] = [];
+
+      if (parentUnreadIds.length) {
+        updates.push(
+          supabase
+            .from("playAndGreet")
+            .update({ parent_is_read: true })
+            .in("id", parentUnreadIds)
+        );
+      }
+
+      if (sitterUnreadIds.length) {
+        updates.push(
+          supabase
+            .from("playAndGreet")
+            .update({ sitter_is_read: true })
+            .in("id", sitterUnreadIds)
+        );
+      }
+
+      if (updates.length) {
+        try {
+          await Promise.all(updates);
+        } catch (error) {
+          console.error("Failed to mark Play & Greet requests as read:", error);
+        }
+      }
+    },
+    [user?.id]
+  );
 
   const fetchRequests = useCallback(async () => {
     if (!user?.id) return setLoading(false);
@@ -135,7 +188,19 @@ const PlayAndGreet = () => {
         sitter_stripeID: sitterMap[r.sitter_id]?.stripeAccountID ?? "",
       }));
 
-      setRequests(enriched);
+      const adjustedForViewer =
+        enriched?.map((r) => {
+          if (user?.id === r.parent_id && !r.parent_is_read) {
+            return { ...r, parent_is_read: true };
+          }
+          if (user?.id === r.sitter_id && !r.sitter_is_read) {
+            return { ...r, sitter_is_read: true };
+          }
+          return r;
+        }) ?? [];
+        
+      setRequests(adjustedForViewer);
+      await markRequestsAsRead(enriched ?? []);
     } catch (err: any) {
       console.error("Error fetching requests:", err);
       toast({ title: "Error", description: err.message || "Failed to fetch requests", variant: "destructive" });
@@ -143,12 +208,18 @@ const PlayAndGreet = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, toast]);
+  }, [user?.id, toast, markRequestsAsRead]);
 
   const handleStatusChange = async (id: string, status: RequestStatus) => {
+    const updates = {
+      request_status: status,
+      parent_is_read: false,
+      sitter_is_read: true,
+    };
+
     const { error } = await supabase
       .from("playAndGreet")
-      .update({ request_status: status })
+      .update(updates)
       .eq("id", id);
 
     if (error) {
@@ -156,7 +227,7 @@ const PlayAndGreet = () => {
     } else {
       setRequests((prev) =>
         prev.map((req) =>
-          req.id === id ? { ...req, request_status: status } : req
+          req.id === id ? { ...req, ...updates } : req
         )
       );
     }
