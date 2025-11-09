@@ -197,6 +197,8 @@ export type babysitterProfile = {
   profile_image: string;
   isProfileCompleted:boolean;
   stripeAccountID:string;
+  averageRating?: number | null;
+  reviewCount?: number;
 };
 export interface TransactionsData {
   id: string;

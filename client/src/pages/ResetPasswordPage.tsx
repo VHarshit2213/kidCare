@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
 
   if (status === "error" && !token) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-white to-pink-50">
+      <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-pink-50">
         <div className="w-full max-w-md">
           <Card>
             <CardHeader className="text-center">

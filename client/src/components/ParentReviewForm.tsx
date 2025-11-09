@@ -150,30 +150,30 @@ export default function ParentReviewForm({
     },
   });
 
-  const createReviewMutation = useMutation({
-    mutationFn: async (data: ParentReviewFormValues) => {
-      const response = await apiRequest("POST", "/api/parent-reviews", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Review Submitted",
-        description: "Thank you for your feedback!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings/parent"] });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/parent-reviews/booking", booking.id],
-      });
-      onSuccess();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit review",
-        variant: "destructive",
-      });
-    },
-  });
+  // const createReviewMutation = useMutation({
+  //   mutationFn: async (data: ParentReviewFormValues) => {
+  //     const response = await apiRequest("POST", "/api/parent-reviews", data);
+  //     return response.json();
+  //   },
+  //   onSuccess: () => {
+  //     toast({
+  //       title: "Review Submitted",
+  //       description: "Thank you for your feedback!",
+  //     });
+  //     queryClient.invalidateQueries({ queryKey: ["/api/bookings/parent"] });
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["/api/parent-reviews/booking", booking.id],
+  //     });
+  //     onSuccess();
+  //   },
+  //   onError: (error: any) => {
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "Failed to submit review",
+  //       variant: "destructive",
+  //     });
+  //   },
+  // });
 
   // const onSubmit = async (values: ParentReviewFormValues) => {
   //   setIsSubmitting(true);
@@ -199,8 +199,8 @@ export default function ParentReviewForm({
         values.wouldBookAgain,
       ];
 
-      const overallRating = Math.round(
-        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      const overallRating = parseFloat(
+        (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(2)
       );
 
       const payload = {

@@ -299,9 +299,9 @@ export default function AuthPage() {
   /* ----------- new code ------------ */
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div className="flex min-h-screen flex-col lg:flex-row bg-gradient-to-br from-blue-50 via-white to-pink-50">
       {/* Left side: Form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-10">
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-10">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <img
@@ -319,22 +319,24 @@ export default function AuthPage() {
             onValueChange={setActiveTab}
           >
             <TabsList
-              className={`grid w-full  mb-6 ${
-                !adminMode ? "grid-cols-3" : "grid-cols-1 justify-normal"
-              } `}
+              className={`flex w-full mb-6 space-x-2 overflow-x-auto scrollbar-hide ${!adminMode ? "justify-between" : "justify-normal"
+                }`}
             >
-              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="login" className="flex-1">
+                Login
+              </TabsTrigger>
               {!adminMode && (
                 <>
-                  <TabsTrigger value="register">Register</TabsTrigger>
-                  <TabsTrigger value="forgot-password">
+                  <TabsTrigger value="register" className="flex-1">
+                    Register
+                  </TabsTrigger>
+                  <TabsTrigger value="forgot-password" className="flex-1">
                     Forgot Password
                   </TabsTrigger>
                 </>
               )}
-              {/* <TabsTrigger value="register">Register</TabsTrigger>
-              <TabsTrigger value="forgot-password">Forgot Password</TabsTrigger> */}
             </TabsList>
+
 
             {/* Login Form */}
             <TabsContent value="login">
@@ -351,26 +353,6 @@ export default function AuthPage() {
                       onSubmit={loginForm.handleSubmit(onLoginSubmit)}
                       className="space-y-4"
                     >
-                      {/* ----------- old code for reference ------------ */}
-                      {/* <FormField
-                        control={loginForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter your username"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      /> */}
-                      {/* ----------- old code for reference ------------ */}
-
-                      {/* ----------- new code ------------ */}
                       <FormField
                         control={loginForm.control}
                         name="email"
@@ -389,8 +371,6 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      {/* ----------- new code ------------ */}
-
                       <FormField
                         control={loginForm.control}
                         name="password"
@@ -423,16 +403,6 @@ export default function AuthPage() {
                               </div>
                             </FormControl>
                             <FormMessage />
-                            {/* <div className="text-right mt-1">
-                              <Button
-                                variant="link"
-                                className="p-0 h-auto text-xs text-blue-600"
-                                onClick={() => setActiveTab("forgot-password")}
-                                type="button"
-                              >
-                                Forgot password?
-                              </Button>
-                            </div> */}
                             {!adminMode && (
                               <div className="text-right mt-1">
                                 <Button
@@ -784,7 +754,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right side: Hero */}
-      <div className="hidden md:flex flex-1 bg-brand-blue text-white p-10 items-center justify-center">
+      <div className="hidden lg:flex flex-1 bg-brand-blue text-white p-10 items-center justify-center">
         <div className="max-w-md">
           <h2 className="text-4xl font-bold mb-6">
             Quality childcare at your fingertips

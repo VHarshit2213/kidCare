@@ -980,12 +980,50 @@ export default function InstantCareModal({
       return;
     }
 
+    const sitterIds = babysitterRes.data
+      .map((b) => b.user_id)
+      .filter((id): id is string => Boolean(id));
+
+    let ratingMap: Record<string, { total: number; count: number }> = {};
+
+    if (sitterIds.length) {
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from("reviews")
+        .select("babysitter_id, overAllRating")
+        .in("babysitter_id", sitterIds);
+
+      if (reviewsError) {
+        console.error("Error fetching sitter ratings:", reviewsError);
+      } else if (reviewsData) {
+        ratingMap = reviewsData.reduce((acc, review) => {
+          if (!review?.babysitter_id || review.overAllRating == null) {
+            return acc;
+          }
+
+          const key = review.babysitter_id;
+          if (!acc[key]) {
+            acc[key] = { total: 0, count: 0 };
+          }
+
+          acc[key].total += review.overAllRating;
+          acc[key].count += 1;
+          return acc;
+        }, {} as Record<string, { total: number; count: number }>);
+      }
+    }
+
     const babysittersWithDoc = await Promise.all(
       babysitterRes.data.map(async (b) => {
         const profileImageUrl = await getSignedUrl(b.profile_image);
         const certificateUrl = await getSignedUrl(b.certified);
         const transportationUrl = await getSignedUrl(b.transportation);
         const videoUrl = await getSignedUrl(b.instrucationVideo);
+        const ratingKey = b.user_id ?? "";
+        const ratingData = ratingKey ? ratingMap[ratingKey] : undefined;
+        const averageRating =
+          ratingData && ratingData.count
+            ? Number((ratingData.total / ratingData.count).toFixed(2))
+            : null;
 
         return {
           ...b,
@@ -994,6 +1032,8 @@ export default function InstantCareModal({
           transportationUrl,
           videoUrl,
           userType: "babysitter",
+          averageRating,
+          reviewCount: ratingData?.count ?? 0,
         };
       }),
     );

@@ -21,6 +21,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Elements } from "@stripe/react-stripe-js";
 import { BabysitterStripeCheckout } from "./BabysitterStripeCheckout";
 import { loadStripe } from "@stripe/stripe-js";
+import { Star } from "lucide-react";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 interface AvailableSittersPopupProps {
@@ -223,20 +224,25 @@ export default function AvailableSittersPopup({
               </div>
             ) : (
               <div className="space-y-4 py-2">
-                {nearbySitters.map((sitter: any) => (
-                  <Card key={sitter.user_id} className="p-4">
-                    <div className="flex items-start gap-4">
-                      <Avatar className="h-12 w-12 border">
-                        {sitter?.profileImageUrl ? (
-                          <AvatarImage
-                            src={sitter?.profileImageUrl}
-                            alt={sitter?.fullName}
-                          />
-                        ) : (
-                          <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
-                            {sitter?.fullName?.charAt(0)}
-                          </div>
-                        )}
+                {nearbySitters.map((sitter: any) => {
+                  const hasRating =
+                    typeof sitter?.averageRating === "number" &&
+                    !Number.isNaN(sitter.averageRating);
+
+                  return (
+                    <Card key={sitter.user_id} className="p-4">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-12 w-12 border">
+                          {sitter?.profileImageUrl ? (
+                            <AvatarImage
+                              src={sitter?.profileImageUrl}
+                              alt={sitter?.fullName}
+                            />
+                          ) : (
+                            <div className="bg-brand-pink/20 flex items-center justify-center h-full w-full text-brand-blue font-semibold">
+                              {sitter?.fullName?.charAt(0)}
+                            </div>
+                          )}
                       </Avatar>
 
                       <div className="flex-1">
@@ -259,6 +265,17 @@ export default function AvailableSittersPopup({
                               {sitter?.horulyRate}
                               /hr
                             </p>
+                              {hasRating && (
+                                <div className="mt-1 flex items-center text-sm text-yellow-500">
+                                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="ml-1 font-semibold text-gray-800">
+                                  {sitter.averageRating.toFixed(2)}
+                                </span>
+                                  <span className="ml-1 text-xs text-muted-foreground">
+                                     ({sitter.reviewCount} {sitter.reviewCount === 1 ? "review" : "reviews"})
+                                  </span>
+                                </div>
+                              )}
                           </div>
                           <div className="flex items-center gap-1">
                             <Badge
@@ -341,7 +358,8 @@ export default function AvailableSittersPopup({
                       </div>
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )
           }

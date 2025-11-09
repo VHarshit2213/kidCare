@@ -1622,11 +1622,11 @@ export default function ParentProfileForm() {
                     name="floor_number"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>house number</FormLabel>
+                        <FormLabel>Home Address</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter your house number"
+                            placeholder="Enter your home address"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1638,7 +1638,7 @@ export default function ParentProfileForm() {
                     name="street_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>residential Name</FormLabel>
+                        <FormLabel>Residential Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}

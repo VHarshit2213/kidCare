@@ -343,6 +343,7 @@ import { Label } from "./ui/label";
 import { AddressAutofill } from "@mapbox/search-js-react";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
+import { Star } from "lucide-react";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -749,6 +750,9 @@ export default function AvailableScheduledSitters(
               const sitterId = String(sitter.user_id);
             
               const isBooked = Boolean(bookingStatus?.[sitterId]);
+              const hasRating =
+                typeof sitter?.averageRating === "number" &&
+                !Number.isNaN(sitter.averageRating);
 
               return (
                 <Card key={sitterId} className="p-6">
@@ -798,6 +802,18 @@ export default function AvailableScheduledSitters(
                           </div>
                         </div>
                       </div>
+
+                      {hasRating && (
+                        <div className="flex items-center text-sm text-yellow-600 mb-2">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="ml-1 font-semibold text-gray-800">
+                            {sitter.averageRating?.toFixed(2)}
+                          </span>
+                          <span className="ml-1 text-xs text-muted-foreground">
+                             ({sitter.reviewCount} {sitter.reviewCount === 1 ? "review" : "reviews"})
+                          </span>
+                        </div>
+                      )}
 
                       <p className="text-sm text-gray-600 mb-3">
                         {sitter?.shortBio}
