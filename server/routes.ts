@@ -1775,6 +1775,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Membership Payment Routes
   if (process.env.STRIPE_SECRET_KEY) {
 
+    // Pricing configuration (amounts in cents to match Stripe requirements)
+    const FULL_MEMBERSHIP_AMOUNT_CENTS = 80000; // $800
+    const INSTALLMENT_PAYMENT_AMOUNT_CENTS = FULL_MEMBERSHIP_AMOUNT_CENTS / 2; // $400
+
     // Promo code configuration
     const PROMO_CODES: Record<
       string,
@@ -1813,7 +1817,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Base amount based on payment type
-          let baseAmount = paymentType === "full" ? 50000 : 25000; // $500 or $250 in cents
+          let baseAmount =
+            paymentType === "full"
+              ? FULL_MEMBERSHIP_AMOUNT_CENTS
+              : INSTALLMENT_PAYMENT_AMOUNT_CENTS;
 
           // Apply discount if promo code is provided
           let amount = baseAmount;
