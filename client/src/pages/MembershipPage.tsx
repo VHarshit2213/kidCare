@@ -243,11 +243,10 @@ export default function MembershipPage() {
 
   return (
     <Layout>
-      <div className="container max-w-6xl py-10 mx-auto">
-        <div className="max-w-3xl mx-auto">
+        <div className="container max-w-3xl py-10 px-2 md:px-1 mx-auto">
           <Card className="border-2">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">
+              <CardTitle>
                 Membership Registration
               </CardTitle>
               <CardDescription>
@@ -266,12 +265,12 @@ export default function MembershipPage() {
                     setPaymentType(v as "full" | "installment")
                   }
                 >
-                  <div className="flex items-start space-x-2 border rounded-lg p-4 hover:border-brand-blue">
+                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:border-brand-blue">
                     <RadioGroupItem value="full" id="full-payment" />
                     <div>
                       <Label
                         htmlFor="full-payment"
-                        className="text-base font-medium"
+                        className="text-base"
                       >
                         One-time Payment
                       </Label>
@@ -282,7 +281,7 @@ export default function MembershipPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start space-x-2 border rounded-lg p-4 hover:border-brand-blue">
+                  <div className="flex items-center space-x-2 border rounded-lg p-4 hover:border-brand-blue">
                     <RadioGroupItem
                       value="installment"
                       id="installment-payment"
@@ -290,7 +289,7 @@ export default function MembershipPage() {
                     <div>
                       <Label
                         htmlFor="installment-payment"
-                        className="text-base font-medium"
+                        className="text-base"
                       >
                         Installment Plan
                       </Label>
@@ -518,7 +517,6 @@ export default function MembershipPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
 
       {/* Payment Dialog */}
       <PaymentDialog

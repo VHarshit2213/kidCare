@@ -42,7 +42,7 @@ export default function PaymentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Complete Your Payment</DialogTitle>
           <DialogDescription>

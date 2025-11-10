@@ -936,7 +936,7 @@ export default function ScheduledCareModal({
       />
 
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Schedule Childcare</DialogTitle>
             <DialogDescription>
@@ -1072,7 +1072,7 @@ export default function ScheduledCareModal({
                 )}
               />
 
-              <div className="mb-4">
+              <div className="mb-4 space-y-2">
                 <FormLabel>Hours Needed  <span className="text-red-500">*</span></FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -1152,7 +1152,7 @@ export default function ScheduledCareModal({
                 </Popover>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="startTime"
@@ -1165,8 +1165,10 @@ export default function ScheduledCareModal({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select start time" />
-                            <Clock className="ml-2 h-4 w-4 opacity-50" />
+                            <div className="flex gap-2 items-center">
+                              <SelectValue placeholder="Select start time" />
+                              <Clock className="ml-2 h-4 w-4 opacity-50" />
+                            </div>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -1194,8 +1196,10 @@ export default function ScheduledCareModal({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select end time" />
-                            <Clock className="ml-2 h-4 w-4 opacity-50" />
+                            <div className="flex gap-2 items-center">
+                              <SelectValue placeholder="Select end time" />
+                              <Clock className="ml-2 h-4 w-4 opacity-50" />
+                            </div>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

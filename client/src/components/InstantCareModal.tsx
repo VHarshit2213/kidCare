@@ -1107,7 +1107,7 @@ export default function InstantCareModal({
   return (
     <>
       <Dialog open={isOpen && !showSittersPopup} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Request Instant Childcare</DialogTitle>
             <DialogDescription>
@@ -1229,7 +1229,7 @@ export default function InstantCareModal({
                   control={form.control}
                   name="startTime"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-0">
                       <FormLabel>Start Time (Today) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -1257,13 +1257,13 @@ export default function InstantCareModal({
                               value={
                                 field.value
                                   ? new Date(field.value).toLocaleTimeString(
-                                      "en-US",
-                                      {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: false,
-                                      },
-                                    )
+                                    "en-US",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: false,
+                                    },
+                                  )
                                   : ""
                               }
                               onChange={(e) => {
@@ -1408,7 +1408,7 @@ export default function InstantCareModal({
                   control={form.control}
                   name="endTime"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-0">
                       <FormLabel>End Time (Today) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -1436,13 +1436,13 @@ export default function InstantCareModal({
                               value={
                                 field.value
                                   ? new Date(field.value).toLocaleTimeString(
-                                      "en-US",
-                                      {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: false,
-                                      },
-                                    )
+                                    "en-US",
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: false,
+                                    },
+                                  )
                                   : ""
                               }
                               onChange={(e) => {
@@ -1560,125 +1560,126 @@ export default function InstantCareModal({
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <FormField
-                control={form.control}
-                name="children"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Children <span className="text-red-500">*</span></FormLabel>
-                    <FormControl>
-                      <Popover
-                        open={childrenPopoverOpen}
-                        onOpenChange={setChildrenPopoverOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value?.length && "text-muted-foreground",
-                            )}
-                          >
-                            {field.value?.length > 0
-                              ? `${field.value.length} children selected`
-                              : "Select children..."}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0">
-                          <div className="p-4 space-y-2">
-                            {childOptions.map((child) => {
-                              const isSelected = field.value?.some(
-                                (selectedChild) =>
-                                  selectedChild.id === child.id,
-                              );
-                              return (
-                                <div
-                                  key={child.id}
-                                  className="flex items-center space-x-2 rounded px-2 py-1 hover:bg-accent cursor-pointer"
-                                  onClick={() => {
-                                    const newValue = isSelected
-                                      ? field.value.filter(
+                <FormField
+                  control={form.control}
+                  name="children"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Children <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Popover
+                          open={childrenPopoverOpen}
+                          onOpenChange={setChildrenPopoverOpen}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value?.length && "text-muted-foreground",
+                              )}
+                            >
+                              {field.value?.length > 0
+                                ? `${field.value.length} children selected`
+                                : "Select children..."}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <div className="p-4 space-y-2">
+                              {childOptions.map((child) => {
+                                const isSelected = field.value?.some(
+                                  (selectedChild) =>
+                                    selectedChild.id === child.id,
+                                );
+                                return (
+                                  <div
+                                    key={child.id}
+                                    className="flex items-center space-x-2 rounded px-2 py-1 hover:bg-accent cursor-pointer"
+                                    onClick={() => {
+                                      const newValue = isSelected
+                                        ? field.value.filter(
                                           (selectedChild) =>
                                             selectedChild.id !== child.id,
                                         )
-                                      : [...(field.value || []), child];
-                                    field.onChange(newValue);
+                                        : [...(field.value || []), child];
+                                      field.onChange(newValue);
+                                    }}
+                                  >
+                                    <Checkbox checked={isSelected} />
+                                    <div>
+                                      {child.firstName} {child.lastName}
+                                    </div>
+                                    {isSelected && (
+                                      <Check className="ml-auto h-4 w-4" />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                              <div className="mt-4 pt-3 border-t flex justify-end">
+                                <Button
+                                  type="button"
+                                  style={{ backgroundColor: "#3c5679" }}
+                                  className="text-white font-medium"
+                                  onClick={(e) => {
+                                    setChildrenPopoverOpen(false);
                                   }}
                                 >
-                                  <Checkbox checked={isSelected} />
-                                  <div>
-                                    {child.firstName} {child.lastName}
-                                  </div>
-                                  {isSelected && (
-                                    <Check className="ml-auto h-4 w-4" />
-                                  )}
-                                </div>
-                              );
-                            })}
-                            <div className="mt-4 pt-3 border-t flex justify-end">
-                              <Button
-                                type="button"
-                                style={{ backgroundColor: "#3c5679" }}
-                                className="text-white font-medium"
-                                onClick={(e) => {
-                                  setChildrenPopoverOpen(false);
-                                }}
-                              >
-                                Done
-                              </Button>
+                                  Done
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </FormControl>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {field.value?.map((child) => (
-                        <Badge
-                          key={child.id}
-                          variant="outline"
-                          className="py-1 border-brand-pink text-brand-blue"
-                        >
-                          {child.firstName} {child.lastName}
-                          <X
-                            className="ml-1 h-3 w-3 cursor-pointer"
-                            onClick={() => {
-                              field.onChange(
-                                field.value.filter(
-                                  (selectedChild) =>
-                                    selectedChild.id !== child.id,
-                                ),
-                              );
-                            }}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
+                          </PopoverContent>
+                        </Popover>
+                      </FormControl>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {field.value?.map((child) => (
+                          <Badge
+                            key={child.id}
+                            variant="outline"
+                            className="py-1 border-brand-pink text-brand-blue"
+                          >
+                            {child.firstName} {child.lastName}
+                            <X
+                              className="ml-1 h-3 w-3 cursor-pointer"
+                              onClick={() => {
+                                field.onChange(
+                                  field.value.filter(
+                                    (selectedChild) =>
+                                      selectedChild.id !== child.id,
+                                  ),
+                                );
+                              }}
+                            />
+                          </Badge>
+                        ))}
+                      </div>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="careInstructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Care Instructions (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Special needs, meal times, bedtime routine, activities, etc."
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="careInstructions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Care Instructions (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Special needs, meal times, bedtime routine, activities, etc."
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+              </div>
 
               <Button
                 type="submit"
