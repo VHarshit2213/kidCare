@@ -23,6 +23,8 @@ const BLACK_FRIDAY_PROMO_CODE = "BLKFDEAL25";
 const BLACK_FRIDAY_DISCOUNT = 75;
 const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
 const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 22, 0, 0); // Nov 29, 2025 2:00 PM PST
+const FULL_MEMBERSHIP_AMOUNT = 800;
+const INSTALLMENT_PAYMENT_AMOUNT = FULL_MEMBERSHIP_AMOUNT / 2;
 
 export default function MembershipPage() {
   console.log("MembershipPage: Component rendered");
@@ -50,6 +52,10 @@ export default function MembershipPage() {
   const isPaymentSuccess = user?.user_metadata?.isPayment;
   const hasCompletedProfile = user?.user_metadata?.profileCompleted;
   const baseUrl = window.location.origin;
+  const selectedPaymentAmount =
+    paymentType === "full"
+      ? FULL_MEMBERSHIP_AMOUNT
+      : INSTALLMENT_PAYMENT_AMOUNT;
 
   const handleApplyPromoCode = async () => {
     if (!promoCode.trim()) {
@@ -159,7 +165,10 @@ export default function MembershipPage() {
     setActivating(true);
     try {
       // Calculate the final amount based on discounts
-      const baseAmount = paymentType === "full" ? 500 : 250;
+      const baseAmount =
+        paymentType === "full"
+          ? FULL_MEMBERSHIP_AMOUNT
+          : INSTALLMENT_PAYMENT_AMOUNT;
       const finalAmount = promoApplied
         ? (baseAmount * (100 - discount)) / 100
         : baseAmount;
@@ -275,8 +284,7 @@ export default function MembershipPage() {
                         One-time Payment
                       </Label>
                       <p className="text-sm text-gray-500">
-                        Pay the full membership fee of $500 at once and get
-                        immediate access to all our services.
+                        {`Pay the full membership fee of $${FULL_MEMBERSHIP_AMOUNT} at once and get immediate access to all our services.`}
                       </p>
                     </div>
                   </div>
@@ -294,8 +302,7 @@ export default function MembershipPage() {
                         Installment Plan
                       </Label>
                       <p className="text-sm text-gray-500">
-                        Pay $250 now and $250 in 30 days. You'll get immediate
-                        access to our services.
+                        {`Pay $${INSTALLMENT_PAYMENT_AMOUNT} now and $${INSTALLMENT_PAYMENT_AMOUNT} in 30 days. You'll get immediate access to our services.`}
                       </p>
                     </div>
                   </div>
@@ -366,7 +373,7 @@ export default function MembershipPage() {
                     <div className="flex justify-between">
                       <span>Membership Fee:</span>
                       <span className="line-through text-muted-foreground">
-                        ${paymentType === "full" ? 500 : 250}
+                        ${selectedPaymentAmount}
                       </span>
                     </div>
                     <div className="flex justify-between text-green-600">
@@ -374,7 +381,7 @@ export default function MembershipPage() {
                       <span>
                         -$
                         {(
-                          ((paymentType === "full" ? 500 : 250) * discount) /
+                          (selectedPaymentAmount * discount) /
                           100
                         ).toFixed(2)}
                       </span>
@@ -384,8 +391,7 @@ export default function MembershipPage() {
                       <span>
                         $
                         {(
-                          ((paymentType === "full" ? 500 : 250) *
-                            (100 - discount)) /
+                          (selectedPaymentAmount * (100 - discount)) /
                           100
                         ).toFixed(2)}
                       </span>
@@ -395,11 +401,11 @@ export default function MembershipPage() {
                   <div className="flex flex-col space-y-2">
                     <div className="flex justify-between">
                       <span>Membership Fee:</span>
-                      <span>${paymentType === "full" ? 500 : 250}</span>
+                      <span>${selectedPaymentAmount}</span>
                     </div>
                     <div className="flex justify-between font-bold border-t pt-2 mt-2">
                       <span>Total Due Now:</span>
-                      <span>${paymentType === "full" ? 500 : 250}</span>
+                      <span>${selectedPaymentAmount}</span>
                     </div>
                   </div>
                 )}
@@ -459,7 +465,10 @@ export default function MembershipPage() {
 
                     setActivating(true);
                     try {
-                      const baseAmount = paymentType === "full" ? 500 : 250;
+                      const baseAmount =
+                        paymentType === "full"
+                          ? FULL_MEMBERSHIP_AMOUNT
+                          : INSTALLMENT_PAYMENT_AMOUNT;
                       const finalAmount = promoApplied
                         ? (baseAmount * (100 - discount)) / 100
                         : baseAmount;
@@ -505,7 +514,7 @@ export default function MembershipPage() {
                       Loading Payment...
                     </>
                   ) : (
-                    `Pay $${promoApplied ? (((paymentType === "full" ? 500 : 250) * (100 - discount)) / 100).toFixed(2) : paymentType === "full" ? 500 : 250} Now`
+                    `Pay $${promoApplied ? ((selectedPaymentAmount * (100 - discount)) / 100).toFixed(2) : selectedPaymentAmount} Now`
                   )}
                 </Button>
               )}

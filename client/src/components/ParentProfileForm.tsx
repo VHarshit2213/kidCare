@@ -1642,7 +1642,7 @@ export default function ParentProfileForm() {
                         <FormControl>
                           <Input
                             {...field}
-                            placeholder="Enter your residential name"
+                            placeholder="e.g. Lake House, Primary Home, Vacation Cabin"
                           />
                         </FormControl>
                         <FormMessage />
