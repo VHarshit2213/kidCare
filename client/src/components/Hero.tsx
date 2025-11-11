@@ -6,6 +6,11 @@ import { CalendarIcon, Clock } from "lucide-react";
 import brandBackgroundImage from "../assets/IMG_1660.jpg";
 import { useToast } from "@/hooks/use-toast";
 import supabase from "@/config/supabaseClient";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { MdContentCopy, MdOutlineDiscount } from "react-icons/md";
+import kidCare from "../assets/kidCare.png"
+
+const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
 
 export default function Hero() {
   const { user } = useAuth();
@@ -13,9 +18,27 @@ export default function Hero() {
   const isAuthenticated = !!user;
   const [, navigate] = useLocation();
   const [profile, setProfile] = useState<any>(null);
+  const [showDiscountDialog, setShowDiscountDialog] = useState(false);
 
+  const discountCode = "BLKFDEAL25";
   const isParent = user?.user_metadata?.userType === "parent";
   const isPaymentSuccess = user?.user_metadata?.isPayment;
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(discountCode);
+      toast({
+        title: "Code copied!",
+        description: `${discountCode} has been copied to your clipboard.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleInstantCareRequest = () => {
     if (!isAuthenticated) {
@@ -54,6 +77,11 @@ export default function Hero() {
       window.dispatchEvent(new CustomEvent("open-scheduled-care"));
     }
   };
+  
+  const handlePromoClaim = () => {
+    setShowDiscountDialog(false);
+    navigate("/auth?tab=register");
+  };
 
   const fetchParentProfile = async () => {
     if (!user?.id) return;
@@ -76,10 +104,56 @@ export default function Hero() {
       fetchParentProfile();
     }
   }, [user]);
+
+  useEffect(() => {
+    const now = Date.now();
+
+    // Show dialog if current time is **before the promo end**
+    if (now <= BLACK_FRIDAY_PROMO_END) {
+      setShowDiscountDialog(true);
+    }
+  }, []);
  
   return (
     <>
       <div className="relative h-full bg-[#f5f8fc]">
+
+        {/* for black friday deal  */}
+        <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
+          <DialogContent className="!max-w-3xl flex">
+            <div className="w-1/2 flex flex-col justify-center items-center gap-3 text-brand-blue capitalize text-center">
+              <MdOutlineDiscount className="text-3xl" />
+              <p className="text-lg font-semibold uppercase tracking-wide">Black Friday Exclusive</p>
+              <p className="text-2xl font-bold">
+                It’s Here — Our Biggest Discount of the Year!
+              </p>
+              <div className="flex items-center gap-2 border-2 border-brand-blue rounded-lg px-3 py-2">
+                <span className="font-semibold tracking-wider uppercase">{discountCode}</span>
+                <button
+                  onClick={handleCopyCode}
+                  className="text-brand-blue hover:text-brand-blue/70 transition-colors"
+                  aria-label="Copy code"
+                >
+                  <MdContentCopy className="text-xl" />
+                </button>
+              </div>
+              <Button className="w-full mt-2" onClick={handlePromoClaim}>
+                Claim Your 75% Off Before It’s Gone
+              </Button>
+              <p className="text-xs text-gray-500 mt-1">
+                Offer valid until <strong>November 29, 2025 at 1 PM PST</strong>.
+              </p>
+            </div>
+            <div className="w-1/2">
+              <img
+                className="w-full h-full object-cover object-center"
+                src={kidCare}
+                alt="kidCare"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Background image with midcentury modern overlay */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/10 to-brand-blue/20"></div>

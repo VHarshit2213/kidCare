@@ -22,7 +22,7 @@ import supabase from "@/config/supabaseClient";
 const BLACK_FRIDAY_PROMO_CODE = "BLKFDEAL25";
 const BLACK_FRIDAY_DISCOUNT = 75;
 const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
-const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 22, 0, 0); // Nov 29, 2025 2:00 PM PST
+const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
 const FULL_MEMBERSHIP_AMOUNT = 800;
 const INSTALLMENT_PAYMENT_AMOUNT = FULL_MEMBERSHIP_AMOUNT / 2;
 
@@ -97,7 +97,7 @@ export default function MembershipPage() {
           toast({
             title: "Promo Code Expired",
             description:
-              "This Black Friday deal ended on November 29, 2025 at 2:00 PM PST.",
+              "This Black Friday deal ended on November 29, 2025 at 1:00 PM PST.",
             variant: "destructive",
           });
           return;
