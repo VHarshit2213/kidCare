@@ -16,5 +16,4 @@ export const allowedZipCodes = [
   "91117",
   "91118",
   "90305",
-  "394105"
 ];
