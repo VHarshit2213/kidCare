@@ -165,6 +165,7 @@ export default function BabysitterProfileForm() {
   const [profiles, setProfiles] = useState<babysitterProfile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState(profiles?.[0]?.address || "");
+  const [postcode, setPostcode] = useState<string | null>(profiles?.[0]?.zipCode || null);
   const [AddressLoading, setAddressLoading] = useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -368,6 +369,7 @@ export default function BabysitterProfileForm() {
     setAddress(data?.[0]?.address || "");
     setLatitude(data?.[0]?.location?.latitude ?? null);
     setLongitude(data?.[0]?.location?.longitude ?? null);
+    setPostcode(data?.[0]?.zipCode || null);
   };
 
   // Upload file to Supabase
@@ -499,6 +501,7 @@ export default function BabysitterProfileForm() {
         fullName: values.fullName,
         email: values.email,
         address,
+        zipCode: postcode,
         floor_number: values.floor_number,
         street_name: values.street_name,
         location: {
@@ -667,11 +670,20 @@ export default function BabysitterProfileForm() {
         setLongitude(longitude);
         try {
           const res = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?types=address,postcode&access_token=${mapboxgl.accessToken}`
           );
           const data = await res.json();
-          const placeName = data.features?.[0]?.place_name || "";
+          const feature = data.features?.[0];
+          const placeName = feature?.place_name || "";
+          let postcode = feature?.context?.find((c: any) => c.id.startsWith("postcode."))?.text;
+
+          if (!postcode) {
+            const postcodeFeature = data.features.find((f: any) => f.place_type.includes("postcode"));
+            postcode = postcodeFeature?.text || null;
+          }
+
           setAddress(placeName);
+          setPostcode(postcode);
         } catch (err) {
           alert("Failed to get address");
         } finally {

@@ -168,6 +168,7 @@ export interface ParentProfile {
   profile_image?: string;
   isProfileCompleted?: boolean;
   isApproved:boolean;
+  zipCode:string;
 }
 
 export type babysitterProfile = {
@@ -199,6 +200,7 @@ export type babysitterProfile = {
   stripeAccountID:string;
   averageRating?: number | null;
   reviewCount?: number;
+  zipCode:string;
 };
 export interface TransactionsData {
   id: string;

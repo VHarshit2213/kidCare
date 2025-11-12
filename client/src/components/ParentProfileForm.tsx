@@ -963,6 +963,7 @@ export default function ParentProfileForm() {
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [address, setAddress] = useState(profiles?.[0]?.address || "");
+  const [postcode, setPostcode] = useState<string | null>(profiles?.[0]?.zipCode || null);
   const [AddressLoading, setAddressLoading] = useState(false);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -1003,14 +1004,15 @@ export default function ParentProfileForm() {
       const profile = profiles?.[0];
       const secondParent = profile?.secondParentGuardian;
 
-      // Check if all second parent fields are empty or not
-      const hasSecondParent =
+      // Check if any second parent fields contain data
+      const hasSecondParent = !!(
         secondParent &&
         [
           secondParent.firstName,
           secondParent.lastName,
           secondParent.phoneNumber,
-        ].some((field) => field && field.trim() !== "");
+        ].some((field) => field && field.trim() !== "")
+      );
 
       form.reset({
         fullName: userData?.fullName || "",
@@ -1133,6 +1135,7 @@ export default function ParentProfileForm() {
       setAddress(profile.address || "");
       setLatitude(profile.location?.latitude || null);
       setLongitude(profile.location?.longitude || null);
+      setPostcode(profile.zipCode || null);
     }
   };
 
@@ -1234,6 +1237,7 @@ export default function ParentProfileForm() {
         fullName: values.fullName,
         email: values.email,
         address: address,
+        zipCode: postcode,
         floor_number: values.floor_number,
         street_name: values.street_name,
         location: {
@@ -1243,10 +1247,10 @@ export default function ParentProfileForm() {
         phoneNumber: values.phoneNumber,
         secondParentGuardian: values.hasSecondParent
           ? {
-              firstName: values.secondParentFirstName || "",
-              lastName: values.secondParentLastName || "",
-              phoneNumber: values.secondParentPhone || "",
-            }
+            firstName: values.secondParentFirstName || "",
+            lastName: values.secondParentLastName || "",
+            phoneNumber: values.secondParentPhone || "",
+          }
           : null,
         children: mappedChildren,
         parentingStyle: values.parentingStyle,
@@ -1428,11 +1432,20 @@ export default function ParentProfileForm() {
         setLongitude(longitude);
         try {
           const res = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?types=address,postcode&access_token=${mapboxgl.accessToken}`
           );
           const data = await res.json();
-          const placeName = data.features?.[0]?.place_name || "";
+          const feature = data.features?.[0];
+          const placeName = feature?.place_name || "";
+          let postcode = feature?.context?.find((c: any) => c.id.startsWith("postcode."))?.text;
+
+          if (!postcode) {
+            const postcodeFeature = data.features.find((f: any) => f.place_type.includes("postcode"));
+            postcode = postcodeFeature?.text || null;
+          }
+
           setAddress(placeName);
+          setPostcode(postcode);
         } catch (err) {
           alert("Failed to get address");
         } finally {
@@ -1590,11 +1603,11 @@ export default function ParentProfileForm() {
                             {...field}
                             placeholder="Enter your Email"
                             readOnly
-                            // onChange={(e) => {
-                            //   field.onChange(e);
-                            //   // Set email to the same value as username
-                            //   loginForm.setValue("email", e.target.value);
-                            // }}
+                          // onChange={(e) => {
+                          //   field.onChange(e);
+                          //   // Set email to the same value as username
+                          //   loginForm.setValue("email", e.target.value);
+                          // }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -1719,8 +1732,10 @@ export default function ParentProfileForm() {
                         <FormControl>
                           <div className="flex items-center space-x-2">
                             <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
+                              checked={!!field.value}
+                              onCheckedChange={(checked) =>
+                                field.onChange(checked === true)
+                              }
                               id="hasSecondParent"
                             />
                             <Label

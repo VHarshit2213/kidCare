@@ -9,6 +9,7 @@ import supabase from "@/config/supabaseClient";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { MdContentCopy, MdOutlineDiscount } from "react-icons/md";
 import kidCare from "../assets/kidCare.png"
+import { useZipRestriction } from "@/hooks/use-zip-restriction";
 
 const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
 
@@ -23,6 +24,10 @@ export default function Hero() {
   const discountCode = "BLKFDEAL25";
   const isParent = user?.user_metadata?.userType === "parent";
   const isPaymentSuccess = user?.user_metadata?.isPayment;
+
+  const {
+    guardNavigation
+  } = useZipRestriction({ profile });
 
   const handleCopyCode = async () => {
     try {
@@ -40,7 +45,9 @@ export default function Hero() {
     }
   };
 
-  const handleInstantCareRequest = () => {
+  const handleInstantCareRequest = (event?: React.MouseEvent) => {
+    if (guardNavigation(event)) return;
+
     if (!isAuthenticated) {
       navigate("/auth");
     } else if (!isPaymentSuccess) {
@@ -59,7 +66,9 @@ export default function Hero() {
     }
   };
 
-  const handleScheduledCareRequest = () => {
+  const handleScheduledCareRequest = (event?: React.MouseEvent) => {
+    if (guardNavigation(event)) return;
+
     if (!isAuthenticated) {
       navigate("/auth");
     } else if (!isPaymentSuccess) {

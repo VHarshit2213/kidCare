@@ -102,29 +102,19 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
           const isParent = next.parent_id === currentUserId;
           const isSitter = next.sitter_id === currentUserId;
 
-          let title = "Play & Greet Update";
-          let body = "There is an update on your Play & Greet request.";
+          let title = "";
+          let body = "";
 
           if (payload.eventType === "INSERT") {
             if (!isSitter) return; // Only notify sitters for new requests
             title = "New Play & Greet Request";
             body = "You have received a new Play & Greet request.";
+
+          // UPDATE — only when request_status changes
           } else if (payload.eventType === "UPDATE") {
-
-            const changedKeys = Object.keys(next).filter((key) => next[key] !== prev[key]);
-
-            const readFields = ["parent_is_read", "sitter_is_read"];
-
-            const nonReadChanges = changedKeys.filter((key) => !readFields.includes(key));
-
-            if (nonReadChanges.length === 0) {
-              // → means only read flags changed — skip notification
-              return;
-            }
-
-            // Also ignore updates where request_status didn't change
+            // Ignore updates where status didn't change
             if (!prev || next.request_status === prev.request_status) return;
-
+            
             if (isParent) {
               switch (next.request_status) {
                 case "accepted":

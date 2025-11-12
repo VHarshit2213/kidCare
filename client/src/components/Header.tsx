@@ -13,6 +13,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useZipRestriction } from "@/hooks/use-zip-restriction";
+import { BsInfoCircle } from "react-icons/bs";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
@@ -34,6 +36,12 @@ export default function Header() {
   const isPaymentSuccess = user?.user_metadata?.isPayment;
   const isParent = user?.user_metadata?.userType === "parent";
   const isBabySitter = user?.user_metadata?.userType === "babysitter";
+
+  const {
+    isZipRestrictionEvaluated,
+    isZipRestricted,
+    guardNavigation,
+  } = useZipRestriction({ profile });
 
   const [isOnline, setIsOnline] = useState(true);
   const userId = user?.id;
@@ -71,6 +79,7 @@ export default function Header() {
   const isActive = (path: string) => location === path;
 
   const handleCareButtonClick = () => {
+    if (guardNavigation()) return;
     if (!isAuthenticated) {
       setLocation("/auth");
     } else if (!isPaymentSuccess) {
@@ -276,14 +285,16 @@ export default function Header() {
 
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18">
-          <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+            <Link
+              href="/"
+              className="flex items-center"
+            >
               <img
                 src={logo}
                 alt="The Enchanted Co. Logo"
-                className="h-12 w-auto"
+                className="h-16 w-16"
               />
             </Link>
             <nav className="hidden sm:ml-12 sm:flex sm:items-center sm:space-x-10">
@@ -334,6 +345,7 @@ export default function Header() {
                     <div className="grid gap-3">
                       <Button
                         onClick={() => {
+                          if (guardNavigation()) return;
                           if (!isAuthenticated) {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
@@ -376,6 +388,7 @@ export default function Header() {
                       </Button>
                       <Button
                         onClick={() => {
+                          if (guardNavigation()) return;
                           if (!isAuthenticated) {
                             setLocation("/auth");
                           } else if (!isPaymentSuccess) {
@@ -429,6 +442,7 @@ export default function Header() {
                     ? "text-[#3c5679] font-medium"
                     : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide`}
+                onClick={guardNavigation}
               >
                 My Bookings
               </Link>
@@ -439,6 +453,7 @@ export default function Header() {
                     ? "text-[#3c5679] font-medium"
                     : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+                onClick={guardNavigation}
               >
                 <span>Messages</span>
                 {unreadCount > 0 && (
@@ -455,6 +470,7 @@ export default function Header() {
                       ? "text-[#3c5679] font-medium"
                       : "text-neutral-700 hover:text-[#3c5679]"
                   } px-1 pt-1 text-sm tracking-wide`}
+                  onClick={guardNavigation}
                 >
                   Reviews
                 </Link>
@@ -466,6 +482,7 @@ export default function Header() {
                     ? "text-[#3c5679] font-medium"
                     : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+                onClick={guardNavigation}
               >
                 <span>Notification</span>
                 {bookingUnreadCount > 0 && (
@@ -481,6 +498,7 @@ export default function Header() {
                     ? "text-[#3c5679] font-medium"
                     : "text-neutral-700 hover:text-[#3c5679]"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+                onClick={guardNavigation}
               >
                 <span>Play And Greet</span>
                 {playGreetUnreadCount > 0 && (
@@ -490,10 +508,9 @@ export default function Header() {
                 )}
               </Link>
             </nav>
-          </div>
           <div>
             {isAuthenticated && profile?.isApproved === false && profile?.isProfileCompleted === true && (
-              <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600">
+              <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600 whitespace-nowrap">
                 Your Profile is Under Review
               </Badge>
             )}
@@ -712,6 +729,23 @@ export default function Header() {
           </div>
         </div>
       </div>
+      {isZipRestrictionEvaluated && isZipRestricted && (
+        <div className="w-full bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <div>
+              <BsInfoCircle className="text-xl text-brand-blue" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-brand-blue">
+                We're currently not available in your region.
+              </h3>
+              <p className="text-sm text-gray-600">
+                We'll be expanding soon! Stay tuned for updates.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
