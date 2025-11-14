@@ -10,9 +10,36 @@ interface MessageNotificationsProps {
 export default function MessageNotifications({ currentUserId }: MessageNotificationsProps) {
   const { toast } = useToast();
   
+  // Safe check for Notification API (prevents Safari crash)
+  const isNotificationSupported =
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    typeof Notification !== "undefined";
+
   useEffect(() => {
-    // Ask for browser notification permission once
-    Notification.requestPermission();
+
+    // SAFARI-SAFE: Only request permission if supported
+    if (isNotificationSupported) {
+      try {
+        Notification.requestPermission().catch(() => {});
+      } catch (err) {
+        console.warn("Safari blocked Notification permission:", err);
+      }
+    }
+
+    // Helper to safely show notifications
+    const showNotification = (title: string, body: string) => {
+      if (isNotificationSupported && Notification.permission === "granted") {
+        try {
+          new Notification(title, { body, icon: logo });
+        } catch (err) {
+          console.warn("Notification error:", err);
+          toast({ title, description: body });
+        }
+      } else {
+        toast({ title, description: body });
+      }
+    };
 
     // Subscribe to INSERT events in messages table
     const messagesChannel = supabase
@@ -31,18 +58,7 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
             ? `${message.sender_name} sent you a message`
             : "You have a new message from The Enchanted Co.";
 
-          // Browser notification
-          if (Notification.permission === "granted") {
-            new Notification(title, {
-              body: message.message,
-              icon: logo,
-            });
-          } else {
-            toast({
-              title: title,
-              description: message.message,
-            });
-          }
+          showNotification(title, message.message);
         }
       )
       .subscribe();
@@ -63,18 +79,7 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
           const title = "New Booking Notification";
           const body = notification.message;
 
-          // Browser notification
-          if (Notification.permission === "granted") {
-            new Notification(title, {
-              body: body,
-              icon: logo,
-            });
-          } else {
-            toast({
-              title: title,
-              description: body,
-            });
-          }
+          showNotification(title, body);
         }
       )
       .subscribe();
@@ -148,10 +153,8 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
             }
           }
 
-          if (Notification.permission === "granted") {
-            new Notification(title, { body, icon: logo });
-          } else {
-            toast({ title, description: body });
+          if (title && body) {
+            showNotification(title, body);
           }
         }
       )
@@ -162,7 +165,7 @@ export default function MessageNotifications({ currentUserId }: MessageNotificat
       supabase.removeChannel(bookingsChannel);
       supabase.removeChannel(playAndGreetChannel);
     };
-  }, [currentUserId]);
+  }, [currentUserId , isNotificationSupported]);
 
   return null;
 }
