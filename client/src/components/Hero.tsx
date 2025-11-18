@@ -45,46 +45,38 @@ export default function Hero() {
     }
   };
 
-  const handleInstantCareRequest = (event?: React.MouseEvent) => {
-    if (guardNavigation(event)) return;
+  const handleCareRequest = (type: "instant" | "scheduled") => {
+    if (guardNavigation()) return;
 
     if (!isAuthenticated) {
       navigate("/auth");
-    } else if (!isPaymentSuccess) {
+      return;
+    }
+
+    if (!isPaymentSuccess) {
       navigate("/membership");
-    } else if (!profile) {
-      window.dispatchEvent(new CustomEvent("open-sitter-request"));
-    } else if (!profile?.isApproved) {
+      return;
+    }
+
+    if (!profile) {
+      window.dispatchEvent(
+        new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+      );
+      return;
+    }
+
+    if (!profile?.isApproved) {
       toast({
         title: "Access Denied",
-        description:
-          "Your profile is under review you can not book babysitter.",
+        description: "Your profile is under review you cannot book babysitter.",
         variant: "destructive",
       });
-    } else {
-      window.dispatchEvent(new CustomEvent("open-sitter-request"));
+      return;
     }
-  };
 
-  const handleScheduledCareRequest = (event?: React.MouseEvent) => {
-    if (guardNavigation(event)) return;
-
-    if (!isAuthenticated) {
-      navigate("/auth");
-    } else if (!isPaymentSuccess) {
-      navigate("/membership");
-    } else if (!profile) {
-      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
-    } else if (!profile?.isApproved) {
-      toast({
-        title: "Access Denied",
-        description:
-          "Your profile is under review you can not book babysitter.",
-        variant: "destructive",
-      });
-    } else {
-      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
-    }
+    window.dispatchEvent(
+      new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+    );
   };
   
   const handlePromoClaim = () => {
@@ -129,18 +121,18 @@ export default function Hero() {
 
         {/* for black friday deal  */}
         <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
-          <DialogContent className="!max-w-3xl flex">
-            <div className="w-1/2 flex flex-col justify-center items-center gap-3 text-brand-blue capitalize text-center">
+          <DialogContent className="w-[95%] lg:max-w-4xl flex">
+            <div className="w-full sm:w-1/2 flex flex-col justify-center items-center gap-3 text-brand-blue capitalize text-center">
               <MdOutlineDiscount className="text-3xl" />
               <p className="text-lg font-semibold uppercase tracking-wide">Black Friday Exclusive</p>
-              <p className="text-2xl font-bold">
+              <p className="text-xl md:text-2xl font-bold">
                 It’s Here — Our Biggest Discount of the Year!
               </p>
               <div className="flex items-center gap-2 border-2 border-brand-blue rounded-lg px-3 py-2">
                 <span className="font-semibold tracking-wider uppercase">{discountCode}</span>
                 <button
                   onClick={handleCopyCode}
-                  className="text-brand-blue hover:text-brand-blue/70 transition-colors"
+                  className="text-brand-blue hover:text-brand-blue/70 transition-colors outline-none"
                   aria-label="Copy code"
                 >
                   <MdContentCopy className="text-xl" />
@@ -149,11 +141,11 @@ export default function Hero() {
               <Button className="w-full mt-2" onClick={handlePromoClaim}>
                 Claim Your 75% Off Before It’s Gone
               </Button>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-brand-blue mt-1">
                 Offer valid until <strong>November 29, 2025 at 1 PM PST</strong>.
               </p>
             </div>
-            <div className="w-1/2">
+            <div className="w-1/2 hidden sm:block">
               <img
                 className="w-full h-full object-cover object-center"
                 src={kidCare}
@@ -194,7 +186,7 @@ export default function Hero() {
 
               <div className="flex flex-wrap gap-4 justify-center">
                 <Button
-                  onClick={handleInstantCareRequest}
+                  onClick={() => handleCareRequest("instant")}
                   variant="blue"
                   size="md"
                 >
@@ -203,7 +195,7 @@ export default function Hero() {
                 </Button>
 
                 <Button
-                  onClick={handleScheduledCareRequest}
+                  onClick={() => handleCareRequest("scheduled")}
                   variant="outline_blue"
                   size="md"
                 >

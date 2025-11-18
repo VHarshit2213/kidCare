@@ -15,6 +15,11 @@ import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
 import { BsInfoCircle } from "react-icons/bs";
+import { CalendarIcon, ChevronDown, Clock, Menu } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { FaChildren, FaRegCalendarCheck, FaRegUser } from "react-icons/fa6";
+import { HiOutlineLogout } from "react-icons/hi";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
@@ -27,6 +32,7 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [bookingUnreadCount, setBookingUnreadCount] = useState(0);
   const [playGreetUnreadCount, setPlayGreetUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false)
 
   const isAuthenticated = !!user;
   const hasMembership =
@@ -78,15 +84,38 @@ export default function Header() {
 
   const isActive = (path: string) => location === path;
 
-  const handleCareButtonClick = () => {
+  const handleCareRequest = (type: "instant" | "scheduled") => {
     if (guardNavigation()) return;
+
     if (!isAuthenticated) {
       setLocation("/auth");
-    } else if (!isPaymentSuccess) {
-      setLocation("/membership");
-    } else {
-      window.dispatchEvent(new CustomEvent("open-sitter-request"));
+      return;
     }
+
+    if (!isPaymentSuccess) {
+      setLocation("/membership");
+      return;
+    }
+
+    if (!profile) {
+      window.dispatchEvent(
+        new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+      );
+      return;
+    }
+
+    if (!profile?.isApproved) {
+      toast({
+        title: "Access Denied",
+        description: "Your profile is under review you cannot book babysitter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+    );
   };
 
   const fetchProfile = async () => {
@@ -287,235 +316,120 @@ export default function Header() {
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center">
+            <img src={logo} alt="The Enchanted Co. Logo" className="h-16 w-16" />
+          </Link>
+          <nav className="hidden xxl:flex xxl:items-center xxl:space-x-10">
             <Link
               href="/"
-              className="flex items-center"
+              className={`${isActive("/")
+                ? "text-brand-blue font-medium"
+                : "text-neutral-700 hover:text-brand-blue"
+                } px-1 pt-1 text-sm tracking-wide`}
             >
-              <img
-                src={logo}
-                alt="The Enchanted Co. Logo"
-                className="h-16 w-16"
-              />
+              Home
             </Link>
-            <nav className="hidden sm:ml-12 sm:flex sm:items-center sm:space-x-10">
-              <Link
-                href="/"
-                className={`${
-                  isActive("/")
-                    ? "text-[#3c5679] font-medium"
-                    : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide`}
-              >
-                Home
-              </Link>
-              {isParent && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button className="flex items-center bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Request a Sitter
-                      <svg
-                        className="h-4 w-4 ml-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-52 p-4 shadow-lg border-neutral-200">
-                    <div className="grid gap-3">
-                      <Button
-                        onClick={() => {
-                          if (guardNavigation()) return;
-                          if (!isAuthenticated) {
-                            setLocation("/auth");
-                          } else if (!isPaymentSuccess) {
-                            setLocation("/membership");
-                          } else if (!profile) {
-                            window.dispatchEvent(
-                              new CustomEvent("open-sitter-request")
-                            );
-                          } else if (!profile?.isApproved) {
-                            toast({
-                              title: "Access Denied",
-                              description:
-                                "Your profile is under review you can not book babysitter.",
-                              variant: "destructive",
-                            });
-                          } else {
-                            window.dispatchEvent(
-                              new CustomEvent("open-sitter-request")
-                            );
-                          }
-                        }}
-                        className="justify-start bg-[#D4AEA8] hover:bg-[#AA8780] text-white font-medium tracking-wide rounded-[4px]"
-                        size="sm"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        Instant Care
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          if (guardNavigation()) return;
-                          if (!isAuthenticated) {
-                            setLocation("/auth");
-                          } else if (!isPaymentSuccess) {
-                            setLocation("/membership");
-                          } else if (!profile) {
-                            window.dispatchEvent(
-                              new CustomEvent("open-scheduled-care")
-                            );
-                          } else if (!profile?.isApproved) {
-                            toast({
-                              title: "Access Denied",
-                              description:
-                                "Your profile is under review you can not book babysitter.",
-                              variant: "destructive",
-                            });
-                          } else {
-                            window.dispatchEvent(
-                              new CustomEvent("open-scheduled-care")
-                            );
-                          }
-                        }}
-                        variant="outline"
-                        className="justify-start border-[#D4AEA8] text-[#D4AEA8] hover:bg-pink-50 font-medium tracking-wide rounded-[4px]"
-                        size="sm"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 mr-2 text-[#D4AEA8]"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        Scheduled Care
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-
-              <Link
-                href="/bookings"
-                className={`${
-                  isActive("/bookings")
-                    ? "text-[#3c5679] font-medium"
-                    : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide`}
-                onClick={guardNavigation}
-              >
-                My Bookings
-              </Link>
-              <Link
-                href="/messages"
-                className={`${
-                  isActive("/messages")
-                    ? "text-[#3c5679] font-medium"
-                    : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-                onClick={guardNavigation}
-              >
-                <span>Messages</span>
-                {unreadCount > 0 && (
-                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </Link>
-              {isBabySitter && (
-                <Link
-                  href="/reviews"
-                  className={`${
-                    isActive("/reviews")
-                      ? "text-[#3c5679] font-medium"
-                      : "text-neutral-700 hover:text-[#3c5679]"
-                  } px-1 pt-1 text-sm tracking-wide`}
-                  onClick={guardNavigation}
-                >
-                  Reviews
-                </Link>
-              )}
-              <Link
-                href="/booking-notification"
-                className={`${
-                  isActive("/booking-notification")
-                    ? "text-[#3c5679] font-medium"
-                    : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-                onClick={guardNavigation}
-              >
-                <span>Notification</span>
-                {bookingUnreadCount > 0 && (
-                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
-                    {bookingUnreadCount > 99 ? "99+" : bookingUnreadCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href="/play-and-greet"
-                className={`${
-                  isActive("/play-and-greet")
-                    ? "text-[#3c5679] font-medium"
-                    : "text-neutral-700 hover:text-[#3c5679]"
-                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-                onClick={guardNavigation}
-              >
-                <span>Play And Greet</span>
-                {playGreetUnreadCount > 0 && (
-                  <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
-                    {playGreetUnreadCount > 99 ? "99+" : playGreetUnreadCount}
-                  </span>
-                )}
-              </Link>
-            </nav>
-          <div>
-            {isAuthenticated && profile?.isApproved === false && profile?.isProfileCompleted === true && (
-              <Badge className="text-white text-base px-6 bg-yellow-500 hover:bg-yellow-600 whitespace-nowrap">
-                Your Profile is Under Review
-              </Badge>
+            {isParent && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center bg-brand-blue hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Request a Sitter
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-4 shadow-lg border-neutral-200">
+                  <div className="grid gap-3">
+                    <Button
+                      onClick={() => handleCareRequest("instant")}
+                      className="justify-start bg-[#D4AEA8] hover:bg-[#AA8780] text-white font-medium tracking-wide rounded-[4px]"
+                      size="sm"
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      Instant Care
+                    </Button>
+                    <Button
+                      onClick={() => handleCareRequest("scheduled")}
+                      variant="outline"
+                      className="justify-start border-[#D4AEA8] text-[#D4AEA8] hover:bg-pink-50 font-medium tracking-wide rounded-[4px]"
+                      size="sm"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      Scheduled Care
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
-          </div>
-          <div className="hidden sm:flex sm:items-center">
+            <Link
+              href="/bookings"
+              className={`${isActive("/bookings")
+                ? "text-brand-blue font-medium"
+                : "text-neutral-700 hover:text-brand-blue"
+                } px-1 pt-1 text-sm tracking-wide`}
+              onClick={guardNavigation}
+            >
+              My Bookings
+            </Link>
+            <Link
+              href="/messages"
+              className={`${isActive("/messages")
+                ? "text-brand-blue font-medium"
+                : "text-neutral-700 hover:text-brand-blue"
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+              onClick={guardNavigation}
+            >
+              <span>Messages</span>
+              {unreadCount > 0 && (
+                <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+            {isBabySitter && (
+              <Link
+                href="/reviews"
+                className={`${isActive("/reviews")
+                  ? "text-brand-blue font-medium"
+                  : "text-neutral-700 hover:text-brand-blue"
+                  } px-1 pt-1 text-sm tracking-wide`}
+                onClick={guardNavigation}
+              >
+                Reviews
+              </Link>
+            )}
+            <Link
+              href="/booking-notification"
+              className={`${isActive("/booking-notification")
+                ? "text-brand-blue font-medium"
+                : "text-neutral-700 hover:text-brand-blue"
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+              onClick={guardNavigation}
+            >
+              <span>Notification</span>
+              {bookingUnreadCount > 0 && (
+                <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                  {bookingUnreadCount > 99 ? "99+" : bookingUnreadCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/play-and-greet"
+              className={`${isActive("/play-and-greet")
+                ? "text-brand-blue font-medium"
+                : "text-neutral-700 hover:text-brand-blue"
+                } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
+              onClick={guardNavigation}
+            >
+              <span>Play And Greet</span>
+              {playGreetUnreadCount > 0 && (
+                <span className="absolute -right-3 -top-1.5 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                  {playGreetUnreadCount > 99 ? "99+" : playGreetUnreadCount}
+                </span>
+              )}
+            </Link>
+          </nav>
+          <div className="hidden xxl:flex xxl:items-center">
             {isAuthenticated ? (
               <div className="ml-4 flex items-center">
                 {/* online offline toggle */}
@@ -577,20 +491,7 @@ export default function Header() {
                         href="/profile"
                         className="text-sm font-medium text-neutral-700 hover:text-[#ed4aea] flex items-center"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
+                        <FaRegUser className="h-4 w-4 mr-3" />
                         Profile
                       </Link>
                       {user?.username === "ecadmin" && (
@@ -621,20 +522,7 @@ export default function Header() {
                         className="justify-start px-0 text-neutral-700 hover:text-[#ed4aea] hover:bg-pink-50"
                         onClick={handleLogout}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
+                        <HiOutlineLogout className="h-5 w-5 mr-2" />
                         Logout
                       </Button>
                     </div>
@@ -671,65 +559,105 @@ export default function Header() {
           </div>
 
           {/* Mobile buttons */}
-          <div className="flex items-center sm:hidden space-x-3">
-            <button
-              onClick={handleCareButtonClick}
-              className="inline-flex items-center justify-center p-2 bg-[#ed4aea] text-white rounded-[4px] shadow-sm"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <div className="xxl:hidden flex items-center space-x-1">
+            {!isAuthenticated && (
+              <Button
+                className="bg-[#3c5679] hover:bg-[#2c4059] text-white font-medium tracking-wide rounded-[4px]"
+                onClick={() => setLocation("/auth")}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => setLocation("/admin")}
-              className="inline-flex items-center justify-center p-2 border border-red-600 text-red-600 rounded-[4px]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                Login
+              </Button>
+            )}
+            {isBabySitter && (
+              <div className="flex items-center gap-3 py-2 px-3">
+                <span className="text-sm font-medium">
+                  {isOnline ? "Online" : "Offline"}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isOnline}
+                    onChange={handleToggle}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                </label>
+              </div>
+            )}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <button className="inline-flex items-center justify-center p-2 rounded-[4px] text-neutral-700 hover:text-[#ed4aea] hover:bg-pink-50 focus:outline-none">
+                  <Menu size={24} />
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[300px] sm:w-[400px] h-screen overflow-y-auto"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
-            <button className="inline-flex items-center justify-center p-2 rounded-[4px] text-neutral-700 hover:text-[#ed4aea] hover:bg-pink-50 focus:outline-none">
-              <svg
-                className="h-6 w-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+                <div className="flex flex-col space-y-4 mt-8">
+                  {isParent && (
+                    <Link
+                      href="/bookings"
+                      className={`${isActive("/bookings")
+                        ? "text-brand-blue font-bold"
+                        : "text-neutral-700 hover:text-brand-blue"
+                        } p-2 rounded-lg tracking-wide`}
+                    >
+                      <span className="flex items-center gap-3"><FaRegCalendarCheck className="w-5 h-5" />My Bookings</span>
+                    </Link>
+                  )}
+                  <Link
+                    href="/booking-notification"
+                    className={`${isActive("/booking-notification")
+                      ? "text-brand-blue font-bold"
+                      : "text-neutral-700 hover:text-brand-blue"
+                      } p-2 rounded-lg tracking-wide relative w-fit`}
+                  >
+                    <span className="flex items-center gap-3"><IoMdNotificationsOutline className="w-5 h-5" />
+                      Notification</span>
+                    {bookingUnreadCount > 0 && (
+                      <span className="absolute -right-2 top-0 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                        {bookingUnreadCount > 99 ? "99+" : bookingUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href="/play-and-greet"
+                    className={`${isActive("/play-and-greet")
+                      ? "text-brand-blue font-bold"
+                      : "text-neutral-700 hover:text-brand-blue"
+                      } p-2 rounded-lg tracking-wide relative w-fit`}
+                  >
+                    <span className="flex items-center gap-3"><FaChildren className="w-5 h-5" />Play And Greet</span>
+                    {playGreetUnreadCount > 0 && (
+                      <span className="absolute -right-2 top-0 inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                        {playGreetUnreadCount > 99 ? "99+" : playGreetUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  {isAuthenticated && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start p-2 text-neutral-700 hover:text-brand-blue text-base outline-none"
+                      onClick={handleLogout}
+                    >
+                      <HiOutlineLogout className="h-5 w-5 mr-3" />
+                      Logout
+                    </Button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
-      {isZipRestrictionEvaluated && isZipRestricted && (
+      {isAuthenticated && profile?.isApproved === false && profile?.isProfileCompleted === true && (
+        <div className="w-full bg-orange-50 border border-orange-200 rounded-lg py-2 px-4 flex items-center justify-center shadow-sm font-semibold text-base xs:text-lg text-brand-blue absolute">
+          Your Profile is Under Review
+        </div>
+      )}
+      {/* {isZipRestrictionEvaluated && isZipRestricted && (
         <div className="w-full bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
             <div>
@@ -745,7 +673,7 @@ export default function Header() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </header>
   );
 }

@@ -45,7 +45,7 @@ export default function Footer() {
   }, [user]);
 
   return (
-    <footer className="bg-white border-t border-neutral-100">
+    <footer className="bg-white border-t border-neutral-100 hidden xxl:block">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-wrap justify-between items-center">
           <div className="flex items-center space-x-4">

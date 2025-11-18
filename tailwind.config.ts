@@ -6,6 +6,8 @@ export default {
   theme: {
     extend: {
       screens: {
+        xxl: "1150px",
+        xxxl: "1400px",
         xs: "480px",
       },
       borderRadius: {

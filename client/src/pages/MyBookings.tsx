@@ -40,42 +40,38 @@ export default function MyBookings() {
   //   enabled: isAuthenticated && user?.userType === "parent",
   // });
 
-  const handleInstantCareRequest = () => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-    } else if (!isPaymentSuccess) {
-      navigate("/membership");
-    } else if (!profile) {
-      window.dispatchEvent(new CustomEvent("open-sitter-request"));
-    } else if (!profile?.isApproved) {
-      toast({
-        title: "Access Denied",
-        description:
-          "Your profile is under review you can not book babysitter.",
-        variant: "destructive",
-      });
-    } else {
-      window.dispatchEvent(new CustomEvent("open-sitter-request"));
-    }
-  };
+  const handleCareRequest = (type: "instant" | "scheduled") => {
+    // if (guardNavigation()) return;
 
-  const handleScheduledCareRequest = () => {
     if (!isAuthenticated) {
       navigate("/auth");
-    } else if (!isPaymentSuccess) {
+      return;
+    }
+
+    if (!isPaymentSuccess) {
       navigate("/membership");
-    } else if (!profile) {
-      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
-    } else if (!profile?.isApproved) {
+      return;
+    }
+
+    if (!profile) {
+      window.dispatchEvent(
+        new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+      );
+      return;
+    }
+
+    if (!profile?.isApproved) {
       toast({
         title: "Access Denied",
-        description:
-          "Your profile is under review you can not book babysitter.",
+        description: "Your profile is under review you cannot book babysitter.",
         variant: "destructive",
       });
-    } else {
-      window.dispatchEvent(new CustomEvent("open-scheduled-care"));
+      return;
     }
+
+    window.dispatchEvent(
+      new CustomEvent(type === "instant" ? "open-sitter-request" : "open-scheduled-care")
+    );
   };
 
   const fetchBookings = async () => {
@@ -234,7 +230,7 @@ export default function MyBookings() {
                 <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
                   <Button
                     className="bg-brand-blue hover:bg-brand-blue/90 flex items-center"
-                    onClick={handleInstantCareRequest}
+                    onClick={() => handleCareRequest("instant")}
                   >
                     <Clock className="mr-2 h-4 w-4" />
                     Request a Sitter Now
@@ -243,7 +239,7 @@ export default function MyBookings() {
                   <Button
                     variant="outline"
                     className="flex items-center border-brand-blue text-brand-blue hover:bg-brand-blue/10"
-                    onClick={handleScheduledCareRequest}
+                    onClick={() => handleCareRequest("scheduled")}
                   >
                     <CalendarClock className="mr-2 h-4 w-4" />
                     Schedule Care
