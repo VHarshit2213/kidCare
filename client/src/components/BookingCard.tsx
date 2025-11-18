@@ -4,7 +4,7 @@ import { formatBookingTimeRange } from "@/lib/utils";
 import { Booking, User } from "@shared/schema";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star, Navigation, Loader2 } from "lucide-react";
+import { Star, Navigation, Loader2, CalendarIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import StatusBadge from "./common/StatusBadge";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select.tsx";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 import BookingConfirmation from "./BookingConfirmation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface BookingCardProps {
   booking: Booking;
@@ -237,7 +238,7 @@ export default function BookingCard({
           </div>
         ))
       ) : (
-        <div className="sm:flex sm:items-center sm:justify-between">
+        <div className="">
           <div className="sm:flex sm:items-start w-full">
             {/* Parent logged in → show babysitter details */}
             {user?.user_metadata?.userType === "parent" && babysitter && (
@@ -360,9 +361,8 @@ export default function BookingCard({
             {/* Babysitter logged in → show parent details */}
             {user?.user_metadata?.userType === "babysitter" && parent && (
               <>
-                <div className="hidden sm:block mr-4  mt-3">
-                  <Avatar className="h-12 w-12">
-                    <Avatar className="h-12 w-12">
+                <div className="sm:mr-4 sm:mt-3">
+                    <Avatar className="h-14 w-14">
                       {parent.profileImageUrl ? (
                         <AvatarImage
                           src={parent.profileImageUrl}
@@ -374,7 +374,6 @@ export default function BookingCard({
                         </AvatarFallback>
                       )}
                     </Avatar>
-                  </Avatar>
                 </div>
                 <div className={"w-full"}>
                   <h3 className="text-lg font-medium text-neutral-800">
@@ -392,21 +391,8 @@ export default function BookingCard({
                     parent Name :{" "}
                     <span className="font-medium">{parent.fullName}</span>
                   </p>
-                  <div className="mt-1 flex items-start text-sm text-neutral-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                  <div className="mt-1 flex items-center text-sm text-neutral-600">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
                     {booking.date ? (
                       <div className="flex flex-col">
                         <p>
@@ -434,7 +420,7 @@ export default function BookingCard({
                       </>
                     )}
                   </div>
-                  <div className="flex justify-between mt-5">
+                  <div className="flex flex-col xs:flex-row justify-between gap-3 mt-5">
                     <div className={"flex gap-2 w-auto"}>
                       <Select
                         value={babySitterStatus}
@@ -454,7 +440,7 @@ export default function BookingCard({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="ml-4 flex flex-shrink-0 space-x-2">
+                    <div className="flex justify-end flex-shrink-0 space-x-2">
                       {/* Navigation button for babysitters on confirmed or in-progress bookings  */}
                       {user?.user_metadata?.userType === "babysitter" &&
                         booking.sitter_id === user.id &&
@@ -492,7 +478,7 @@ export default function BookingCard({
               </>
             )}
           </div>
-          <div className="mt-4 flex items-center justify-between sm:mt-0 sm:ml-6">
+          <div className="flex items-center justify-between sm:mt-0 sm:ml-6">
             <div className="ml-4 flex flex-shrink-0 space-x-2">
               {/* Review button for babysitters on completed bookings  */}
               {user?.userType === "babysitter" &&
@@ -508,41 +494,6 @@ export default function BookingCard({
                     Leave Review
                   </Button>
                 )}
-
-              {/* {babysitter && (
-                <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-neutral-600 bg-neutral-100 hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                </button>
-              )} */}
-              {/* <button className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </button> */}
             </div>
           </div>
         </div>
@@ -588,42 +539,26 @@ export default function BookingCard({
         </div>
       )}
 
-      {/* Navigation Modal */}
-      {showNavigation && booking?.address && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto mt-[30px]">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold">
+      <Dialog
+        open={showNavigation && !!booking?.address}
+        onOpenChange={(open) => setShowNavigation(open)}
+      >
+        {booking?.address && (
+          <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto pb-28 xxl:pb-10">
+            <DialogHeader className="flex flex-row items-center justify-between">
+              <DialogTitle>
                 Navigate to {parent.fullName}'s Home
-              </h2>
-              <button
-                onClick={() => setShowNavigation(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-6">
+              </DialogTitle>
+            </DialogHeader>
+            <div className="p-4 sm:p-6">
               <NavigationMap
                 destinationAddress={booking.address}
                 onNavigationStart={() => setShowNavigation(false)}
               />
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
 
       {showBookingInfo && (
         <BookingConfirmation

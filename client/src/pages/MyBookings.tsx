@@ -147,8 +147,8 @@ export default function MyBookings() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-neutral-800 mb-6">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
+        <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">
           Your Bookings
         </h1>
 
@@ -174,7 +174,7 @@ export default function MyBookings() {
           scheduleCareBookings.length > 0 ? (
           <>
             {/* Instant Care Bookings */}
-            <h2 className="text-xl font-semibold text-neutral-700 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-neutral-700 mb-2">
               Instant Care Bookings
             </h2>
             {instantCareBookings.length > 0 ? (
@@ -195,7 +195,7 @@ export default function MyBookings() {
             )}
 
             {/* Scheduled Care Bookings */}
-            <h2 className="text-xl font-semibold text-neutral-700 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-neutral-700 mb-2">
               Scheduled Care Bookings
             </h2>
             {scheduleCareBookings.length > 0 ? (

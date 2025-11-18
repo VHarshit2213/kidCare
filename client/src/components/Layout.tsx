@@ -50,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex flex-col h-screen">
       <Header />
       <MessageNotifications currentUserId={userId} />
-      <main className="flex-1 relative z-0 overflow-y-auto bg-neutral-lighter">
+      <main className="flex-1 relative z-0 overflow-y-auto bg-neutral-lighter pb-28 xxl:pb-0">
         {children}
       </main>
       <Footer />
