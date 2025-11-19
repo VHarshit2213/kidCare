@@ -711,6 +711,7 @@ import supabase from "@/config/supabaseClient";
 import { log } from "console";
 import mapboxgl from "mapbox-gl";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
+import { allowedZipCodes } from "@/config/allowedZipCodes";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
@@ -764,6 +765,7 @@ export default function InstantCareModal({
   const [nearbySitters, setNearbySitters] = useState([]);
   const [childrenPopoverOpen, setChildrenPopoverOpen] = useState(false);
   const [address, setAddress] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [AddressLoading, setAddressLoading] = useState(false);
   const [userData, setUserData] = useState<any>(null);
 
@@ -876,8 +878,27 @@ export default function InstantCareModal({
 
     if (!address || !latitude || !longitude) {
       toast({
-        title: "Location is required",
-        description: "Please use 'Use My Location' to fetch location.",
+        title: "Location required",
+        description: "Please tap 'Use My Location' so we can find nearby sitters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const normalizedZip = zipCode.trim();
+    if (!normalizedZip) {
+      toast({
+        title: "ZIP code required",
+        description: "We couldn't detect your ZIP code. Please refresh your location.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!allowedZipCodes.includes(normalizedZip)) {
+      toast({
+        title: "Service unavailable in your area",
+        description: `We're currently not available in your region.`,
         variant: "destructive",
       });
       return;
@@ -1059,8 +1080,27 @@ export default function InstantCareModal({
             `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`,
           );
           const data = await res.json();
-          const placeName = data.features?.[0]?.place_name || "";
+          const feature = data.features?.[0];
+          const placeName = feature?.place_name || "";
+          let postcode = feature?.context?.find((c: any) => c.id.startsWith("postcode."))?.text;
+
+          if (!postcode) {
+            const postcodeFeature = data.features.find((f: any) => f.place_type.includes("postcode"));
+            postcode = postcodeFeature?.text || null;
+          }
+
+          console.log("postcode",postcode);
+          
           setAddress(placeName);
+          setZipCode(postcode);
+          if (!postcode) {
+            toast({
+              title: "ZIP code unavailable",
+              description:
+                "We couldn't detect your ZIP code. Please try again or refresh your location.",
+              variant: "destructive",
+            });
+          }
         } catch (err) {
           alert("Failed to get address");
         } finally {
