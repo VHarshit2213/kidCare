@@ -1,7 +1,7 @@
 import supabase from "@/config/supabaseClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
-import { useEffect, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
 export default function Footer() {
@@ -9,12 +9,19 @@ export default function Footer() {
   const [location, setLocation] = useLocation();
 
   const [profile, setProfile] = useState<any>(null);
+  const isBabySitter = user?.user_metadata?.userType === "babysitter";
 
   const isActive = (path: string) => location === path;
 
   const {
     guardNavigation,
   } = useZipRestriction({ profile });
+
+  const handleZipCodeRestriction = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isBabySitter) return;
+
+    guardNavigation(event);
+  };
 
    const fetchProfile = async () => {
     if (!user?.id) return;
@@ -77,7 +84,7 @@ export default function Footer() {
                   ? "text-[#3c5679] font-medium"
                   : "text-neutral-700 hover:text-[#3c5679]"
                 } text-sm`}
-                onClick={guardNavigation}
+                onClick={handleZipCodeRestriction}
             >
               Bookings
             </Link>
@@ -87,7 +94,7 @@ export default function Footer() {
                   ? "text-[#3c5679] font-medium"
                   : "text-neutral-700 hover:text-[#3c5679]"
                 } text-sm`}
-              onClick={guardNavigation}
+              onClick={handleZipCodeRestriction}
             >
               Messages
             </Link>

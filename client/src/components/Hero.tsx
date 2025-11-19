@@ -46,7 +46,7 @@ export default function Hero() {
   };
 
   const handleCareRequest = (type: "instant" | "scheduled") => {
-    if (guardNavigation()) return;
+    // if (guardNavigation()) return;
 
     if (!isAuthenticated) {
       navigate("/auth");

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
-import { useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -84,8 +84,13 @@ export default function Header() {
 
   const isActive = (path: string) => location === path;
 
+  const handleZipCodeRestriction = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isBabySitter) return;
+    guardNavigation(event);
+  };
+
   const handleCareRequest = (type: "instant" | "scheduled") => {
-    if (guardNavigation()) return;
+    // if (guardNavigation()) return;
 
     if (!isAuthenticated) {
       setLocation("/auth");
@@ -367,7 +372,7 @@ export default function Header() {
                 ? "text-brand-blue font-medium"
                 : "text-neutral-700 hover:text-brand-blue"
                 } px-1 pt-1 text-sm tracking-wide`}
-              onClick={guardNavigation}
+              onClick={handleZipCodeRestriction}
             >
               My Bookings
             </Link>
@@ -377,7 +382,7 @@ export default function Header() {
                 ? "text-brand-blue font-medium"
                 : "text-neutral-700 hover:text-brand-blue"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-              onClick={guardNavigation}
+              onClick={handleZipCodeRestriction}
             >
               <span>Messages</span>
               {unreadCount > 0 && (
@@ -393,7 +398,7 @@ export default function Header() {
                   ? "text-brand-blue font-medium"
                   : "text-neutral-700 hover:text-brand-blue"
                   } px-1 pt-1 text-sm tracking-wide`}
-                onClick={guardNavigation}
+                onClick={handleZipCodeRestriction}
               >
                 Reviews
               </Link>
@@ -404,7 +409,7 @@ export default function Header() {
                 ? "text-brand-blue font-medium"
                 : "text-neutral-700 hover:text-brand-blue"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-              onClick={guardNavigation}
+              onClick={handleZipCodeRestriction}
             >
               <span>Notification</span>
               {bookingUnreadCount > 0 && (
@@ -419,7 +424,7 @@ export default function Header() {
                 ? "text-brand-blue font-medium"
                 : "text-neutral-700 hover:text-brand-blue"
                 } px-1 pt-1 text-sm tracking-wide flex items-center gap-2 relative`}
-              onClick={guardNavigation}
+              onClick={handleZipCodeRestriction}
             >
               <span>Play And Greet</span>
               {playGreetUnreadCount > 0 && (
@@ -602,6 +607,7 @@ export default function Header() {
                         ? "text-brand-blue font-bold"
                         : "text-neutral-700 hover:text-brand-blue"
                         } p-2 rounded-lg tracking-wide`}
+                      onClick={handleZipCodeRestriction}
                     >
                       <span className="flex items-center gap-3"><FaRegCalendarCheck className="w-5 h-5" />My Bookings</span>
                     </Link>
@@ -612,6 +618,7 @@ export default function Header() {
                       ? "text-brand-blue font-bold"
                       : "text-neutral-700 hover:text-brand-blue"
                       } p-2 rounded-lg tracking-wide relative w-fit`}
+                    onClick={handleZipCodeRestriction}
                   >
                     <span className="flex items-center gap-3"><IoMdNotificationsOutline className="w-5 h-5" />
                       Notification</span>
@@ -627,6 +634,7 @@ export default function Header() {
                       ? "text-brand-blue font-bold"
                       : "text-neutral-700 hover:text-brand-blue"
                       } p-2 rounded-lg tracking-wide relative w-fit`}
+                    onClick={handleZipCodeRestriction}
                   >
                     <span className="flex items-center gap-3"><FaChildren className="w-5 h-5" />Play And Greet</span>
                     {playGreetUnreadCount > 0 && (

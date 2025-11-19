@@ -5,7 +5,7 @@ import { FaRegCalendarCheck, FaRegClock } from "react-icons/fa6";
 import { CalendarIcon, MessageCircleMore } from "lucide-react";
 import { FaRegUser } from "react-icons/fa";
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
-import { useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { TbUserStar } from "react-icons/tb";
@@ -22,6 +22,7 @@ export default function MobileNav() {
   const isPaymentSuccess = user?.user_metadata?.isPayment;
   const userId = user?.id;
   const isParent = user?.user_metadata?.userType === "parent";
+  const isBabySitter = user?.user_metadata?.userType === "babysitter";
 
   const {
     guardNavigation
@@ -29,8 +30,13 @@ export default function MobileNav() {
 
   const isActive = (path: string) => location === path;
 
+  const handleZipCodeRestriction = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isBabySitter) return;
+    guardNavigation(event);
+  };
+
   const handleCareRequest = (type: "instant" | "scheduled") => {
-    if (guardNavigation()) return;
+    // if (guardNavigation()) return;
 
     if (!isAuthenticated) {
       setLocation("/auth");
@@ -63,11 +69,21 @@ export default function MobileNav() {
     );
   };
 
-  const fetchParentProfile = async () => {
+  const fetchProfile = async () => {
     if (!user?.id) return;
 
+    const userType = user.user_metadata?.userType;
+    const tableName =
+      userType === "parent"
+        ? "parentprofile"
+        : userType === "babysitter"
+          ? "babySitterProfile"
+          : null;
+
+    if (!tableName) return;
+
     const { data, error } = await supabase
-      .from("parentprofile")
+      .from(tableName)
       .select("*")
       .eq("user_id", user.id)
       .single();
@@ -101,9 +117,8 @@ export default function MobileNav() {
   }, [userId]);
 
   useEffect(() => {
-    if (user?.id && user?.user_metadata?.userType === "parent") {
-      fetchParentProfile();
-    }
+    if (!user?.id) return;
+    fetchProfile();
   }, [user]);
 
   useEffect(() => {
@@ -163,6 +178,7 @@ export default function MobileNav() {
             <Link
               href="/reviews"
               className={`flex flex-col items-center relative ${isActive("/reviews") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}
+              onClick={handleZipCodeRestriction}
             >
               <TbUserStar className="w-5 h-5" />
               <span className="text-xs mt-1">Reviews</span>
@@ -187,6 +203,7 @@ export default function MobileNav() {
             <Link
               href="/bookings"
               className={`flex flex-col items-center relative ${isActive("/reviews") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}
+              onClick={handleZipCodeRestriction}
             >
               <FaRegCalendarCheck className="w-4 h-4" />
               <span className="text-xs mt-2">Bookings</span>
@@ -195,7 +212,7 @@ export default function MobileNav() {
         )}
 
         <div className="flex flex-col items-center py-3 px-2">
-          <Link href="/messages" className={`flex flex-col items-center relative ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`}>
+          <Link href="/messages" className={`flex flex-col items-center relative ${isActive("/messages") ? "text-brand-blue" : "text-neutral-600 hover:text-brand-blue"}`} onClick={handleZipCodeRestriction}>
             <MessageCircleMore className="h-5 w-5" />
             <span className="text-xs mt-1">Messages</span>
             {unreadCount > 0 && (
