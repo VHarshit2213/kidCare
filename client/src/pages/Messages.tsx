@@ -421,8 +421,8 @@ useEffect(() => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-neutral-800 mb-6">Messages</h1>
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
+        <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">Messages</h1>
 
         {!isAuthenticated ? (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
@@ -467,45 +467,45 @@ useEffect(() => {
                   otherUserName={partner?.fullName}
                   trigger={
                     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-4 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-center">
-                        <Avatar className="h-10 w-10 mr-3">
-                          {partner?.profileImageUrl ? (
-                            <AvatarImage
-                              src={partner.profileImageUrl}
-                              alt={partner?.fullName || "User"}
-                            />
-                          ) : (
-                            <AvatarFallback>
-                              {" "}
-                              {getInitials(partner?.fullName || "User")}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex justify-between">
+                      <div className="flex flex-col xs:flex-row justify-between gap-2 xs:gap-4">
+                        <div className="flex items-center order-2 xs:order-1">
+                          <Avatar className="h-10 w-10 mr-3">
+                            {partner?.profileImageUrl ? (
+                              <AvatarImage
+                                src={partner.profileImageUrl}
+                                alt={partner?.fullName || "User"}
+                              />
+                            ) : (
+                              <AvatarFallback>
+                                {" "}
+                                {getInitials(partner?.fullName || "User")}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
                             <h3 className="text-sm font-medium text-neutral-800 capitalize">
                               {partner?.fullName || "User"}
                             </h3>
-                            <div className="flex items-center gap-2">
-                              {unreadCounts[partnerId] > 0 && (
-                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                                  {unreadCounts[partnerId]}
-                                </span>
-                              )}
-                              {latestMessage && (
-                                <span className="text-xs text-neutral-500">
-                                  {format(new Date(latestMessage.created_at), "dd-MM-yyyy")}
-                                </span>
-                              )}
-                            </div>
+                            {latestMessage && (
+                              <p className="text-sm text-neutral-600 line-clamp-1">
+                                {latestMessage.sender_id === user?.id
+                                  ? "You: "
+                                  : ""}
+                                {latestMessage.message || "📍 location"}
+                              </p>
+                            )}
                           </div>
+                        </div>
+                        <div className="flex items-center gap-2 order-1 xs:order-2 self-end xs:self-auto">
+                          {unreadCounts[partnerId] > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                              {unreadCounts[partnerId]}
+                            </span>
+                          )}
                           {latestMessage && (
-                            <p className="text-sm text-neutral-600 line-clamp-1">
-                              {latestMessage.sender_id === user?.id
-                                ? "You: "
-                                : ""}
-                              {latestMessage.message || "📍 location"}
-                            </p>
+                            <span className="text-xs text-neutral-500">
+                              {format(new Date(latestMessage.created_at), "dd-MM-yyyy")}
+                            </span>
                           )}
                         </div>
                       </div>

@@ -936,7 +936,7 @@ export default function ScheduledCareModal({
       />
 
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="w-[95%] sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Schedule Childcare</DialogTitle>
             <DialogDescription>

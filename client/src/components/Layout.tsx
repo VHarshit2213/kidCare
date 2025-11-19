@@ -15,10 +15,11 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isInstantCareModalOpen, setIsInstantCareModalOpen] = useState(false);
   const [isScheduledCareModalOpen, setIsScheduledCareModalOpen] = useState(false);
   const userId = user?.id;
+  const isHomePage = location === "/";
 
   useEffect(() => {
     const handleOpenSitterRequest = () => {
@@ -50,7 +51,11 @@ export default function Layout({ children }: LayoutProps) {
     <div className="flex flex-col h-screen">
       <Header />
       <MessageNotifications currentUserId={userId} />
-      <main className="flex-1 relative z-0 overflow-y-auto bg-neutral-lighter pb-28 xxl:pb-0">
+      <main
+        className={`flex-1 relative z-0 overflow-y-auto bg-neutral-lighter ${
+          isHomePage ? "" : "pb-28 xxl:pb-0"
+        }`}
+      >
         {children}
       </main>
       <Footer />

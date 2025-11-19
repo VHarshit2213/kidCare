@@ -485,7 +485,7 @@ export default function Header() {
                       </div>
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-4 shadow-lg border-neutral-200">
+                  <PopoverContent className="w-56 p-4 mx-4 shadow-lg border-neutral-200">
                     <div className="grid gap-3">
                       <Link
                         href="/profile"

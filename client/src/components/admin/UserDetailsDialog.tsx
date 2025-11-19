@@ -50,9 +50,9 @@ export default function UserDetailsDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95%] lg:max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
+          <DialogTitle className="text-xl xs:text-2xl">
             {user?.userType === "parent" ? "Parent" : "Babysitter"} Details
           </DialogTitle>
           <DialogDescription>
@@ -84,16 +84,17 @@ export default function UserDetailsDialog({
                   <CardDescription className="text-center">
                     {user.email}
                   </CardDescription>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-col lg:flex-row justify-center items-center gap-2 lg:gap-0">
                     <Badge
                       variant={
                         user.userType === "babysitter" ? "secondary" : "default"
                       }
+                      className="w-fit"
                     >
                       {user.userType === "babysitter" ? "Babysitter" : "Parent"}
                     </Badge>
                     {user.isProfileCompleted && (
-                      <Badge variant="success" className="ml-2">
+                      <Badge variant="success" className="ml-2 w-fit">
                         Profile Complete
                       </Badge>
                     )}
@@ -175,7 +176,7 @@ export default function UserDetailsDialog({
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="w-full grid grid-cols-3">
+              <TabsList className={`w-full grid ${fieldsToShow ? "grid-cols-3" : " grid-cols-2"} `}>
                 {fieldsToShow && (
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                 )}

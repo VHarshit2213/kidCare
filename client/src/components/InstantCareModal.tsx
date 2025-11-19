@@ -672,7 +672,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import AvailableSittersPopup from "@/components/AvailableSittersPopup";
-import { X, Plus, Check, AlertCircle, MapPin } from "lucide-react";
+import { X, Plus, Check, AlertCircle, MapPin, Clock } from "lucide-react";
 
 import {
   Dialog,
@@ -1107,7 +1107,7 @@ export default function InstantCareModal({
   return (
     <>
       <Dialog open={isOpen && !showSittersPopup} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogContent className="w-[95%] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Request Instant Childcare</DialogTitle>
             <DialogDescription>
@@ -1234,25 +1234,12 @@ export default function InstantCareModal({
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 icon-brand"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                            <Clock className="h-4 w-4" />
                           </div>
-                          <div className="flex w-full items-center">
+                          <div className="flex items-center">
                             <Input
                               type="time"
-                              className="pl-10"
+                              className="pl-10 flex-1"
                               {...field}
                               value={
                                 field.value
@@ -1413,25 +1400,12 @@ export default function InstantCareModal({
                       <FormControl>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5 icon-brand"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                            <Clock className="h-4 w-4" />
                           </div>
                           <div className="flex w-full items-center">
                             <Input
                               type="time"
-                              className="pl-10"
+                              className="pl-10 flex-1"
                               {...field}
                               value={
                                 field.value

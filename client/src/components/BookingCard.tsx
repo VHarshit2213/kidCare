@@ -15,7 +15,7 @@ import supabase from "@/config/supabaseClient";
 import { format } from "date-fns";
 import { babysitterProfile, ParentProfile } from "@/lib/types";
 import ChatDialog from "@/components/ChatDialog";
-import { IoIosChatboxes, IoMdClose } from "react-icons/io";
+import { IoIosChatboxes } from "react-icons/io";
 import {
   Select,
   SelectContent,
@@ -94,9 +94,9 @@ export default function BookingCard({
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
@@ -239,100 +239,101 @@ export default function BookingCard({
         ))
       ) : (
         <div className="">
-          <div className="sm:flex sm:items-start w-full">
+          <div>
             {/* Parent logged in → show babysitter details */}
             {user?.user_metadata?.userType === "parent" && babysitter && (
-              <>
-                <div className="hidden sm:block mr-4 mt-3">
-                  <Avatar className="h-12 w-12">
-                    {babysitter.profileImageUrl ? (
-                      <AvatarImage
-                        src={babysitter.profileImageUrl}
-                        alt={babysitter.fullName}
-                      />
-                    ) : (
-                      <AvatarFallback>
-                        {getInitials(babysitter.fullName)}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                </div>
-                <div className={"w-full"}>
-                  <h3 className="text-lg font-medium text-neutral-800">
-                    {babysitter.fullName} with{" "}
-                    {booking.children
-                      .map((child) => `${child.firstName} ${child.lastName}`)
-                      .join(", ")
-                      .replace(/, ([^,]*)$/, " and $1")}
-                  </h3>
-                  <p className="font-bold">
-                    Address :{" "}
-                    <span className="font-medium"> {babysitter?.address}</span>
-                  </p>
-                  <div className="flex items-end text-sm text-neutral-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    {booking.date ? (
-                      <div className="flex flex-col">
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Date:
-                          </span>{" "}
-                          {format(booking.date, "MMM d, yyyy")}
-                        </p>
-                        <p>
-                          <span className="font-medium text-foreground">
-                            Time:
-                          </span>{" "}
-                          {/* {format(booking?.date, "MMM d, yyyy")} ( */}
-                          {booking.start_time} - {booking.end_time}
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <span>
-                          {formatBookingTimeRange(
-                            booking.start_time,
-                            booking.end_time
-                          )}
-                        </span>
-                      </>
-                    )}
+              <div className="flex flex-col lg:flex-row lg:items-end gap-4 w-full">
+                <div className="flex flex-col sm:flex-row flex-1 gap-4">
+                  <div className="mt-3 self-start">
+                    <Avatar className="h-12 w-12">
+                      {babysitter.profileImageUrl ? (
+                        <AvatarImage
+                          src={babysitter.profileImageUrl}
+                          alt={babysitter.fullName}
+                        />
+                      ) : (
+                        <AvatarFallback>
+                          {getInitials(babysitter.fullName)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
                   </div>
-                  <p className="font-bold text-sm mt-2">
-                    Booking Status : <StatusBadge status={booking.status} />
-                  </p>
+                  <div className={"w-full"}>
+                    <h3 className="text-lg font-medium text-neutral-800">
+                      {babysitter.fullName} with{" "}
+                      {booking.children
+                        .map((child) => `${child.firstName} ${child.lastName}`)
+                        .join(", ")
+                        .replace(/, ([^,]*)$/, " and $1")}
+                    </h3>
+                    <p className="font-bold">
+                      Address :{" "}
+                      <span className="font-medium"> {babysitter?.address}</span>
+                    </p>
+                    <div className="flex items-end text-sm text-neutral-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {booking.date ? (
+                        <div className="flex flex-col">
+                          <p>
+                            <span className="font-medium text-foreground">
+                              Date:
+                            </span>{" "}
+                            {format(booking.date, "MMM d, yyyy")}
+                          </p>
+                          <p>
+                            <span className="font-medium text-foreground">
+                              Time:
+                            </span>{" "}
+                            {/* {format(booking?.date, "MMM d, yyyy")} ( */}
+                            {booking.start_time} - {booking.end_time}
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <span>
+                            {formatBookingTimeRange(
+                              booking.start_time,
+                              booking.end_time
+                            )}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <p className="font-bold text-sm mt-2">
+                      Booking Status : <StatusBadge status={booking.status} />
+                    </p>
+                  </div>
                 </div>
-                {user?.user_metadata?.userType === "parent" &&
-                  booking.status === "Completed" &&
-                  booking.parent_id === user.id &&
-                  !alreadyReviewed && (
-                    // !existingParentReviews?.length &&
-                    <Button
-                      onClick={() => setShowParentReviewForm(true)}
-                      size="sm"
-                      className="bg-blue-500 hover:bg-blue-600 text-white mt-5 mr-4"
-                    >
-                      <Star className="h-4 w-4 mr-1" />
-                      Review Babysitter
-                    </Button>
-                  )}
-                <div className="flex justify-between gap-2 mt-5">
+                <div className="flex flex-wrap self-end gap-2">
+                  {user?.user_metadata?.userType === "parent" &&
+                    booking.status === "Completed" &&
+                    booking.parent_id === user.id &&
+                    !alreadyReviewed && (
+                      // !existingParentReviews?.length &&
+                      <Button
+                        onClick={() => setShowParentReviewForm(true)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white flex-1 xs:flex-none"
+                      >
+                        <Star className="h-4 w-4 mr-1" />
+                        Review Babysitter
+                      </Button>
+                    )}
                   {user?.user_metadata?.userType === "parent" && (
                     <Button
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 flex-1 xs:flex-none "
                       onClick={() => setShowBookingInfo(true)}
                     >
                       <IoMdInformationCircleOutline className="h-4 w-4" />
@@ -342,38 +343,40 @@ export default function BookingCard({
 
                   <ChatDialog
                     currentUserId={parent?.user_id}
-                    currentUserName= {parent?.fullName}
+                    currentUserName={parent?.fullName}
                     otherUserId={babysitter?.user_id}
                     currentUserPhone={parent?.phoneNumber}
                     otherUserPhone={babysitter?.phoneNumber}
                     otherUserName={babysitter?.fullName}
                     trigger={
-                      <button className="bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-[4px] px-4 py-2 text-sm tracking-wide font-medium shadow-sm flex items-center gap-1">
+                      <Button
+                        className="flex items-center gap-1 flex-1 xs:flex-none"
+                      >
                         <IoIosChatboxes className="h-4 w-4" />
                         Chat
-                      </button>
+                      </Button>
                     }
                   />
                 </div>
-              </>
+              </div>
             )}
 
             {/* Babysitter logged in → show parent details */}
             {user?.user_metadata?.userType === "babysitter" && parent && (
-              <>
-                <div className="sm:mr-4 sm:mt-3">
-                    <Avatar className="h-14 w-14">
-                      {parent.profileImageUrl ? (
-                        <AvatarImage
-                          src={parent.profileImageUrl}
-                          alt={parent.fullName}
-                        />
-                      ) : (
-                        <AvatarFallback>
-                          {getInitials(parent.fullName)}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
+              <div className="flex flex-col md:flex-row md:items-end gap-4 w-full">
+                <div className="sm:mt-3 self-start">
+                  <Avatar className="h-14 w-14">
+                    {parent.profileImageUrl ? (
+                      <AvatarImage
+                        src={parent.profileImageUrl}
+                        alt={parent.fullName}
+                      />
+                    ) : (
+                      <AvatarFallback>
+                        {getInitials(parent.fullName)}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
                 </div>
                 <div className={"w-full"}>
                   <h3 className="text-lg font-medium text-neutral-800">
@@ -475,7 +478,7 @@ export default function BookingCard({
                     </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
           <div className="flex items-center justify-between sm:mt-0 sm:ml-6">
@@ -510,47 +513,40 @@ export default function BookingCard({
       )}
 
       {/* Parent Review Form Modal */}
-      {showParentReviewForm && babysitter && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                Review {babysitter.fullName}
-              </h2>
-              <button
-                onClick={() => setShowParentReviewForm(false)}
-                className="text-gray-400 hover:text-gray-600 font-bold text-xl"
-              >
-                <IoMdClose />
-              </button>
-            </div>
-            <div className="p-6">
-              <ParentReviewForm
-                booking={booking}
-                babysitter={babysitter}
-                parent={parent}
-                onSuccess={() => {
-                  setShowParentReviewForm(false);
-                  checkReview();
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showParentReviewForm && !!babysitter}
+        onOpenChange={(open) => setShowParentReviewForm(open)}
+      >
+        {babysitter && (
+          <DialogContent className="max-w-2xl w-[95%]">
+            <DialogHeader>
+              <DialogTitle>Review {babysitter.fullName}</DialogTitle>
+            </DialogHeader>
+            <ParentReviewForm
+              booking={booking}
+              babysitter={babysitter}
+              parent={parent}
+              onSuccess={() => {
+                setShowParentReviewForm(false);
+                checkReview();
+              }}
+            />
+          </DialogContent>
+        )}
+      </Dialog>
 
       <Dialog
         open={showNavigation && !!booking?.address}
         onOpenChange={(open) => setShowNavigation(open)}
       >
         {booking?.address && (
-          <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto pb-28 xxl:pb-10">
+          <DialogContent className="max-w-4xl w-[95%]">
             <DialogHeader className="flex flex-row items-center justify-between">
               <DialogTitle>
                 Navigate to {parent.fullName}'s Home
               </DialogTitle>
             </DialogHeader>
-            <div className="p-4 sm:p-6">
+            <div>
               <NavigationMap
                 destinationAddress={booking.address}
                 onNavigationStart={() => setShowNavigation(false)}

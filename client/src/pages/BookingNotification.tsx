@@ -108,8 +108,8 @@ const BookingNotification = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-neutral-800 mb-6">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
+        <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">
           Your Booking Notification
         </h1>
 
@@ -148,10 +148,10 @@ const BookingNotification = () => {
                   key={notification.id}
                   className="bg-white shadow-md border-neutral-200"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="text-base text-gray-600">{message}</div>
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  <CardContent className="!p-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                      <div className="text-base text-gray-600 order-2 sm:order-none">{message}</div>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap order-1 sm:order-none self-end sm:self-auto">
                         {format(
                           new Date(notification.created_at),
                           "dd-MM-yyyy"

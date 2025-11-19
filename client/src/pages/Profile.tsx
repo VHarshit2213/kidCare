@@ -112,9 +112,9 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
-        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
-          <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8 space-y-5">
+        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg xs:p-4 flex items-center justify-between shadow-sm">
+          <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between gap-4 shadow-sm">
             <div>
               <h3 className="text-sm font-medium text-gray-800">
                 Allow SMS Notifications?
@@ -142,8 +142,8 @@ export default function Profile() {
         </div>
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200">
           <div className="p-6 sm:p-8">
-            <div className="sm:flex sm:items-center sm:justify-between">
-              <div className="sm:flex sm:items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col xs:flex-row xs:gap-6 items-center xs:items-end sm:items-center">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                   {profile?.profileImageUrl ? (
                     <AvatarImage
@@ -156,8 +156,8 @@ export default function Profile() {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div className="mt-4 sm:mt-0 sm:ml-6">
-                  <h1 className="text-2xl font-bold text-neutral-800">
+                <div className="mt-4 sm:mt-0 text-center xs:text-start">
+                  <h1 className="text-2xl font-bold text-neutral-800 capitalize">
                     {user?.user_metadata?.fullName}
                   </h1>
                   <p className="mt-1 text-sm text-neutral-600">

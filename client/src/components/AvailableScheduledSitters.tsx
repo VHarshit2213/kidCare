@@ -487,7 +487,7 @@ const PlayAndGreetDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}
+      <DialogContent className="w-[95%] sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Schedule a Play and Greet</DialogTitle>
@@ -584,7 +584,7 @@ const PlayAndGreetDialog = ({
             )}
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 flex-row justify-end !gap-3">
             <Button
               type="button"
               variant="outline"
@@ -734,7 +734,7 @@ export default function AvailableScheduledSitters(
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95%] sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle>Available Sitters</DialogTitle>
             <DialogDescription>
@@ -755,7 +755,7 @@ export default function AvailableScheduledSitters(
                 !Number.isNaN(sitter.averageRating);
 
               return (
-                <Card key={sitterId} className="p-6">
+                <Card key={sitterId} className="p-4 xs:p-6">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="flex-shrink-0">
                       <Avatar className="h-20 w-20 border">
@@ -962,7 +962,7 @@ export default function AvailableScheduledSitters(
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-[#3c5679] text-[#3c5679]"
+                              className="border-[#3c5679] text-[#3c5679] flex-1 xs:flex-none"
                             >
                               Schedule a Play and Greet
                             </Button>
@@ -977,7 +977,7 @@ export default function AvailableScheduledSitters(
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-[#3c5679] text-[#3c5679]"
+                              className="border-[#3c5679] text-[#3c5679] flex-1 xs:flex-none"
                             >
                               View Profile
                             </Button>
@@ -989,7 +989,7 @@ export default function AvailableScheduledSitters(
                           onClick={() => handleBookNow(sitterId)}
                           disabled={selectedSitter === sitterId || isBooked}
                           style={{ backgroundColor: "#3c5679" }}
-                          className="text-white font-medium"
+                          className="text-white font-medium flex-1 xs:flex-none"
                         >
                           {selectedSitter === sitterId
                             ? "Booking..."
@@ -1005,7 +1005,7 @@ export default function AvailableScheduledSitters(
             })}
           </div>
 
-          <div className="sticky bottom-0 pb-4 pt-4 bg-white border-t mt-6 flex justify-center sm:justify-end">
+          {/* <div className="sticky bottom-0 pb-4 pt-4 bg-white border-t mt-6 flex justify-center sm:justify-end">
             <Button
               onClick={onClose}
               style={{ backgroundColor: "#3c5679" }}
@@ -1014,7 +1014,7 @@ export default function AvailableScheduledSitters(
             >
               Close
             </Button>
-          </div>
+          </div> */}
         </DialogContent>
       </Dialog>
 

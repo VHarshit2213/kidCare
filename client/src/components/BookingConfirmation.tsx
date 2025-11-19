@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
 import mapboxgl from "mapbox-gl";
+import { Clock } from "lucide-react";
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
@@ -127,7 +128,7 @@ export default function BookingConfirmation({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95%] sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Booking Confirmed!</DialogTitle>
           <DialogDescription>
@@ -186,21 +187,7 @@ export default function BookingConfirmation({
 
         <div className="mt-6 bg-brand-blue/5 p-4 rounded-lg">
           <h3 className="text-md font-medium mb-2 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2 icon-brand"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+            <Clock className="mr-2 h-5 w-5" />
             Estimated Arrival
           </h3>
 
@@ -210,7 +197,7 @@ export default function BookingConfirmation({
               <span>Calculating arrival time...</span>
             </div>
           ) : (
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center">
               <p className="text-lg font-semibold">
                 {estimatedArrival || "Calculating..."}
               </p>
@@ -219,6 +206,7 @@ export default function BookingConfirmation({
                   href={`https://www.google.com/maps/search/?api=1&query=${userLocation.lat},${userLocation.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="self-end"
                 >
                   <Badge
                     variant="outline"
@@ -348,7 +336,7 @@ export default function BookingConfirmation({
           </div>
         </div> */}
 
-        <div className="mt-6 pt-4 border-t flex justify-end">
+        {/* <div className="mt-6 pt-4 border-t flex justify-end">
           <Button
             onClick={onClose}
             style={{ backgroundColor: "#3c5679" }}
@@ -356,7 +344,7 @@ export default function BookingConfirmation({
           >
             Close
           </Button>
-        </div>
+        </div> */}
       </DialogContent>
     </Dialog>
   );

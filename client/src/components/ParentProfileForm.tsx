@@ -1499,14 +1499,14 @@ export default function ParentProfileForm() {
 
   return (
     <>
-      <Card className="w-full max-w-4xl mx-auto">
+      <Card className="w-full max-w-5xl mx-auto">
         <CardHeader>
           {isPaymentSuccess && (
-            <h1 className="text-green-900 bg-green-100 p-2 font-bold text-xl">
+            <h1 className="text-green-900 bg-green-100 p-2 font-bold text-base xs:text-lg sm:text-xl">
               Your payment is successfully completed
             </h1>
           )}
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="!text-lg sm:!text-xl md:!text-2xl  !font-bold leading-6">
             Complete Your Parent Profile
           </CardTitle>
           <CardDescription>
@@ -1891,7 +1891,7 @@ export default function ParentProfileForm() {
 
                   {/* Add/Edit Child Dialog */}
                   <Dialog open={isAddingChild} onOpenChange={setIsAddingChild}>
-                    <DialogContent className="max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="w-[90%] max-w-lg">
                       <DialogHeader>
                         <DialogTitle>
                           {isEditingChild
@@ -1904,7 +1904,7 @@ export default function ParentProfileForm() {
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="childFirstName">
                               First Name <span className="text-red-500">*</span>
@@ -1987,7 +1987,7 @@ export default function ParentProfileForm() {
                           />
                         </div>
                       </div>
-                      <DialogFooter>
+                      <DialogFooter className="flex !flex-row !gap-2 !justify-end">
                         <Button
                           variant="outline"
                           onClick={() => setIsAddingChild(false)}
@@ -2208,6 +2208,7 @@ export default function ParentProfileForm() {
                     type="button"
                     variant="outline"
                     onClick={addEmergencyContact}
+                    className="!text-xs xs:!text-sm"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Another Emergency Contact

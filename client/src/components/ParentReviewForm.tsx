@@ -252,7 +252,7 @@ export default function ParentReviewForm({
                 control={form.control}
                 name={key as keyof ParentReviewFormValues}
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
+                  <FormItem className="space-y-2">
                     <FormLabel className="text-base font-medium">
                       {label}
                     </FormLabel>

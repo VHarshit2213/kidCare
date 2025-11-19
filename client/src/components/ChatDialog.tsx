@@ -247,7 +247,7 @@ const ChatDialog = ({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         {" "}
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="flex flex-col h-[80vh] max-w-lg w-full bg-white !rounded-xl shadow-lg p-0 gap-0">
+        <DialogContent className="flex flex-col h-[80vh] w-[95%] sm:max-w-lg bg-white !rounded-xl shadow-lg !p-0 gap-0">
           <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-100 rounded-t-xl">
             <DialogTitle className="text-lg font-semibold text-gray-700 capitalize">
               Chat with {otherUserName}
@@ -351,37 +351,38 @@ const ChatDialog = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center p-4 border-t border-gray-200 bg-white gap-2 rounded-b-xl">
+          <div className="flex items-center p-2 xs:p-4 border-t border-gray-200 bg-white gap-1 xs:gap-2 rounded-b-xl">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-1 xs:py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || sending}
-              className={`px-4 py-2 bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
+              className={`px-2 xs:px-4 py-2 bg-[#3c5679] hover:bg-[#2c4059] text-white rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
             >
               {sending ? (
                 <>
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                  sending...
+                  <Loader2 className="animate-spin h-4 w-4 xs:mr-2" />
+                  <span className="hidden xs:block">sending...</span>
                 </>
               ) : (
                 <>
-                  <IoIosSend />
-                  Send
+                  <IoIosSend/>
+                  <span className="hidden xs:block">Send</span>
                 </>
               )}
             </button>
             {isBabySitter && (
               <button
                 onClick={() => setIsLocationDialogOpen(true)}
-                className={`px-4 py-2 bg-white text-red-600 border-2 border-red-600 rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
+                className={`px-2 xs:px-4 py-1.5 bg-white text-red-600 border-2 border-red-600 rounded-md flex items-center gap-1 disabled:cursor-not-allowed`}
                 title="Send Location"
               >
-                <MdOutlineLocationOn /> Location
+                <MdOutlineLocationOn />
+                <span className="hidden xs:block">Location</span>
               </button>
             )}
           </div>
@@ -393,9 +394,9 @@ const ChatDialog = ({
         open={isLocationDialogOpen}
         onOpenChange={setIsLocationDialogOpen}
       >
-        <DialogContent className="max-w-md bg-white !rounded-xl shadow-lg p-0 gap-0">
+        <DialogContent className="w-[95%] max-w-md bg-white !rounded-xl shadow-lg !p-0 gap-0">
           <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-100 rounded-t-xl">
-            <DialogTitle>Send Your Current Location</DialogTitle>
+            <DialogTitle className="!text-base xs:!text-lg">Send Your Current Location</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-3 p-4 space-y-2 bg-gray-50 rounded-b-xl">
@@ -421,7 +422,7 @@ const ChatDialog = ({
                 {sendingLocation ? "Sending..." : "Send Location"}
               </button>
             </div>
-            <p className="text-sm text-red-500 text-center">
+            <p className="text-xs xs:text-sm text-red-500 text-center">
               Your live location will be sent with this message.
             </p>
           </div>

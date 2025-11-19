@@ -170,8 +170,8 @@ const Reviews = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-neutral-800 mb-6">My Reviews</h1>
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
+        <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">My Reviews</h1>
 
         {!isAuthenticated ? (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
@@ -191,7 +191,7 @@ const Reviews = () => {
           <>
             {averageRating && (
               <div className="flex items-center mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center">
+                <div className="flex flex-col xs:flex-row xs:items-center">
                   <span className="text-lg font-medium text-gray-700 mr-3">
                     Overall Rating :
                   </span>
@@ -204,7 +204,7 @@ const Reviews = () => {
                 </div>
               </div>
             )}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="max-w-[1500px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               {reviews.map((review) => (
                 <Card key={review.id}>
                   <CardHeader>
@@ -236,7 +236,7 @@ const Reviews = () => {
                     <div className="space-y-4">
                       {reviewCriteria.map(({ key, label, description }) => (
                         <div key={key} className="border-b pb-2">
-                          <div className="flex justify-between items-center">
+                          <div className="flex justify-between items-center mb-1">
                             <span className="font-medium">{label}</span>
                             <span className="flex">
                               <StarRating rating={review[key] || 0} />

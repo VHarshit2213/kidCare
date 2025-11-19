@@ -191,7 +191,7 @@ export default function AvailableSittersPopup({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95%] sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Available Sitters Near You</DialogTitle>
             <DialogDescription>
@@ -208,7 +208,7 @@ export default function AvailableSittersPopup({
           </div> 
         ):*/
             nearbySitters.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-4 sm:py-8">
                 <p className="text-lg font-medium mb-4">No sitters available</p>
                 <p className="text-muted-foreground mb-6">
                   We couldn't find any available sitters within 8 miles for your
@@ -231,7 +231,7 @@ export default function AvailableSittersPopup({
 
                   return (
                     <Card key={sitter.user_id} className="p-4">
-                      <div className="flex items-start gap-4">
+                      <div className="flex flex-col xs:flex-row items-start gap-2 xs:gap-4">
                         <Avatar className="h-12 w-12 border">
                           {sitter?.profileImageUrl ? (
                             <AvatarImage
@@ -245,9 +245,9 @@ export default function AvailableSittersPopup({
                           )}
                       </Avatar>
 
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
+                      <div className="flex-1 w-full">
+                        <div className="flex flex-col xs:flex-row gap-2 justify-between items-start">
+                          <div className="order-2 xs:order-1">
                             <p
                               className={`text-sm font-medium ${
                                 sitter?.isAvailable
@@ -277,7 +277,7 @@ export default function AvailableSittersPopup({
                                 </div>
                               )}
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 order-1 xs:order-2">
                             <Badge
                               variant="outline"
                               className="px-2 py-0.5 border-brand-blue text-brand-blue"
@@ -306,7 +306,7 @@ export default function AvailableSittersPopup({
                           )}
                           {sitter?.parentSkill
                             ?.slice(0, 2)
-                            .map((skill, index) => (
+                            .map((skill:any, index:number) => (
                               <Badge
                                 key={index}
                                 variant="outline"
@@ -318,18 +318,6 @@ export default function AvailableSittersPopup({
                         </div>
 
                         <div className="mt-3 flex justify-end gap-2">
-                          {/* <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            window.alert(
-                              `Viewing ${sitter?.fullName}'s profile...`,
-                            )
-                          }
-                          style={{ borderColor: "#3c5679", color: "#3c5679" }}
-                        >
-                          View Profile
-                        </Button> */}
                           <UserDetailsDialog
                             user={sitter}
                             trigger={

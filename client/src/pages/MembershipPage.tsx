@@ -252,7 +252,7 @@ export default function MembershipPage() {
 
   return (
     <Layout>
-        <div className="container max-w-3xl py-10 px-2 md:px-1 mx-auto">
+        <div className="container w-[95%] max-w-3xl py-10 px-2 md:px-1 mx-auto">
           <Card className="border-2">
             <CardHeader className="text-center">
               <CardTitle>

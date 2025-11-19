@@ -728,9 +728,9 @@ export default function BabysitterProfileForm() {
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-5xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">
+        <CardTitle className="!text-lg sm:!text-xl md:!text-2xl  !font-bold leading-6">
           Complete Your Babysitter Profile
         </CardTitle>
         <CardDescription>

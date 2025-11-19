@@ -222,13 +222,13 @@ export default function NavigationMap({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
+        <CardTitle className="!text-lg xs:!text-xl sm:!text-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center order-2 sm:order-1">
             <MapPin className="h-5 w-5 mr-2" />
             Navigation to Parent
           </div>
           {distance && duration && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 order-1 sm:order-2 justify-end">
               <Badge variant="outline" className="flex items-center">
                 <MapPin className="h-3 w-3 mr-1" />
                 {distance} mi
@@ -246,7 +246,7 @@ export default function NavigationMap({
           <strong>Destination:</strong> Parent's Home
         </div>
         
-        <div ref={mapContainer} className="w-full h-64 rounded-lg border" />
+        <div ref={mapContainer} className="w-full h-44 xs:h-52 sm:h-64 rounded-lg border" />
         
         <Button onClick={openInMaps} className="w-full" size="lg">
           <Navigation className="h-4 w-4 mr-2" />

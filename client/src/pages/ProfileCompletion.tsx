@@ -103,12 +103,12 @@ export default function ProfileCompletion() {
   }
 
   return (
-    <div className="container py-10 px-4 md:px-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">
+    <div className="py-10 px-4 md:px-6">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold text-center mb-2">
           Complete Your Profile
         </h1>
-        <p className="text-center text-muted-foreground mb-8">
+        <p className="text-center text-muted-foreground mb-4 xs:mb-6 sm:mb-8">
           {user?.user_metadata?.userType === "parent"
             ? "Help us personalize your experience by providing more information about you and your family."
             : "Share your experience and caregiving style to help parents find the perfect match for their family."}
