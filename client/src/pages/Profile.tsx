@@ -16,7 +16,7 @@ export default function Profile() {
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [smsEnabledForMobile, setSmsEnabledForMobile] = useState(true);
+  // const [smsEnabledForMobile, setSmsEnabledForMobile] = useState(false);
 
   const isAuthenticated = !!user;
 
@@ -58,26 +58,26 @@ export default function Profile() {
     }
 
     setProfile(data);
-    setSmsEnabledForMobile(data.sms_enabled ?? true);
+    // setSmsEnabledForMobile(data.sms_enabled ?? false);
     setLoading(false);
   };
 
-  const handleToggle = async () => {
-    const newValue = !smsEnabledForMobile;
-    setSmsEnabledForMobile(newValue);
+  // const handleToggle = async () => {
+  //   const newValue = !smsEnabledForMobile;
+  //   setSmsEnabledForMobile(newValue);
 
-    const tableName =
-      user?.user_metadata?.userType === "parent"
-        ? "parentprofile"
-        : "babySitterProfile";
+  //   const tableName =
+  //     user?.user_metadata?.userType === "parent"
+  //       ? "parentprofile"
+  //       : "babySitterProfile";
 
-    const { error } = await supabase
-      .from(tableName)
-      .update({ sms_enabled: newValue })
-      .eq("user_id", user?.id);
+  //   const { error } = await supabase
+  //     .from(tableName)
+  //     .update({ sms_enabled: newValue })
+  //     .eq("user_id", user?.id);
 
-    if (error) console.error("Error updating SMS setting:", error.message);
-  };
+  //   if (error) console.error("Error updating SMS setting:", error.message);
+  // };
 
   useEffect(() => {
     fetchProfile();
@@ -113,7 +113,7 @@ export default function Profile() {
   return (
     <Layout>
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8 space-y-5">
-        <div className="w-full bg-blue-50 border border-blue-200 rounded-lg xs:p-4 flex items-center justify-between shadow-sm">
+        {/* <div className="w-full bg-blue-50 border border-blue-200 rounded-lg xs:p-4 flex items-center justify-between shadow-sm">
           <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between gap-4 shadow-sm">
             <div>
               <h3 className="text-sm font-medium text-gray-800">
@@ -139,7 +139,7 @@ export default function Profile() {
               ></div>
             </label>
           </div>
-        </div>
+        </div> */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200">
           <div className="p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">

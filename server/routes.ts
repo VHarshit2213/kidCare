@@ -2348,7 +2348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (profile.error) throw profile.error;
 
-      const smsEnabled = profile.data?.sms_enabled ?? true;
+      const smsEnabled = profile.data?.sms_enabled ?? false;
 
       // 1. Send SMS
       if (smsEnabled) {

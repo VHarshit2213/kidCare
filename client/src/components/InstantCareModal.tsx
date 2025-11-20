@@ -1279,7 +1279,7 @@ export default function InstantCareModal({
                           <div className="flex items-center">
                             <Input
                               type="time"
-                              className="pl-10 flex-1"
+                              className="pl-10 appearance-none safari-date-left"
                               {...field}
                               value={
                                 field.value
@@ -1445,7 +1445,7 @@ export default function InstantCareModal({
                           <div className="flex w-full items-center">
                             <Input
                               type="time"
-                              className="pl-10 flex-1"
+                              className="pl-10 appearance-none safari-date-left"
                               {...field}
                               value={
                                 field.value

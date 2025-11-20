@@ -1951,6 +1951,7 @@ export default function ParentProfileForm() {
                                 e.target.value
                               )
                             }
+                            className="appearance-none safari-date-left"
                           />
                         </div>
                         <div className="space-y-2">

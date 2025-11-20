@@ -173,7 +173,6 @@ export default function MyBookings() {
         ) : instantCareBookings.length > 0 ||
           scheduleCareBookings.length > 0 ? (
           <>
-            {/* Instant Care Bookings */}
             <h2 className="text-lg sm:text-xl font-semibold text-neutral-700 mb-2">
               Instant Care Bookings
             </h2>
@@ -194,7 +193,6 @@ export default function MyBookings() {
               </p>
             )}
 
-            {/* Scheduled Care Bookings */}
             <h2 className="text-lg sm:text-xl font-semibold text-neutral-700 mb-2">
               Scheduled Care Bookings
             </h2>
@@ -217,10 +215,6 @@ export default function MyBookings() {
           </>
         ) : (
           <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-8 text-center">
-            <p className="text-neutral-600 m-6">
-              You don't have any bookings yet.
-            </p>
-
             {user?.user_metadata?.userType === "parent" && (
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-medium mb-3">

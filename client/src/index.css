@@ -60,3 +60,7 @@ mapbox-search-listbox {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.safari-date-left::-webkit-date-and-time-value {
+  text-align: left !important;
+}

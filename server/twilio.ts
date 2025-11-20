@@ -36,9 +36,9 @@ async function isSmsEnabled(userId: string, userType: "parent" | "babysitter") {
 
   if (error) {
     console.error("Error fetching SMS preference:", error.message);
-    return true;
+    return false;
   }
-  return data?.sms_enabled ?? true;
+  return data?.sms_enabled ?? false;
 }
 
 /**

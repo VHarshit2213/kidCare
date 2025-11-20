@@ -11,27 +11,48 @@ export function useZipRestriction({ profile }: UseZipRestrictionOptions) {
 
   const [isZipRestrictionEvaluated, setIsZipRestrictionEvaluated] = useState(false);
   const [isZipRestricted, setIsZipRestricted] = useState(false);
+  const [zipError, setZipError] = useState<"missingZip" | null>(null);
 
   useEffect(() => {
     if (!profile) {
       setIsZipRestricted(true);
       setIsZipRestrictionEvaluated(false);
+      setZipError(null);
       return;
     }
 
-    const zip = profile.zipCode ? String(profile.zipCode).trim() : null;
-    const allowed = zip && allowedZipCodes.includes(zip);
+    const zip = profile.zipCode ? String(profile.zipCode).trim() : "";
+
+    if (!zip) {
+      setIsZipRestricted(true);
+      setIsZipRestrictionEvaluated(true);
+      setZipError("missingZip");
+      return;
+    }
+
+    const allowed = allowedZipCodes.includes(zip);
 
     setIsZipRestricted(!allowed);
+    setZipError(null);
     setIsZipRestrictionEvaluated(true);
   }, [profile]);
 
-  const showZipRestrictionToast = () =>
+  const showZipRestrictionToast = () => {
+    if (zipError === "missingZip") {
+      toast({
+        title: "ZIP code required",
+        description: "Please complete your profile with your ZIP code to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Service unavailable in your area",
       description: `We're currently not available in your region.`,
       variant: "destructive",
     });
+  };
 
   const showZipCheckToast = () =>
     toast({
