@@ -215,6 +215,11 @@ export default function MyBookings() {
           </>
         ) : (
           <div className="bg-white rounded-lg shadow-md overflow-hidden border border-neutral-200 p-8 text-center">
+            {user?.user_metadata?.userType === "babysitter" && (
+              <p className="text-neutral-600 m-6">
+                  You don't have any bookings yet.
+              </p>
+            )}
             {user?.user_metadata?.userType === "parent" && (
               <div className="flex flex-col items-center">
                 <h3 className="text-lg font-medium mb-3">
