@@ -11,6 +11,7 @@ import { MdContentCopy, MdOutlineDiscount } from "react-icons/md";
 import kidCare from "../assets/kidCare.png"
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
 
+const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
 const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
 
 export default function Hero() {
@@ -107,12 +108,16 @@ export default function Hero() {
   }, [user]);
 
   useEffect(() => {
-    const now = Date.now();
+    const checkPromo = () => {
+      const now = Date.now();
+      const isActive = (now >= BLACK_FRIDAY_PROMO_START) && (now <= BLACK_FRIDAY_PROMO_END);
+      setShowDiscountDialog(isActive);
+    };
 
-    // Show dialog if current time is **before the promo end**
-    if (now <= BLACK_FRIDAY_PROMO_END) {
-      setShowDiscountDialog(true);
-    }
+    checkPromo();
+    const interval = setInterval(checkPromo, 60000); // check every 1 minute
+
+    return () => clearInterval(interval);
   }, []);
  
   return (
