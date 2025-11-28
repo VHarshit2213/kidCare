@@ -11,8 +11,8 @@ import { MdContentCopy, MdOutlineDiscount } from "react-icons/md";
 import kidCare from "../assets/kidCare.png"
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
 
-const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
-const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
+// const BLACK_FRIDAY_PROMO_START = Date.UTC(2025, 10, 28, 8, 0, 0); // Nov 28, 2025 12:00 AM PST
+// const BLACK_FRIDAY_PROMO_END = Date.UTC(2025, 10, 29, 21, 0, 0); // Nov 29, 2025 1:00 PM PST
 
 export default function Hero() {
   const { user } = useAuth();
@@ -20,9 +20,9 @@ export default function Hero() {
   const isAuthenticated = !!user;
   const [, navigate] = useLocation();
   const [profile, setProfile] = useState<any>(null);
-  const [showDiscountDialog, setShowDiscountDialog] = useState(false);
+  // const [showDiscountDialog, setShowDiscountDialog] = useState(false);
 
-  const discountCode = "BLKFDEAL25";
+  // const discountCode = "BLKFDEAL25";
   const isParent = user?.user_metadata?.userType === "parent";
   const isPaymentSuccess = user?.user_metadata?.isPayment;
 
@@ -30,21 +30,21 @@ export default function Hero() {
     guardNavigation
   } = useZipRestriction({ profile });
 
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(discountCode);
-      toast({
-        title: "Code copied!",
-        description: `${discountCode} has been copied to your clipboard.`,
-      });
-    } catch (err) {
-      toast({
-        title: "Failed to copy",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  // const handleCopyCode = async () => {
+  //   try {
+  //     await navigator.clipboard.writeText(discountCode);
+  //     toast({
+  //       title: "Code copied!",
+  //       description: `${discountCode} has been copied to your clipboard.`,
+  //     });
+  //   } catch (err) {
+  //     toast({
+  //       title: "Failed to copy",
+  //       description: "Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const handleCareRequest = (type: "instant" | "scheduled") => {
     // if (guardNavigation()) return;
@@ -80,10 +80,10 @@ export default function Hero() {
     );
   };
   
-  const handlePromoClaim = () => {
-    setShowDiscountDialog(false);
-    navigate("/auth?tab=register");
-  };
+  // const handlePromoClaim = () => {
+  //   setShowDiscountDialog(false);
+  //   navigate("/auth?tab=register");
+  // };
 
   const fetchParentProfile = async () => {
     if (!user?.id) return;
@@ -107,25 +107,25 @@ export default function Hero() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const checkPromo = () => {
-      const now = Date.now();
-      const isActive = (now >= BLACK_FRIDAY_PROMO_START) && (now <= BLACK_FRIDAY_PROMO_END);
-      setShowDiscountDialog(isActive);
-    };
+  // useEffect(() => {
+  //   const checkPromo = () => {
+  //     const now = Date.now();
+  //     const isActive = (now >= BLACK_FRIDAY_PROMO_START) && (now <= BLACK_FRIDAY_PROMO_END);
+  //     setShowDiscountDialog(isActive);
+  //   };
 
-    checkPromo();
-    const interval = setInterval(checkPromo, 60000); // check every 1 minute
+  //   checkPromo();
+  //   const interval = setInterval(checkPromo, 60000); // check every 1 minute
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
  
   return (
     <>
       <div className="relative h-full bg-[#f5f8fc]">
 
         {/* for black friday deal  */}
-        <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
+        {/* <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
           <DialogContent className="w-[95%] lg:max-w-4xl flex">
             <div className="w-full sm:w-1/2 flex flex-col justify-center items-center gap-3 text-brand-blue capitalize text-center">
               <MdOutlineDiscount className="text-3xl" />
@@ -158,7 +158,7 @@ export default function Hero() {
               />
             </div>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
 
         {/* Background image with midcentury modern overlay */}
         <div className="absolute inset-0 overflow-hidden">
