@@ -137,6 +137,7 @@ import supabase from "@/config/supabaseClient";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import ChatDialog from "@/components/ChatDialog";
 import { format } from "date-fns";
+import { FaImages } from "react-icons/fa";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -450,7 +451,20 @@ useEffect(() => {
         ) : conversationPartners.length > 0 ? (
           <div className="space-y-3">
             {conversationPartners.map((partnerId) => {
-              const latestMessage = getLatestMessage(partnerId);
+              const latestMessage:any = getLatestMessage(partnerId);
+              const previewText = latestMessage
+                ? latestMessage.image_path
+                  ? (
+                      <span className="inline-flex items-center gap-1">
+                        <FaImages className="text-sm" />
+                        <span>image</span>
+                      </span>
+                    )
+                  : latestMessage.map_url
+                    ? "📍 location"
+                    : latestMessage.message || ""
+                : "";
+              
               // const partnerName = getPartnerName(partnerId);
               const partner = partners?.find(
                 (partner) => partner.user_id === partnerId
@@ -491,7 +505,7 @@ useEffect(() => {
                                 {latestMessage.sender_id === user?.id
                                   ? "You: "
                                   : ""}
-                                {latestMessage.message || "📍 location"}
+                                {previewText || "Message"}
                               </p>
                             )}
                           </div>

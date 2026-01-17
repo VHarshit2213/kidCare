@@ -2329,6 +2329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       receiver_id,
       location,
       map_url,
+      image_path,
     } = req.body;
 
     try {
@@ -2352,7 +2353,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // 1. Send SMS
       if (smsEnabled) {
-        let smsBody = message || "📍 Location shared";
+        let smsBody = message;
+
+        if (!smsBody && image_path) {
+          smsBody = "Photo shared in the chat.";
+        }
+
+        if (!smsBody) {
+          smsBody = "📍 Location shared";
+        }
 
         if (location?.latitude && location?.longitude) {
           const mapsLink = `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
@@ -2385,6 +2394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (location) payload.location = location;
       if (map_url) payload.map_url = map_url;
+      if (image_path) payload.image_path = image_path;
 
       const { error } = await supabase.from("messages").insert([payload]);
 
