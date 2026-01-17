@@ -73,9 +73,11 @@ export function getStatusColor(status: string): string {
       return "bg-blue-100 text-blue-800 border border-blue-300";
     case "paid":
       return "bg-green-100 text-green-800 border border-green-300";
+    case "in progress":
+      return "bg-green-100 text-green-800 border border-green-300";
     case "cancelled":
       return "text-red-600 bg-red-100";
     default:
-      return "text-slate-600 bg-slate-100";
+      return "text-slate-600 bg-slate-100 border border-slate-300";
   }
 }

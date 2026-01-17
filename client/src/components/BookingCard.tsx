@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Navigation, Loader2, CalendarIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
+import { useToast } from "@/hooks/use-toast";
 import StatusBadge from "./common/StatusBadge";
 import ReviewForm from "./ReviewForm";
 import ParentReviewForm from "./ParentReviewForm";
@@ -41,15 +42,19 @@ export default function BookingCard({
   const [showNavigation, setShowNavigation] = useState(false);
   const [parent, setParent] = useState<ParentProfile[]>([]);
   const [babysitter, setBabySitter] = useState<babysitterProfile[]>([]);
+  const [statusAction, setStatusAction] = useState<
+    "check-in" | "check-out" | null
+  >(null);
   const { user } = useAuth();
+  const { toast } = useToast();
   const { getSignedUrl } = useSignedUrl();
   const [loading, setLoading] = useState({
     profiles: false,
     review: false,
   });
-  const [babySitterStatus, setBabySitterStatus] = useState<string>(
-    booking?.status || "Booked"
-  );
+  // const [babySitterStatus, setBabySitterStatus] = useState<string>(
+  //   booking?.status || "Booked"
+  // );
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [showBookingInfo, setShowBookingInfo] = useState(false);
 
@@ -157,28 +162,47 @@ export default function BookingCard({
     }
   };
 
+  // for update status and check in / check out time
   const updateBabySitterStatus = async (
     bookingId: string,
     value: string,
-    type: "instant" | "scheduled"
+    type: "instant" | "scheduled",
+    checkInOutTime: Record<string, unknown> = {},
+    action: "check-in" | "check-out" | null = null
   ) => {
+    setStatusAction(action);
     try {
       const tableName = type === "instant" ? "InstantCare" : "scheduledCare";
 
       // Update InstantCare
       const { error } = await supabase
         .from(tableName)
-        .update({ status: value })
+        .update({ status: value, ...checkInOutTime })
         .eq("id", bookingId)
         .select();
 
       if (error) throw error;
 
-      setBabySitterStatus(value);
       await fetchBookings();
+      toast({
+        title: "Success",
+        description:
+          value?.toLowerCase() === "in progress"
+            ? "You have checked in successfully."
+            : value?.toLowerCase() === "completed"
+            ? "You have checked out successfully."
+            : "Booking status updated successfully.",
+      });
       console.log(`Status updated in ${tableName}`);
     } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "Unable to update booking status. Please try again.",
+        variant: "destructive",
+      });
       console.error("Error updating status:", error);
+    } finally {
+      setStatusAction(null);
     }
   };
 
@@ -313,7 +337,7 @@ export default function BookingCard({
                       )}
                     </div>
                     <p className="font-bold text-sm mt-2">
-                      Booking Status : <StatusBadge status={booking.status} />
+                      Status : <StatusBadge status={booking.status} />
                     </p>
                   </div>
                 </div>
@@ -423,10 +447,14 @@ export default function BookingCard({
                       </>
                     )}
                   </div>
-                  <div className="flex flex-col xs:flex-row justify-between gap-3 mt-5">
-                    <div className={"flex gap-2 w-auto"}>
-                      <Select
-                        value={babySitterStatus}
+                  <p className="font-bold text-sm mt-2">
+                    Status : <StatusBadge status={booking.status} />
+                  </p>
+                  <div className="flex flex-col xs:flex-row gap-3 mt-5">
+                    {booking.status?.toLowerCase() !== "completed" && (
+                      <div className="flex gap-2 w-auto">
+                      {/* <Select
+                        value={booking.status}
                         onValueChange={(value) =>
                           updateBabySitterStatus(booking.id, value, type)
                         }
@@ -441,9 +469,66 @@ export default function BookingCard({
                             </SelectItem>
                           ))}
                         </SelectContent>
-                      </Select>
+                      </Select> */}
+                      <Button
+                        onClick={() =>
+                          updateBabySitterStatus(
+                            booking.id,
+                            "in progress",
+                            type,
+                            {
+                              check_in_time: new Date().toISOString(),
+                            },
+                            "check-in"
+                          )
+                        }
+                        size="sm"
+                        className="bg-green-700 hover:bg-green-600 text-white"
+                        disabled={
+                          booking.status?.toLowerCase() === "in progress" ||
+                          statusAction !== null
+                        }
+                      >
+                        {statusAction === "check-in" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            Checking In...
+                          </>
+                        ) : (
+                          "Check In"
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          updateBabySitterStatus(
+                            booking.id,
+                            "Completed",
+                            type,
+                            {
+                              check_out_time: new Date().toISOString(),
+                            },
+                            "check-out"
+                          )
+                        }
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-500 text-white"
+                        disabled={
+                          booking.status?.toLowerCase() === "booked" ||
+                          statusAction !== null
+                        }
+                      >
+                        {statusAction === "check-out" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            Checking Out...
+                          </>
+                        ) : (
+                          "Check Out"
+                        )}
+                      </Button>
                     </div>
-                    <div className="flex justify-end flex-shrink-0 space-x-2">
+                    )}
+                    <div className="flex justify-end flex-shrink-0 space-x-2 ml-auto">
                       {/* Navigation button for babysitters on confirmed or in-progress bookings  */}
                       {user?.user_metadata?.userType === "babysitter" &&
                         booking.sitter_id === user.id &&
