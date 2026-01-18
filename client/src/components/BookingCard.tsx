@@ -89,6 +89,11 @@ export default function BookingCard({
       .join("")
       .toUpperCase();
   };
+  
+  const formatCheckTime = (value?: string | null) => {
+    if (!value) return "—";
+    return format(new Date(value), "p");
+  };
 
   // Function to calculate distance between parent and babysitter
   function getDistanceInMiles(lat1, lon1, lat2, lon2) {
@@ -339,6 +344,26 @@ export default function BookingCard({
                     <p className="font-bold text-sm mt-2">
                       Status : <StatusBadge status={booking.status} />
                     </p>
+                    {(booking.check_in_time || booking.check_out_time) && (
+                      <div className="text-sm text-neutral-600 mt-1 space-y-0.5">
+                        {booking.check_in_time && (
+                          <p>
+                            <span className="font-semibold">
+                              Checked in at:
+                            </span>{" "}
+                            {formatCheckTime(booking.check_in_time)}
+                          </p>
+                        )}
+                        {booking.check_out_time && (
+                          <p>
+                            <span className="font-semibold">
+                              Checked out at:
+                            </span>{" "}
+                            {formatCheckTime(booking.check_out_time)}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap self-end gap-2">
@@ -450,6 +475,26 @@ export default function BookingCard({
                   <p className="font-bold text-sm mt-2">
                     Status : <StatusBadge status={booking.status} />
                   </p>
+                  {(booking.check_in_time || booking.check_out_time) && (
+                    <div className="text-sm text-neutral-600 mt-1 space-y-0.5">
+                      {booking.check_in_time && (
+                        <p>
+                          <span className="font-semibold">
+                            Checked in at:
+                          </span>{" "}
+                          {formatCheckTime(booking.check_in_time)}
+                        </p>
+                      )}
+                      {booking.check_out_time && (
+                        <p>
+                          <span className="font-semibold">
+                            Checked out at:
+                          </span>{" "}
+                          {formatCheckTime(booking.check_out_time)}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex flex-col xs:flex-row gap-3 mt-5">
                     {booking.status?.toLowerCase() !== "completed" && (
                       <div className="flex gap-2 w-auto">
