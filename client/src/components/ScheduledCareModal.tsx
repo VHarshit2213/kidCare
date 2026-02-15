@@ -775,7 +775,12 @@ export default function ScheduledCareModal({
         );
         return { ...sitter, distance };
       })
-      .filter((sitter) => sitter.distance <= radiusMiles);
+      .filter((sitter) => {
+        const sitterZip = sitter?.zipCode ? String(sitter.zipCode).trim() : "";
+        if (!sitterZip) return false;
+        if (!allowedZipCodes.includes(sitterZip)) return false;
+        return sitter.distance <= radiusMiles;
+      });
   }
 
   // fetch parent profile
