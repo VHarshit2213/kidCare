@@ -5,18 +5,19 @@ import { FaRegCalendarCheck, FaRegClock } from "react-icons/fa6";
 import { CalendarIcon, MessageCircleMore } from "lucide-react";
 import { FaRegUser } from "react-icons/fa";
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import supabase from "@/config/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import { TbUserStar } from "react-icons/tb";
+import { useBadgeCounts } from "@/contexts/badge-context";
 
 export default function MobileNav() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { unreadCount } = useBadgeCounts();
 
   const [profile, setProfile] = useState<any>(null);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   const isAuthenticated = !!user;
   const isPaymentSuccess = user?.user_metadata?.isPayment;
@@ -95,61 +96,10 @@ export default function MobileNav() {
     setProfile(data);
   };
 
-  const fetchUnreadCount = useCallback(async () => {
-    if (!userId) {
-      setUnreadCount(0);
-      return;
-    }
-
-    const { count, error } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("receiver_id", userId)
-      .eq("is_read", false);
-
-    if (error) {
-      console.error("Error fetching unread messages:", error.message);
-      setUnreadCount(0);
-      return;
-    }
-
-    setUnreadCount(count ?? 0);
-  }, [userId]);
-
   useEffect(() => {
     if (!user?.id) return;
     fetchProfile();
   }, [user]);
-
-  useEffect(() => {
-    if (!userId) {
-      setUnreadCount(0);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    fetchUnreadCount();
-
-    const channel = supabase
-      .channel(`messages-unread-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `receiver_id=eq.${userId}`,
-        },
-        () => fetchUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchUnreadCount]);
 
   return (
     <div className="xxl:hidden fixed bottom-0 inset-x-0 bg-white shadow-t border-t border-neutral-200 z-10">

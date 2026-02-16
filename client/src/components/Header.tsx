@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
-import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
-import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useZipRestriction } from "@/hooks/use-zip-restriction";
+import { useBadgeCounts } from "@/contexts/badge-context";
 import { BsInfoCircle } from "react-icons/bs";
 import { CalendarIcon, ChevronDown, Clock, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -26,13 +26,11 @@ export default function Header() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const { getSignedUrl } = useSignedUrl();
+  const { unreadCount, bookingUnreadCount, playGreetUnreadCount } = useBadgeCounts();
+  const [isOpen, setIsOpen] = useState(false)
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [bookingUnreadCount, setBookingUnreadCount] = useState(0);
-  const [playGreetUnreadCount, setPlayGreetUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false)
 
   const isAuthenticated = !!user;
   const hasMembership =
@@ -276,73 +274,6 @@ export default function Header() {
     setLoading(false);
   };
 
-  const fetchUnreadCount = useCallback(async () => {
-    if (!userId) {
-      setUnreadCount(0);
-      return;
-    }
-
-    const { count, error } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("receiver_id", userId)
-      .eq("is_read", false);
-
-    if (error) {
-      console.error("Error fetching unread messages:", error.message);
-      setUnreadCount(0);
-      return;
-    }
-
-    setUnreadCount(count ?? 0);
-  }, [userId]);
-
-  const fetchPlayGreetUnreadCount = useCallback(async () => {
-    if (!userId) {
-      setPlayGreetUnreadCount(0);
-      return;
-    }
-
-    const { count, error } = await supabase
-      .from("playAndGreet")
-      .select("id", { count: "exact", head: true })
-      .or(
-        `and(parent_id.eq.${userId},parent_is_read.eq.false),and(sitter_id.eq.${userId},sitter_is_read.eq.false)`
-      );
-
-    if (error) {
-      console.error("Error fetching unread play & greet:", error.message);
-      setPlayGreetUnreadCount(0);
-      return;
-    }
-
-    setPlayGreetUnreadCount(count ?? 0);
-  }, [userId]);
-
-  const fetchBookingUnreadCount = useCallback(async () => {
-    if (!userId) {
-      setBookingUnreadCount(0);
-      return;
-    }
-
-    const { count, error } = await supabase
-      .from("bookingNotification")
-      .select("id", { count: "exact", head: true })
-      .eq("receiver_id", userId)
-      .eq("is_read", false);
-
-    if (error) {
-      console.error(
-        "Error fetching unread booking notifications:",
-        error.message
-      );
-      setBookingUnreadCount(0);
-      return;
-    }
-
-    setBookingUnreadCount(count ?? 0);
-  }, [userId]);
-
   useEffect(() => {
     if (!isBabySitter) return;
     if (profile?.isAvailable === undefined || profile?.isAvailable === null) return;
@@ -352,96 +283,6 @@ export default function Header() {
   useEffect(() => {
     fetchProfile();
   }, [user]);
-
-  useEffect(() => {
-    if (!userId) {
-      setUnreadCount(0);
-      setBookingUnreadCount(0);
-      setPlayGreetUnreadCount(0);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    fetchUnreadCount();
-
-    const channel = supabase
-      .channel(`messages-unread-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `receiver_id=eq.${userId}`,
-        },
-        () => fetchUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchUnreadCount]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    fetchBookingUnreadCount();
-
-    const channel = supabase
-      .channel(`booking-notification-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "bookingNotification",
-          filter: `receiver_id=eq.${userId}`,
-        },
-        () => fetchBookingUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchBookingUnreadCount]);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    fetchPlayGreetUnreadCount();
-
-    const channel = supabase
-      .channel(`play-greet-unread-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "playAndGreet",
-          filter: `parent_id=eq.${userId}`,
-        },
-        () => fetchPlayGreetUnreadCount()
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "playAndGreet",
-          filter: `sitter_id=eq.${userId}`,
-        },
-        () => fetchPlayGreetUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchPlayGreetUnreadCount]);
 
   return (
     <header className="bg-white sticky top-0 z-10 border-b border-neutral-100">

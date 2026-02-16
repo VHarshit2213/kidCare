@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
-import Layout from "@/components/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import StatusBadge from "@/components/common/StatusBadge";
@@ -318,7 +317,7 @@ const PlayAndGreet = () => {
 
   return (
     <>
-      <Layout>
+      <>
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
           <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">
             Your Play & Greet Sessions
@@ -434,7 +433,7 @@ const PlayAndGreet = () => {
             </div>
           )}
         </div>
-      </Layout>
+      </>
 
       {showStripeModal && stripeClientSecret && totalAmount !== null && (
         <Elements stripe={stripePromise} options={options}>

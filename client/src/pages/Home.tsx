@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import Hero from "@/components/Hero";
 import BookingCard from "@/components/BookingCard";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,7 +30,7 @@ export default function Home() {
   };
 
   return (
-    <Layout>
+    <>
       <Hero />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -95,6 +94,6 @@ export default function Home() {
       {/* Modals for booking care */}
       <InstantCareModal isOpen={instantCareOpen} onClose={() => setInstantCareOpen(false)} />
       <ScheduledCareModal isOpen={scheduledCareOpen} onClose={() => setScheduledCareOpen(false)} />
-    </Layout>
+    </>
   );
 }

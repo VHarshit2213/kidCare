@@ -128,7 +128,6 @@
 
 // -------------------------------- new code ---------------------------------------
 
-import Layout from "@/components/Layout";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Message, User } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
@@ -421,7 +420,7 @@ useEffect(() => {
 
 
   return (
-    <Layout>
+    <>
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
         <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">Messages</h1>
 
@@ -538,7 +537,7 @@ useEffect(() => {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 }
 

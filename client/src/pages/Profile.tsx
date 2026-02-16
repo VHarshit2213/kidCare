@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Skill from "@/components/common/Skill";
@@ -85,7 +84,7 @@ export default function Profile() {
 
   if (!isAuthenticated) {
     return (
-      <Layout>
+      <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600">
@@ -96,22 +95,22 @@ export default function Profile() {
             </button>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center text-neutral-600">Loading profile...</div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8 space-y-5">
         {/* <div className="w-full bg-blue-50 border border-blue-200 rounded-lg xs:p-4 flex items-center justify-between shadow-sm">
           <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between gap-4 shadow-sm">
@@ -304,6 +303,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

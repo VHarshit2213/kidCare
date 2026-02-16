@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Tag, Check } from "lucide-react";
-import Layout from "@/components/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -251,7 +250,7 @@ export default function MembershipPage() {
   // ----------------- new code ------------
 
   return (
-    <Layout>
+    <>
         <div className="container w-[95%] max-w-3xl py-10 px-2 md:px-1 mx-auto">
           <Card className="border-2">
             <CardHeader className="text-center">
@@ -550,6 +549,6 @@ export default function MembershipPage() {
           navigate("/profile-completion");
         }}
       />
-    </Layout>
+    </>
   );
 }

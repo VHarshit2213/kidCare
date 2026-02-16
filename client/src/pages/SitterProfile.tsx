@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
-import Layout from "@/components/Layout";
 import { User } from "@/lib/types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ export default function SitterProfile() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200">
             <div className="p-6 sm:p-8">
@@ -45,13 +44,13 @@ export default function SitterProfile() {
             </div>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   if (!sitter) {
     return (
-      <Layout>
+      <>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200 p-8 text-center">
             <p className="text-neutral-600">Babysitter not found.</p>
@@ -60,12 +59,12 @@ export default function SitterProfile() {
             </Button>
           </div>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-neutral-200">
           <div className="relative h-48 md:h-64">
@@ -190,6 +189,6 @@ export default function SitterProfile() {
       </div>
 
       <InstantCareModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-    </Layout>
+    </>
   );
 }

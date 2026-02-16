@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Layout from "@/components/Layout";
 import { CheckCircle2 } from "lucide-react";
 
 export default function MembershipSuccess() {
@@ -59,7 +58,7 @@ export default function MembershipSuccess() {
     status === "installment_1" || status === "installment_2";
 
   return (
-    <Layout>
+    <>
       <div className="container max-w-4xl py-20">
         <Card className="border-0 shadow-lg">
           <CardHeader className="text-center pb-4">
@@ -148,6 +147,6 @@ export default function MembershipSuccess() {
           </CardFooter>
         </Card>
       </div>
-    </Layout>
+    </>
   );
 }

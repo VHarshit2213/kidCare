@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import { Loader2, Star } from "lucide-react";
@@ -169,7 +168,7 @@ const Reviews = () => {
 
 
   return (
-    <Layout>
+    <>
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 xxl:py-8">
         <h1 className="text-lg xs:text-xl lg:text-2xl font-bold text-brand-blue mb-6">My Reviews</h1>
 
@@ -259,7 +258,7 @@ const Reviews = () => {
           </>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 
