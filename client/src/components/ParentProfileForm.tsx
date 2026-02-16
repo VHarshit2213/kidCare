@@ -947,6 +947,13 @@ export default function ParentProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { getSignedUrl } = useSignedUrl();
+  const emptyChildFormValues: ChildFormValues = {
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    personality: "",
+    specialCare: "",
+  };
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [isEditingChild, setIsEditingChild] = useState(false);
   const [currentChildId, setCurrentChildId] = useState<number | null>(null);
@@ -1346,6 +1353,13 @@ export default function ParentProfileForm() {
     }));
   };
 
+  const handleAddChildClick = () => {
+    setChildFormValues({ ...emptyChildFormValues });
+    setIsEditingChild(false);
+    setCurrentChildId(null);
+    setIsAddingChild(true);
+  };
+
   // Function to handle child add/edit
   const handleAddEditChild = () => {
     // Simple validation
@@ -1375,13 +1389,7 @@ export default function ParentProfileForm() {
       setChildrens((prev) => [...prev, childFormValues]);
     }
 
-    setChildFormValues({
-      firstName: "",
-      lastName: "",
-      dateOfBirth: "",
-      personality: "",
-      specialCare: "",
-    });
+    setChildFormValues({ ...emptyChildFormValues });
     setIsEditingChild(false);
     setCurrentChildId(null);
     setIsAddingChild(false);
@@ -1882,7 +1890,7 @@ export default function ParentProfileForm() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsAddingChild(true)}
+                    onClick={handleAddChildClick}
                     className="mt-2"
                   >
                     <Plus className="mr-2 h-4 w-4" />

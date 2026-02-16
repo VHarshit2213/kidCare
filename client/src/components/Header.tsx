@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import logo from "../assets/enchanted-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import supabase from "@/config/supabaseClient";
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useSignedUrl } from "@/hooks/use-signedUrl";
 import { Badge } from "./ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -49,8 +49,114 @@ export default function Header() {
     guardNavigation,
   } = useZipRestriction({ profile });
 
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
   const userId = user?.id;
+  const watchIdRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(0);
+  const lastCoordsRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+
+  // Convert GPS → ZIP Code
+  const getZipFromCoords = async (latitude: number, longitude: number) => {
+    if (!mapboxToken) return "";
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}`,
+    );
+    const data = await res.json();
+    let postcode = data.features?.[0]?.context?.find((c: any) =>
+      c.id.startsWith("postcode."),
+    )?.text;
+    if (!postcode) {
+      const postcodeFeature = data.features?.find((f: any) =>
+        f.place_type.includes("postcode"),
+      );
+      postcode = postcodeFeature?.text || "";
+    }
+    return String(postcode || "").trim();
+  };
+
+  // Calculate distance between two GPS points in miles.
+  const getDistanceInMiles = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ) => {
+    const R = 3958.8; // Radius of the Earth in miles
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Updates babysitter's live location
+  const updateSitterLocation = async (latitude: number, longitude: number) => {
+    const now = Date.now();
+    const last = lastUpdateRef.current;
+    const lastCoords = lastCoordsRef.current;
+
+    // Check if user moved at least 0.1 mile
+    const movedEnough =
+      !lastCoords ||
+      getDistanceInMiles(
+        lastCoords.latitude,
+        lastCoords.longitude,
+        latitude,
+        longitude,
+      ) >= 0.1;
+
+    // Check if 1 minute has passed since last update
+    // const timeEnough = now - last >= 60_000;
+
+    if (!movedEnough) return;
+
+    // Save latest update time & coordinates
+    lastUpdateRef.current = now;
+    lastCoordsRef.current = { latitude, longitude };
+
+    // Convert GPS to ZIP code
+    const zipCode = await getZipFromCoords(latitude, longitude);
+
+    await supabase
+      .from("babySitterProfile")
+      .update({
+        location: { latitude, longitude },
+        zipCode,
+      })
+      .eq("user_id", user?.id);
+  };
+
+  const startTracking = () => {
+    if (watchIdRef.current !== null) return;
+    if (!navigator.geolocation) return;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        updateSitterLocation(latitude, longitude);
+      },
+      (error) => {
+        console.error("Location tracking error:", error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
+  };
+
+  const stopTracking = () => {
+    if (watchIdRef.current === null) return;
+    navigator.geolocation.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
+  };
 
   const handleToggle = async () => {
     const newStatus = !isOnline;
@@ -68,6 +174,20 @@ export default function Header() {
       setIsOnline(!newStatus);
     }
   };
+
+  // real time GPS tracking for babysitter 
+  useEffect(() => {
+    if (!isBabySitter) return;
+    if (isOnline) {
+      startTracking();
+    } else {
+      stopTracking();
+    }
+
+    return () => {
+      stopTracking();
+    };
+  }, [isOnline, isBabySitter]);
 
   const handleLogout = () => {
     // logoutMutation.mutate();
@@ -222,6 +342,12 @@ export default function Header() {
 
     setBookingUnreadCount(count ?? 0);
   }, [userId]);
+
+  useEffect(() => {
+    if (!isBabySitter) return;
+    if (profile?.isAvailable === undefined || profile?.isAvailable === null) return;
+    setIsOnline(Boolean(profile.isAvailable));
+  }, [isBabySitter, profile?.isAvailable]);
 
   useEffect(() => {
     fetchProfile();
