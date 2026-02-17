@@ -790,12 +790,12 @@ export default function AdminPage() {
 
   if (user?.user_metadata?.userType !== "admin") {
     return (
-      <Layout>
+      <>
         <div className="container mx-auto py-10 text-center">
           <h1 className="text-2xl font-bold mb-4">Unauthorized Access</h1>
           <p>You do not have permission to access the admin panel.</p>
         </div>
-      </Layout>
+      </>
     );
   }
 

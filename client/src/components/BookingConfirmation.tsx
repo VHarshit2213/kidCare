@@ -179,7 +179,7 @@ export default function BookingConfirmation({
             <div>
               <p className="font-medium">{sitter.fullName}</p>
               <p className="text-sm text-muted-foreground">
-                {sitter.distance} miles away • ${sitter.horulyRate}/hr
+                {sitter.distance.toFixed(2)} miles away • ${sitter.horulyRate}/hr
               </p>
             </div>
           </div>

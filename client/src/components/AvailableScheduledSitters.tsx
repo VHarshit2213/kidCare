@@ -746,7 +746,23 @@ export default function AvailableScheduledSitters(
           </DialogHeader>
 
           <div className="mt-4 space-y-6">
-            {nearbySitters.map((sitter) => {
+            {nearbySitters.length === 0 ? (
+              <div className="text-center py-4 sm:py-8">
+                <p className="text-lg font-medium mb-4">No sitters available</p>
+                <p className="text-muted-foreground mb-6">
+                  We couldn't find any available sitters within 8 miles for your
+                  requested time.
+                </p>
+                <Button
+                  onClick={onClose}
+                  style={{ backgroundColor: "#3c5679" }}
+                  className="text-white font-medium"
+                >
+                  Try Different Time
+                </Button>
+              </div>
+            ) : (
+              nearbySitters.map((sitter) => {
               const sitterId = String(sitter.user_id);
             
               const isBooked = Boolean(bookingStatus?.[sitterId]);
@@ -1002,7 +1018,8 @@ export default function AvailableScheduledSitters(
                   </div>
                 </Card>
               );
-            })}
+            })
+            )}
           </div>
 
           {/* <div className="sticky bottom-0 pb-4 pt-4 bg-white border-t mt-6 flex justify-center sm:justify-end">

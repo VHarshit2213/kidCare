@@ -6,6 +6,7 @@ import { useBadgeCounts } from "@/contexts/badge-context";
 export default function BadgeCounts() {
   const { user } = useAuth();
   const userId = user?.id;
+  const isAdmin = user?.user_metadata?.userType === "admin";
   const { setUnreadCount, setBookingUnreadCount, setPlayGreetUnreadCount, resetCounts } =
     useBadgeCounts();
 
@@ -74,13 +75,13 @@ export default function BadgeCounts() {
   }, [userId, setBookingUnreadCount]);
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || isAdmin) {
       resetCounts();
     }
-  }, [userId, resetCounts]);
+  }, [userId, isAdmin, resetCounts]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isAdmin) return;
 
     fetchUnreadCount();
 
@@ -101,10 +102,10 @@ export default function BadgeCounts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, fetchUnreadCount]);
+  }, [userId, isAdmin, fetchUnreadCount]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isAdmin) return;
 
     fetchBookingUnreadCount();
 
@@ -125,10 +126,10 @@ export default function BadgeCounts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, fetchBookingUnreadCount]);
+  }, [userId, isAdmin, fetchBookingUnreadCount]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isAdmin) return;
 
     fetchPlayGreetUnreadCount();
 
@@ -159,7 +160,7 @@ export default function BadgeCounts() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, fetchPlayGreetUnreadCount]);
+  }, [userId, isAdmin, fetchPlayGreetUnreadCount]);
 
   return null;
 }
